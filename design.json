@@ -1,0 +1,869 @@
+{
+  "version": 1,
+  "erzeugt": "2026-10-20T10:16:15.046Z",
+  "werkzeug": "Design-Konfigurator",
+  "einstellungen": {
+    "stimmung": 50,
+    "dichte": 56,
+    "bewegung": "apple",
+    "rand": 16,
+    "radius": 16,
+    "font": "system",
+    "display": "none",
+    "ratio": "apple",
+    "basis": 17,
+    "akzent": "#086ADC",
+    "farben": "apple",
+    "tageTint": true,
+    "tageStaerke": 3,
+    "tageModus": "wechsel",
+    "erscheinung": "auto",
+    "hintergrund": "farbverlauf",
+    "wetterlage": "klar",
+    "toolbar": "unten",
+    "tabs": [
+      "wetter",
+      "graphs",
+      "karten",
+      "radsat",
+      "mehr"
+    ],
+    "luftStil": "ring",
+    "luftPos": "liste",
+    "mondStil": "phase",
+    "mondPos": "liste",
+    "iconSet": "gefuellt",
+    "strich": 1.5,
+    "wetterSet": "klassisch",
+    "uiSet": "wetterpro",
+    "akzent2": "",
+    "flaeche": "#1A5FB4",
+    "anordnung": "wetterpro",
+    "symbolTausch": {},
+    "himmelStil": "natur",
+    "effSonne": true,
+    "effWolken": true,
+    "effNiederschlag": true,
+    "effSterne": true,
+    "abdunkeln": 20,
+    "bildQuelle": "himmel",
+    "kopfForm": "leiste",
+    "kopfHoehe": 44,
+    "leisteForm": "pille",
+    "leisteHoehe": 50,
+    "leisteText": "immer",
+    "leisteMarke": "flaeche",
+    "glasTitel": true,
+    "glasTabs": true,
+    "glasKnoepfe": true,
+    "glasKacheln": false,
+    "glasBlur": 20,
+    "glasDeckkraft": 70,
+    "glasFarbe": 180,
+    "glasTon": "neutral",
+    "glasRand": true,
+    "abstandGlobal": 100,
+    "kachelAbstand": 16,
+    "kontrastStufe": "standard",
+    "symbolGroesse": 100,
+    "ikonGroesse": 100,
+    "modAktuell": true,
+    "modStunden": true,
+    "modTage": true,
+    "modKarte": true,
+    "spZusatz": true,
+    "spLuft": false,
+    "spMond": false,
+    "spWind": true,
+    "akGefuehlt": true,
+    "akTaupunkt": false,
+    "akFeuchte": true,
+    "akDruck": true,
+    "akWind": true,
+    "akRegen": true,
+    "teilen": true,
+    "teilenOrt": "kopf",
+    "teilenStil": "klassisch",
+    "teilenPos": "oben",
+    "teilenTon": "auto",
+    "teilenFormat": "original",
+    "teilenKnoepfe": "kamera",
+    "teilenWahl": true,
+    "tiOrt": true,
+    "tiWind": true,
+    "tiRegen": true,
+    "tiSonne": true,
+    "tiMarke": true,
+    "aktRadar": true,
+    "aktWebcam": true,
+    "appName": "Wedderleuchte",
+    "appKurz": "",
+    "iconMotiv": "linse",
+    "iconArt": "sonnewolke",
+    "iconHg": "akzent",
+    "iconGroesse": 65,
+    "iconGlanz": false,
+    "appTyp": "pwa",
+    "ordner": "~/KI Projekte/Wetter Apps/Wedderleuchte",
+    "hosting": "github",
+    "zielGeraete": "iphone",
+    "notizen": {},
+    "kamTab": true,
+    "teilenGroesse": 1080,
+    "teilenDatei": "jpeg",
+    "teilenQualitaet": 90,
+    "tiInfos": [
+      "temp",
+      "symbol",
+      "ort",
+      "datum",
+      "wind",
+      "regen",
+      "sonne"
+    ],
+    "tiOrtStufe": "stadt",
+    "tiText": "",
+    "teilenLogo": "appname",
+    "teilenPartner": false,
+    "webcam": false,
+    "webcamLage": "aktuell",
+    "webcamQuelle": "oststadt",
+    "webcamAnsicht": "aktuell",
+    "webcamTeilen": false,
+    "datenQuelle": "open-meteo",
+    "startOrt": "Mannheim",
+    "startLat": 49.4875,
+    "startLon": 8.466,
+    "orteListe": "Mannheim, Mengerschied, Corralejo, El Cotillo, Costa Calma, Morro Jable",
+    "favoriten": true,
+    "gps": true,
+    "wetterModell": "mix",
+    "modellKopf": true,
+    "einheitWind": "kmh",
+    "einheitTemp": "c",
+    "stundenTakt": "6",
+    "vorhersageTage": "8",
+    "quellenAuto": true,
+    "tabGraphs": "meteogramm",
+    "mgSonne": true,
+    "mgTemp": true,
+    "mgWind": true,
+    "mgRegen": true,
+    "mgUv": false,
+    "mgFeuchte": false,
+    "mgWolken": false,
+    "mgDruck": false,
+    "kaTemp": true,
+    "kaRegen": true,
+    "kaWind": true,
+    "kaWolken": true,
+    "kaIsobaren": false,
+    "kaMarken": true,
+    "kartenGrund": "opentopomap",
+    "rsRadar": true,
+    "rsSatFarbe": true,
+    "rsSatIr": true,
+    "rsSatRegen": true,
+    "rsRueckblick": "2",
+    "rsTakt": "10",
+    "mehrSuche": true,
+    "mehrOrte": true,
+    "mehrDarstellung": true,
+    "mehrQuellen": true,
+    "beschriftungZweitfarbe": false,
+    "heuteBalken": false,
+    "stundenSpalten": "3",
+    "module": [
+      {
+        "id": "aktuell",
+        "groesse": "gross",
+        "an": true
+      },
+      {
+        "id": "webcam",
+        "groesse": "mittel",
+        "an": false
+      },
+      {
+        "id": "teilenchip",
+        "groesse": "mittel",
+        "an": false
+      },
+      {
+        "id": "stunden",
+        "groesse": "mittel",
+        "an": true
+      },
+      {
+        "id": "tage",
+        "groesse": "gross",
+        "an": true
+      },
+      {
+        "id": "luft",
+        "groesse": "klein",
+        "an": false
+      },
+      {
+        "id": "mond",
+        "groesse": "klein",
+        "an": false
+      },
+      {
+        "id": "radar",
+        "groesse": "mittel",
+        "an": true
+      },
+      {
+        "id": "warnung",
+        "groesse": "mittel",
+        "an": false
+      },
+      {
+        "id": "sonne",
+        "groesse": "klein",
+        "an": false
+      },
+      {
+        "id": "wind",
+        "groesse": "klein",
+        "an": false
+      },
+      {
+        "id": "pollen",
+        "groesse": "klein",
+        "an": false
+      },
+      {
+        "id": "meteogramm",
+        "groesse": "mittel",
+        "an": false
+      },
+      {
+        "id": "tipps",
+        "groesse": "mittel",
+        "an": false
+      }
+    ],
+    "mgZeilen": [
+      "sonne",
+      "temp",
+      "wind",
+      "regen"
+    ],
+    "mgWerteKlug": false,
+    "mgWertePaare": true,
+    "tippsAuswahl": [
+      "strand",
+      "kiten",
+      "tide",
+      "uv",
+      "schirm",
+      "golden",
+      "sterne",
+      "frost",
+      "hitze"
+    ],
+    "regen2h": "beides",
+    "temperatur": 50,
+    "chroma": 50,
+    "schatten": 50,
+    "namenEigene": [],
+    "repo": "wedderleuchte",
+    "ghKonto": "stephandel",
+    "appVersion": "0.9.0",
+    "designVersion": 1,
+    "himmelKopf": false,
+    "nutzerFarbe": "aus",
+    "aufbau": "reiter"
+  },
+  "abgeleitet": {
+    "schrift": {
+      "grund": "-apple-system, \"SF Pro Text\", system-ui, sans-serif",
+      "display": "-apple-system, \"SF Pro Text\", system-ui, sans-serif",
+      "stufenPx": {
+        "caption": 12,
+        "footnote": 13,
+        "subhead": 15,
+        "body": 17,
+        "title3": 20,
+        "title2": 22,
+        "title1": 28,
+        "large": 34,
+        "hero": 101
+      },
+      "zeilenhoehe": 1.36,
+      "faktor": "apple"
+    },
+    "abstaendePx": {
+      "tap": 44,
+      "rand": 16,
+      "randIpad": 20,
+      "s1": 4,
+      "s2": 8,
+      "s3": 12,
+      "s4": 16,
+      "s5": 20,
+      "s6": 24,
+      "s8": 32
+    },
+    "radiusPx": {
+      "kachel": 16,
+      "button": 12,
+      "chip": 999
+    },
+    "farben": {
+      "hell": {
+        "akzent": "#086ADC",
+        "akzentHover": "#0357B8",
+        "akzentTint": "#E0ECFE",
+        "bg": "#F2F2F7",
+        "bg2": "#FFFFFF",
+        "label": "#000000",
+        "label2": "rgba(60,60,67,.6)",
+        "label3": "rgba(60,60,67,.3)",
+        "trenner": "rgba(60,60,67,.29)",
+        "fuellung": "rgba(120,120,128,.2)",
+        "glasBg": "rgba(255,255,255,0.7)",
+        "glasRand": "rgba(255,255,255,.4)",
+        "glasSchatten": "0 8px 32px rgba(0,0,0,.12)",
+        "schatten": "none",
+        "gruen": "#34C759",
+        "orange": "#FF9500",
+        "rot": "#FF3B30",
+        "aufAkzent": "#FFFFFF",
+        "glasDeckend": "#FFFFFF",
+        "akzent2": null,
+        "schattenKnopf": "none"
+      },
+      "dunkel": {
+        "akzent": "#0A84FF",
+        "akzentHover": "#509BF9",
+        "akzentTint": "#08284F",
+        "bg": "#000000",
+        "bg2": "#1C1C1E",
+        "label": "#FFFFFF",
+        "label2": "rgba(235,235,245,.6)",
+        "label3": "rgba(235,235,245,.3)",
+        "trenner": "rgba(84,84,88,.6)",
+        "fuellung": "rgba(120,120,128,.36)",
+        "glasBg": "rgba(28,28,30,0.6)",
+        "glasRand": "rgba(255,255,255,.15)",
+        "glasSchatten": "0 8px 32px rgba(0,0,0,.5)",
+        "schatten": "none",
+        "gruen": "#30D158",
+        "orange": "#FF9F0A",
+        "rot": "#FF453A",
+        "aufAkzent": "#000000",
+        "glasDeckend": "#1C1C1E",
+        "akzent2": null,
+        "schattenKnopf": "none"
+      },
+      "akzentOklch": {
+        "l": 0.543,
+        "c": 0.192,
+        "h": 257.4
+      },
+      "tagA": {
+        "hell": "#F2F7FF",
+        "dunkel": "#22272E"
+      },
+      "tagB": {
+        "hell": "#FCF3FF",
+        "dunkel": "#2A242B"
+      },
+      "tagReiheHell": [
+        "#F2F7FF",
+        "#FCF3FF",
+        "#F2F7FF",
+        "#FCF3FF",
+        "#F2F7FF",
+        "#FCF3FF",
+        "#F2F7FF"
+      ],
+      "kontrast": {
+        "akzentHell": 4.58,
+        "akzentDunkel": 5.76,
+        "aufHell": 5.12,
+        "aufDunkel": 5.76,
+        "labelHell": 21,
+        "labelDunkel": 17.01,
+        "zweitHell": null,
+        "zweitDunkel": null,
+        "glasHell": 10.02,
+        "glasDunkel": 4.47
+      }
+    },
+    "himmel": {
+      "klar": "linear-gradient(180deg, #2F7FE0 0%, #6FB1F0 52%, #BFE0F7 100%)",
+      "daemmerung": "linear-gradient(180deg, #26346B 0%, #A85A86 52%, #F2A766 100%)",
+      "bewoelkt": "linear-gradient(180deg, #4F6378 0%, #7B8C9E 52%, #A9B6C2 100%)",
+      "nebel": "linear-gradient(180deg, #56626D 0%, #7F8A94 52%, #A7B0B7 100%)",
+      "regen": "linear-gradient(180deg, #2E3B4D 0%, #4F6075 52%, #7A8A9C 100%)",
+      "gewitter": "linear-gradient(180deg, #1B1D31 0%, #35324F 52%, #5F5672 100%)",
+      "schnee": "linear-gradient(180deg, #566F8A 0%, #8299B0 52%, #B4C4D3 100%)",
+      "nacht": "linear-gradient(180deg, #070B1F 0%, #151C3F 52%, #2A3463 100%)"
+    },
+    "bewegung": {
+      "dauerMs": 280,
+      "ease": "cubic-bezier(.32,.72,0,1)"
+    },
+    "symbole": {
+      "set": "gefuellt",
+      "strich": 1.5
+    },
+    "schutzregeln": {
+      "minTextPx": 11,
+      "tapPx": 44,
+      "kontrastMin": 4.5,
+      "zeilenlaengeCh": 65,
+      "safeArea": true,
+      "dynamicTypeProzent": [
+        130,
+        150
+      ]
+    },
+    "kameraTeilen": {
+      "an": true,
+      "einstieg": "tab",
+      "format": "original",
+      "seitenverhaeltnis": "wie das Foto",
+      "pixel": null,
+      "datei": "jpeg",
+      "qualitaet": 0.9,
+      "vorlage": "klassisch",
+      "lage": "oben",
+      "ton": "auto",
+      "infos": [
+        "temp",
+        "symbol",
+        "ort",
+        "datum",
+        "wind",
+        "regen",
+        "sonne"
+      ],
+      "ortStufe": "stadt",
+      "text": "",
+      "logo": "appname",
+      "partner": null,
+      "storyFreiPx": null
+    },
+    "webcam": {
+      "an": false,
+      "lage": "aktuell",
+      "ansicht": "aktuell",
+      "teilen": false,
+      "quelle": {
+        "id": "oststadt",
+        "name": "Mannheim-Oststadt",
+        "betreiber": "Dr. Michele Klymiuk",
+        "quelle": "klymiuk.info",
+        "seite": "https://www.klymiuk.info/wetter/webcam.html",
+        "blick": "Stadtmitte, fast nur Himmel, Fernmeldeturm",
+        "takt": "alle 15 Minuten"
+      },
+      "erlaubnis": "erforderlich"
+    },
+    "daten": {
+      "quelle": "open-meteo",
+      "modell": "best_match",
+      "startort": {
+        "name": "Mannheim",
+        "lat": 49.4875,
+        "lon": 8.466
+      },
+      "orte": [
+        "Mannheim",
+        "Mengerschied",
+        "Corralejo",
+        "El Cotillo",
+        "Costa Calma",
+        "Morro Jable"
+      ],
+      "einheiten": {
+        "temperatur": "°C",
+        "wind": "km/h"
+      },
+      "stundenTaktH": 6,
+      "tage": 8,
+      "quellenangaben": [
+        "Wetterdaten: Open-Meteo.com (CC BY 4.0)",
+        "Karte: © OpenStreetMap-Mitwirkende, OpenTopoMap (CC BY-SA)",
+        "Radar: RainViewer",
+        "Satellit: EUMETSAT"
+      ]
+    },
+    "reiter": [
+      "Reiter Graphs: Meteogramm mit Zeilen Sonnenschein (min, Balken), Temperatur (°C, Linie), Wind (km/h, Balken), Niederschlag (mm, Balken), in dieser Reihenfolge von oben nach unten, gemeinsame Zeitachse, Baustein `meteogramm.js` mit `meteogramm.css` aus dem Projektpaket (nicht nachbauen, nicht ändern). Werteliste unter dem Diagramm: immer alle Werte (`werteKlug: false`); jede Zeile einzeln (`wertePaare: []`).",
+      "Reiter Karten: Grundkarte OpenTopoMap, Ebenen Temperatur, Niederschlag, Wind, Bewölkung, Wetter-Marken als Chips umschaltbar, Zeitleiste über die nächsten 7 Tage, Baustein `wpkarte.js` (Modus „karten\").",
+      "Reiter Rad/Sat: Ebenen Radar, Satellit Farbe, Infrarot s/w, Satellit + Regen, Rückblick 2 h, ein Bild alle 10 min (13 Bilder), Zeitleiste mit Abspielen, Baustein `wpkarte.js` (Modus „radsat\").",
+      "Reiter Mehr: oben der App-Name „Wedderleuchte\" als Titel, darunter Ortssuche, Orte und Favoriten, Darstellung, Quellen.",
+      "Regenradar-Kachel auf dem Startbildschirm: RainViewer, letzte Aufnahme über dunkler Grundkarte, Ort als Punkt, Uhrzeit oben rechts; Antippen öffnet Rad/Sat."
+    ],
+    "tagesliste": {
+      "beschriftungZweitfarbe": false,
+      "heuteBalken": false,
+      "farbe": "var(--akzent)",
+      "stundenSpalten": {
+        "anzahl": 3,
+        "taktH": 6,
+        "uhrzeit": "mittig"
+      }
+    },
+    "startbildschirm": {
+      "raster": {
+        "iphoneSpalten": 2,
+        "ipadSpalten": 4,
+        "ab": "768px",
+        "luecke": "var(--kachel-abstand)"
+      },
+      "module": [
+        {
+          "nr": 1,
+          "id": "aktuell",
+          "name": "Aktuell",
+          "groesse": "gross",
+          "spaltenIphone": 2,
+          "spaltenIpad": 4,
+          "inhalt": "zweispaltig wie in der Regel „Anordnung WetterPro\": links Symbol und Temperatur, rechts Wetterlage, alle gewählten Werte und Windrose"
+        },
+        {
+          "nr": 2,
+          "id": "stunden",
+          "name": "Stunden",
+          "groesse": "mittel",
+          "spaltenIphone": 2,
+          "spaltenIpad": 2,
+          "inhalt": "drei Zeitpunkte im 6-Stunden-Takt"
+        },
+        {
+          "nr": 3,
+          "id": "tage",
+          "name": "Tagesliste",
+          "groesse": "gross",
+          "spaltenIphone": 2,
+          "spaltenIpad": 4,
+          "inhalt": "alle 8 Vorhersagetage mit allen gewählten Spalten"
+        },
+        {
+          "nr": 4,
+          "id": "radar",
+          "name": "Regenradar",
+          "groesse": "mittel",
+          "spaltenIphone": 2,
+          "spaltenIpad": 2,
+          "inhalt": "Karte mit Regen der letzten Aufnahme, Ort als Punkt, Zeile „Trocken bis 19 Uhr\" und Chip „Karte öffnen\"; Antippen öffnet die große Karte; dazu Regen der nächsten 2 Stunden: ein Satz, darunter 8 Balken à 15 Minuten"
+        }
+      ],
+      "aus": [
+        "webcam",
+        "teilenchip",
+        "luft",
+        "mond",
+        "warnung",
+        "sonne",
+        "wind",
+        "pollen",
+        "meteogramm",
+        "tipps"
+      ],
+      "bedingt": {
+        "webcam": {
+          "nurWenn": "webcam an und webcamLage = kachel",
+          "jetzt": false,
+          "groesse": "mittel",
+          "an": false
+        },
+        "teilenchip": {
+          "nurWenn": "teilen an und teilenOrt = kachel",
+          "jetzt": false,
+          "groesse": "mittel",
+          "an": false
+        }
+      }
+    },
+    "querformat": true,
+    "querformatRegeln": {
+      "media": "(orientation: landscape) and (max-height: 500px)",
+      "spalten": "1fr 1fr",
+      "kopfMaxPx": 40,
+      "leisteMaxBreitePx": 480,
+      "safeAreaSeiten": true
+    },
+    "dynamicType": {
+      "pruefStufenProzent": [
+        130,
+        150
+      ],
+      "einheit": "rem",
+      "heroWachstum": 0.4,
+      "titelWachstum": 0.6,
+      "werteZweizeilig": true,
+      "kopfzeileKuerzen": "ellipsis"
+    },
+    "schriftDateien": [],
+    "kontrastApca": [
+      {
+        "paar": "Text auf Kachel hell",
+        "lc": 106,
+        "schriftPx": 17,
+        "noetig": 75,
+        "ok": true
+      },
+      {
+        "paar": "Nebentext auf Kachel hell",
+        "lc": 61.9,
+        "schriftPx": 15,
+        "noetig": 90,
+        "ok": false
+      },
+      {
+        "paar": "Akzent auf Hintergrund hell",
+        "lc": 67,
+        "schriftPx": 17,
+        "noetig": 75,
+        "ok": false
+      },
+      {
+        "paar": "Text auf Akzentfläche hell",
+        "lc": 79.9,
+        "schriftPx": 17,
+        "noetig": 75,
+        "ok": true
+      },
+      {
+        "paar": "Text auf Kachel dunkel",
+        "lc": 106.3,
+        "schriftPx": 17,
+        "noetig": 75,
+        "ok": true
+      },
+      {
+        "paar": "Nebentext auf Kachel dunkel",
+        "lc": 45.3,
+        "schriftPx": 15,
+        "noetig": 90,
+        "ok": false
+      },
+      {
+        "paar": "Akzent auf Hintergrund dunkel",
+        "lc": 38.4,
+        "schriftPx": 17,
+        "noetig": 75,
+        "ok": false
+      },
+      {
+        "paar": "Text auf Akzentfläche dunkel",
+        "lc": 40.8,
+        "schriftPx": 17,
+        "noetig": 75,
+        "ok": false
+      }
+    ]
+  },
+  "module": [
+    {
+      "nr": 1,
+      "id": "aktuell",
+      "name": "Aktuell",
+      "groesse": "gross",
+      "spaltenIphone": 2,
+      "spaltenIpad": 4,
+      "inhalt": "zweispaltig wie in der Regel „Anordnung WetterPro\": links Symbol und Temperatur, rechts Wetterlage, alle gewählten Werte und Windrose"
+    },
+    {
+      "nr": 2,
+      "id": "stunden",
+      "name": "Stunden",
+      "groesse": "mittel",
+      "spaltenIphone": 2,
+      "spaltenIpad": 2,
+      "inhalt": "drei Zeitpunkte im 6-Stunden-Takt"
+    },
+    {
+      "nr": 3,
+      "id": "tage",
+      "name": "Tagesliste",
+      "groesse": "gross",
+      "spaltenIphone": 2,
+      "spaltenIpad": 4,
+      "inhalt": "alle 8 Vorhersagetage mit allen gewählten Spalten"
+    },
+    {
+      "nr": 4,
+      "id": "radar",
+      "name": "Regenradar",
+      "groesse": "mittel",
+      "spaltenIphone": 2,
+      "spaltenIpad": 2,
+      "inhalt": "Karte mit Regen der letzten Aufnahme, Ort als Punkt, Zeile „Trocken bis 19 Uhr\" und Chip „Karte öffnen\"; Antippen öffnet die große Karte; dazu Regen der nächsten 2 Stunden: ein Satz, darunter 8 Balken à 15 Minuten"
+    }
+  ],
+  "meteogramm": {
+    "aktiv": true,
+    "zeilen": [
+      "sonne",
+      "temp",
+      "wind",
+      "regen"
+    ],
+    "werteKlug": false,
+    "wertePaare": [],
+    "dateien": [
+      "meteogramm.js",
+      "meteogramm.css"
+    ],
+    "bausteinStand": "2026-10-15"
+  },
+  "tipps": [
+    {
+      "id": "schirm",
+      "name": "Schirm",
+      "vorrang": 1,
+      "regel": "Regenrisiko in den restlichen Stunden bis Mitternacht ≥ 40 %",
+      "daten": "Open-Meteo Vorhersage `hourly=precipitation_probability` ab der aktuellen Stunde",
+      "nurKueste": false
+    },
+    {
+      "id": "frost",
+      "name": "Frost",
+      "vorrang": 2,
+      "regel": "Tiefstwert in den restlichen Stunden bis Mitternacht (auch die kommende Nacht) ≤ 0 °C",
+      "daten": "Open-Meteo Vorhersage `hourly=temperature_2m` ab der aktuellen Stunde",
+      "nurKueste": false
+    },
+    {
+      "id": "hitze",
+      "name": "Hitze",
+      "vorrang": 3,
+      "regel": "Höchstwert in den restlichen Stunden bis Mitternacht ≥ 30 °C",
+      "daten": "Open-Meteo Vorhersage `hourly=temperature_2m` ab der aktuellen Stunde",
+      "nurKueste": false
+    },
+    {
+      "id": "uv",
+      "name": "UV-Schutz",
+      "vorrang": 4,
+      "regel": "UV-Index in den restlichen Stunden bis Mitternacht ≥ 6 (nach dem Sonnenuntergang nie)",
+      "daten": "Open-Meteo Vorhersage `hourly=uv_index` ab der aktuellen Stunde",
+      "nurKueste": false
+    },
+    {
+      "id": "kiten",
+      "name": "Kiten",
+      "vorrang": 5,
+      "regel": "nur an Küstenorten; in den restlichen Stunden bis Mitternacht: Wind 20–40 km/h (Mittelwind, nicht Böen), kein Gewitter, noch mindestens 2 Stunden Tageslicht",
+      "daten": "Open-Meteo Vorhersage `hourly=wind_speed_10m,wind_direction_10m,weather_code` ab der aktuellen Stunde (Wettercode 95–99 = Gewitter); Küstenort wie bei Ebbe und Flut",
+      "nurKueste": true
+    },
+    {
+      "id": "tide",
+      "name": "Ebbe und Flut",
+      "vorrang": 6,
+      "regel": "nur an Küstenorten (die Marine-API liefert für den Ort Daten): nächster Tiefst- und Höchststand mit Uhrzeit",
+      "daten": "Open-Meteo Marine-API: `sea_level_height_msl` (stündlich), Küstenort einmal je Ort prüfen und merken",
+      "nurKueste": true
+    },
+    {
+      "id": "strand",
+      "name": "Strand",
+      "vorrang": 7,
+      "regel": "nur an Küstenorten; in den restlichen Stunden bis Mitternacht: Höchstwert ≥ 22 °C, Regenrisiko < 20 %, Wind < 30 km/h, noch mindestens 2 Stunden Tageslicht (Binnenland: kein „Badewetter\"-Tipp)",
+      "daten": "Open-Meteo Vorhersage `hourly=temperature_2m,precipitation_probability,wind_speed_10m` ab der aktuellen Stunde; Küstenort wie bei Ebbe und Flut",
+      "nurKueste": true
+    },
+    {
+      "id": "golden",
+      "name": "Goldene Stunde",
+      "vorrang": 8,
+      "regel": "ab 45 Minuten vor Sonnenuntergang (mit Uhrzeit), solange die Sonne heute noch nicht untergegangen ist",
+      "daten": "Sonnenzeiten: Open-Meteo `daily=sunrise,sunset`",
+      "nurKueste": false
+    },
+    {
+      "id": "sterne",
+      "name": "Sterne",
+      "vorrang": 9,
+      "regel": "nachts (Sonnenuntergang bis -aufgang) Bewölkung ≤ 20 %",
+      "daten": "Open-Meteo Vorhersage: `cloud_cover` der Nachtstunden ab der aktuellen Stunde, Sonnenzeiten",
+      "nurKueste": false
+    }
+  ],
+  "tippsModul": {
+    "an": false,
+    "groesse": "mittel",
+    "hoechstens": 2,
+    "leer": "Heute nichts Besonderes",
+    "nurRestlicheStunden": true
+  },
+  "regen2h": {
+    "darstellung": "beides",
+    "modul": "radar",
+    "an": true,
+    "balken": 8,
+    "minutenJeBalken": 15,
+    "schwelleMm": 0.1,
+    "daten": "Open-Meteo minutely_15=precipitation (8 Werte à 15 Minuten, je Wert ein Balken)",
+    "saetze": [
+      "Die nächsten 2 Stunden bleibt es trocken",
+      "Regen ab 14:30 Uhr für 45 Minuten"
+    ]
+  },
+  "meteogrammModul": {
+    "an": false,
+    "groesse": "mittel",
+    "zeilen": [
+      "temp",
+      "regen"
+    ],
+    "ziel": "#start-meteogramm"
+  },
+  "stimmung": {
+    "seriösVerspielt": 50,
+    "warmKuehl": 50,
+    "farbigkeit": 50,
+    "schatten": 50,
+    "abgeleitet": {
+      "farbtonVerschiebungGrad": 0,
+      "chromaFaktor": 1,
+      "schattenStaerke": 1,
+      "schattenKachel": {
+        "hell": "none",
+        "dunkel": "none"
+      },
+      "schattenKnopf": {
+        "hell": "none",
+        "dunkel": "none"
+      }
+    },
+    "satz": "Stimmung: ausgewogen (50 von 100 zwischen seriös und verspielt), Farbton neutral, Farbigkeit normal (100 % Farbkraft), Schatten mittel."
+  },
+  "projekt": {
+    "name": "Wedderleuchte",
+    "kurzname": "Wedderleuchte",
+    "ordner": "~/KI Projekte/Wetter Apps/Wedderleuchte",
+    "repo": "wedderleuchte",
+    "seite": "https://stephandel.github.io/wedderleuchte/",
+    "version": "0.9.0",
+    "designVersion": 1
+  },
+  "aufbau": {
+    "art": "reiter",
+    "bereiche": [
+      "wetter",
+      "graphs",
+      "karten",
+      "radsat",
+      "mehr"
+    ],
+    "sprungleiste": false,
+    "tabLeiste": true
+  },
+  "nutzerFarbe": {
+    "art": "aus",
+    "speicherSchluessel": "wedderleuchte-farbe",
+    "attribut": "data-farbe",
+    "optionen": []
+  }
+}

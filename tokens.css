@@ -1,0 +1,166 @@
+/* tokens.css – erzeugt vom Design-Konfigurator am 20.10.2026
+   Ersetzt die Variablenwerte aus apple-ui/base.css. Nach base.css einbinden.
+   Vorrang: Die Werte hier gelten vor den Standardwerten aus base.css, auch bei der Schriftskala.
+   Stimmung: ausgewogen, normal, mit Apple-Bewegung */
+
+:root {
+  /* Schrift */
+  --font: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --font-display: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  --fs-large-title: 2.125rem;   /* 34 px */
+  --fs-title1: 1.75rem;        /* 28 px */
+  --fs-title2: 1.375rem;        /* 22 px */
+  --fs-title3: 1.25rem;        /* 20 px */
+  --fs-body: 1.0625rem;          /* 17 px */
+  --fs-subhead: 0.9375rem;       /* 15 px */
+  --fs-footnote: 0.8125rem;      /* 13 px */
+  --fs-caption: 0.75rem;       /* 12 px */
+  --fs-hero: 6.3125rem;          /* 101 px */
+  --lh: 1.36;
+  --typo-ratio: apple; /* feste Apple-Stufen statt Faktor */
+
+  /* Abstände (Dichte × 1.00) */
+  --s1: 4px;   --s2: 8px;   --s3: 12px;   --s4: 16px;   --s5: 20px;   --s6: 24px;   --s8: 32px;
+  --tap: 44px;
+  --rand: 16px;
+  --kachel-abstand: 16px;   /* Lücke zwischen den Kacheln */
+  --abstand-faktor: 1;   /* schon in --s1 … --s8 eingerechnet */
+  --sym-groesse: 30px;   /* Wettersymbol in Listen; Aktuell 112 px, Stunden 60 px */
+  --ikon-groesse: 24px;   /* Bedien-Symbole */
+  --r-kachel: 16px; --r-button: 12px; --r-chip: 999px;
+
+  /* Stimmung (ausgewogen (50 von 100 zwischen seriös und verspielt), Farbton neutral, Farbigkeit normal (100 % Farbkraft), Schatten mittel) */
+  --stimmung: 50;             /* 0 seriös … 100 verspielt */
+  --farbton-verschiebung: 0deg;   /* schon in alle Farben eingerechnet; minus = wärmer */
+  --farbigkeit: 1.00;        /* Faktor für die Chroma (OKLCH), schon eingerechnet */
+  --schatten-staerke: 1.00;  /* 0 = keine, 1 = normal, 2 = doppelt */
+  --schatten-knopf: none;
+
+  /* Bewegung */
+  --dauer: 280ms;
+  --ease: cubic-bezier(.32,.72,0,1);
+
+  /* Symbole */
+  --strich: 1.5;
+  --ikon-set: gefuellt;
+  --wetter-symbole: klassisch;
+
+  /* Glas */
+  --glas-blur: 20px;
+  --glas-saettigung: 180%;
+
+  /* Tagesfarben: wechsel, Stärke 3 % */
+  --tag-staerke: 3;
+
+  /* Himmel nach Wetterlage */
+  --himmel-klar: linear-gradient(180deg, #2F7FE0 0%, #6FB1F0 52%, #BFE0F7 100%);
+  --himmel-daemmerung: linear-gradient(180deg, #26346B 0%, #A85A86 52%, #F2A766 100%);
+  --himmel-bewoelkt: linear-gradient(180deg, #4F6378 0%, #7B8C9E 52%, #A9B6C2 100%);
+  --himmel-nebel: linear-gradient(180deg, #56626D 0%, #7F8A94 52%, #A7B0B7 100%);
+  --himmel-regen: linear-gradient(180deg, #2E3B4D 0%, #4F6075 52%, #7A8A9C 100%);
+  --himmel-gewitter: linear-gradient(180deg, #1B1D31 0%, #35324F 52%, #5F5672 100%);
+  --himmel-schnee: linear-gradient(180deg, #566F8A 0%, #8299B0 52%, #B4C4D3 100%);
+  --himmel-nacht: linear-gradient(180deg, #070B1F 0%, #151C3F 52%, #2A3463 100%);
+  --hintergrund-modus: farbverlauf;
+  --abdunkeln: 0.2;
+  --kopf-hoehe: 44px;
+  --leiste-hoehe: 50px;
+
+  /* Ergänzt beim Bau (fehlte im Konfigurator): Radar-Kachel und Foto-Band; Werte wie die dunklen Systemfarben */
+  --radar-grund: #1C1C1E;
+  --radar-punkt: #FFFFFF;
+  --bild-band: rgba(0,0,0,.55);
+  --bild-text: #FFFFFF;
+  --bild-schwarz: #000000;
+  --bild-band-hell: rgba(255,255,255,.7);   /* Farbton automatisch: helles Band mit dunkler Schrift */
+  --bild-text-dunkel: #000000;
+
+  /* Ergänzt beim Bau: Inhalt auf dem Himmel-Verlauf (Regel 13: Text weiß, Kacheln als Glas).
+     Schleier oben 20 %, nach unten dichter, damit weiße Schrift auch auf dem hellen Verlaufsende 4,5:1 erreicht. */
+  --himmel-schleier: linear-gradient(180deg, rgba(0,0,0,.2) 0%, rgba(0,0,0,.4) 50%, rgba(0,0,0,.55) 100%);
+  --auf-himmel-text: #FFFFFF;
+  --auf-himmel-text-2: rgba(255,255,255,.88);
+  --auf-himmel-trenner: rgba(255,255,255,.3);
+  --auf-himmel-kachel: rgba(0,0,0,.3);
+  --auf-himmel-kachel-voll: #22303F;   /* ohne Transparenz (prefers-reduced-transparency) */
+  --auf-himmel-fuellung: rgba(255,255,255,.16);
+  --auf-himmel-auswahl: rgba(255,255,255,.3);
+  --auf-himmel-tag-a: rgba(255,255,255,.04);
+  --auf-himmel-tag-b: rgba(255,255,255,.09);
+  --auf-himmel-akzent: #A8D1FF;        /* Akzent als Text auf dunklem Glas */
+
+  /* Safe Areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Hell */
+  --akzent: #086ADC;            /* oklch(54.3% 0.192 257) */
+  --akzent-hover: #0357B8;
+  --akzent-tint: #E0ECFE;      /* zarte Fläche, z. B. ausgewählte Zeile */
+  --akzent-fuellung: color-mix(in srgb, var(--akzent) 20%, transparent);
+  --auf-akzent: #FFFFFF;       /* Text auf Akzentfläche, 5,1:1 */
+  --bg: #F2F2F7;
+  --bg-2: #FFFFFF;
+  --label: #000000;
+  --label-2: rgba(60,60,67,.6);
+  --label-3: rgba(60,60,67,.3);
+  --trenner: rgba(60,60,67,.29);
+  --fuellung: rgba(120,120,128,.2);
+  --glas-bg: rgba(255,255,255,0.7);
+  --glas-rand: rgba(255,255,255,.4);
+  --glas-schatten: 0 8px 32px rgba(0,0,0,.12);
+  --akzent-2: var(--label);   /* keine Zweitfarbe: Werte in Textfarbe */
+  --schatten: none;
+  --gruen: #34C759; --orange: #FF9500; --rot: #FF3B30;
+  --tag-a: #F2F7FF;
+  --tag-b: #FCF3FF;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --akzent: #0A84FF;            /* oklch(62.4% 0.206 255) */
+    --akzent-hover: #509BF9;
+    --akzent-tint: #08284F;      /* zarte Fläche, z. B. ausgewählte Zeile */
+    --akzent-fuellung: color-mix(in srgb, var(--akzent) 20%, transparent);
+    --auf-akzent: #000000;       /* Text auf Akzentfläche, 5,8:1 */
+    --bg: #000000;
+    --bg-2: #1C1C1E;
+    --label: #FFFFFF;
+    --label-2: rgba(235,235,245,.6);
+    --label-3: rgba(235,235,245,.3);
+    --trenner: rgba(84,84,88,.6);
+    --fuellung: rgba(120,120,128,.36);
+    --glas-bg: rgba(28,28,30,0.6);
+    --glas-rand: rgba(255,255,255,.15);
+    --glas-schatten: 0 8px 32px rgba(0,0,0,.5);
+    --akzent-2: var(--label);   /* keine Zweitfarbe: Werte in Textfarbe */
+    --schatten: none;
+    --gruen: #30D158; --orange: #FF9F0A; --rot: #FF453A;
+    --tag-a: #22272E;
+    --tag-b: #2A242B;
+  }
+}
+
+@media (min-width: 768px) { :root { --rand: 20px; } }
+@media (prefers-reduced-motion: reduce) { :root { --dauer: 0ms; } }
+
+/* Glas: nur auf schwebenden Flächen (Kopfzeile, Tab-Leiste, Knöpfe und Chips) */
+.glas {
+  background: var(--glas-bg);
+  border: 1px solid var(--glas-rand);
+  box-shadow: var(--glas-schatten);
+  -webkit-backdrop-filter: blur(var(--glas-blur)) saturate(var(--glas-saettigung));
+  backdrop-filter: blur(var(--glas-blur)) saturate(var(--glas-saettigung));
+}
+@supports not (backdrop-filter: blur(1px)) { .glas { background: color-mix(in srgb, var(--bg-2) 92%, transparent); } }
+@media (prefers-reduced-transparency: reduce) { .glas { background: var(--bg-2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* Nutzung der Tagesfarben in einer Liste */
+.liste > .tag:nth-child(odd)  { background: var(--tag-a); }
+.liste > .tag:nth-child(even) { background: var(--tag-b); }
+
+/* Schatten nur auf Kacheln und Knöpfen */
+.kachel { box-shadow: var(--schatten); }
+.button, .chip { box-shadow: var(--schatten-knopf); }

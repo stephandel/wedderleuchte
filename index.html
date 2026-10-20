@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wedderleuchte</title>
+<meta name="theme-color" content="#086ADC">
+<meta name="color-scheme" content="light dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Wedderleuchte">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<link rel="stylesheet" href="meteogramm.css">
+<link rel="stylesheet" href="wpkarte.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="himmel" id="himmel" aria-hidden="true"></div>
+
+<header class="kopf glas" id="kopf">
+  <button type="button" class="kopf-knopf" id="kopfOrte" aria-label="Orte"></button>
+  <div class="kopf-mitte">
+    <h1 class="kopf-titel" id="kopfTitel">Wedderleuchte</h1>
+    <p class="kopf-modell" id="kopfModell">Modell: Beste Mischung</p>
+  </div>
+  <button type="button" class="kopf-knopf" id="kopfSuche" aria-label="Ort suchen"></button>
+  <button type="button" class="kopf-knopf" id="kopfTeilen" aria-label="Wetter mit Foto teilen"></button>
+</header>
+
+<div class="meldung" id="meldung" role="status" hidden></div>
+
+<main id="inhalt">
+  <section class="reiter" id="tab-wetter" aria-labelledby="kopfTitel"></section>
+  <section class="reiter" id="tab-graphs" hidden></section>
+  <section class="reiter" id="tab-radsat" hidden></section>
+  <section class="reiter" id="tab-mehr" hidden></section>
+</main>
+
+<nav class="leiste glas" id="leiste" aria-label="Reiter"></nav>
+
+<!-- Teilen-Bildschirm: immer schwarz -->
+<div class="teilen" id="teilen" role="dialog" aria-modal="true" aria-label="Wetter mit Foto teilen" hidden>
+  <div class="teilen-kopf">
+    <button type="button" class="teilen-text" id="teilenZu">Abbrechen</button>
+  </div>
+  <div class="teilen-buehne"><canvas id="bild" width="1080" height="1440" role="img" aria-label="Vorschau des Wetterbilds"></canvas></div>
+  <div class="vorlagen" id="vorlagen" role="radiogroup" aria-label="Vorlage"></div>
+  <div class="teilen-unten">
+    <button type="button" class="teilen-text" id="teilenFotos">Fotos</button>
+    <button type="button" class="teilen-ausloeser" id="teilenGo" aria-label="Teilen"></button>
+    <button type="button" class="teilen-text" id="teilenKamera">Kamera</button>
+  </div>
+  <input type="file" id="dateiFotos" accept="image/*" hidden>
+  <input type="file" id="dateiKamera" accept="image/*" capture="environment" hidden>
+</div>
+
+<script src="symbole.js"></script>
+<script src="ikonen.js"></script>
+<script src="lib/leaflet/leaflet.min.js"></script>
+<script src="meteogramm.js"></script>
+<script src="wpkarte.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

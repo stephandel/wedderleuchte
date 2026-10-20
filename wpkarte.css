@@ -1,0 +1,77 @@
+/* WetterKarte – gemeinsamer Kartenbaustein (Reiter „Karten" und „Rad/Sat").
+   Farben über Variablen, Vorgabe = WeatherPro-Blau. Eine App setzt die --wk-* am Container oder an :root um. */
+.wk {
+  --wk-leiste: var(--kopf, #0f4a94);        /* Ebenenleiste rechts */
+  --wk-leiste-an: var(--hell, #2069c4);     /* aktiver Knopf */
+  --wk-zeit: var(--leiste, #0c2e5c);        /* Zeitleiste unten */
+  --wk-text: #fff;
+  --wk-still: var(--dim, #c6d5ea);
+  --wk-akzent: var(--gelb, #ffd633);
+  --wk-rand: var(--linie, rgba(255,255,255,.22));
+  --wk-hoehe: calc(100dvh - 190px);
+  display: flex; flex-direction: column; height: var(--wk-hoehe); min-height: 340px; color: var(--wk-text);
+  font-variant-numeric: tabular-nums; position: relative;
+}
+.wk-oben { flex: 1; min-height: 0; display: flex; }
+.wk-karte { flex: 1; min-width: 0; position: relative; background: #7fa7c9; }
+.wk-karte .leaflet-container { width: 100%; height: 100%; background: #7fa7c9; font: inherit; }
+.wk-karte .leaflet-container a { color: inherit; }
+
+/* Ebenenleiste rechts */
+.wk-leiste { width: 56px; flex: none; display: flex; flex-direction: column; background: var(--wk-leiste); border-left: 0.5px solid var(--wk-rand); overflow-y: auto; scrollbar-width: none; }
+.wk-leiste::-webkit-scrollbar { display: none; }
+.wk-knopf { width: 56px; height: 52px; flex: none; border: 0; border-bottom: 0.5px solid var(--wk-rand); background: none; display: grid; place-items: center; cursor: pointer; color: var(--wk-still); -webkit-tap-highlight-color: transparent; }
+.wk-knopf svg { width: 26px; height: 26px; display: block; }
+.wk-knopf.is-on { background: var(--wk-leiste-an); color: var(--wk-text); }
+.wk-knopf:disabled { opacity: .35; cursor: default; }
+.wk-knopf:focus-visible { outline: 2px solid var(--wk-akzent); outline-offset: -3px; }
+.wk-trenner { flex: 1; min-height: 8px; }
+
+/* Zeitleiste unten */
+.wk-zeit { background: var(--wk-zeit); padding: 6px 10px 10px; border-top: 0.5px solid var(--wk-rand); }
+.wk-regler { display: flex; align-items: center; gap: 2px; }
+.wk-tk { width: 40px; height: 40px; border: 0; background: none; color: var(--wk-text); display: grid; place-items: center; cursor: pointer; flex: none; -webkit-tap-highlight-color: transparent; }
+.wk-tk svg { width: 18px; height: 18px; display: block; }
+.wk-tk:disabled { opacity: .35; }
+.wk-spur { flex: 1; min-width: 0; position: relative; padding: 0 2px 30px; }
+.wk-range { width: 100%; margin: 0; display: block; accent-color: #fff; height: 28px; }
+.wk-ticks { position: absolute; left: 10px; right: 10px; bottom: 16px; height: 14px; font-size: 10.5px; color: var(--wk-still); pointer-events: none; }
+.wk-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.wk-ticks span::before { content: ""; display: block; width: 0.5px; height: 4px; background: var(--wk-still); margin: 0 auto 1px; }
+.wk-tage { position: absolute; left: 10px; right: 10px; bottom: 0; height: 14px; font-size: 11px; font-weight: 600; color: var(--wk-text); pointer-events: none; }
+.wk-tage span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.wk-tage span.is-heute { color: var(--wk-akzent); }
+.wk-lade { position: absolute; right: 8px; top: 44px; z-index: 500; font-size: 11.5px; color: var(--wk-still); background: rgba(0,0,0,.45); padding: 2px 7px; pointer-events: none; }
+
+/* Marken */
+.wk-mk { background: none; border: 0; }
+.wk-marke { position: absolute; left: 0; top: 0; font-size: 12.5px; line-height: 1.15; white-space: nowrap; color: #fff;
+  text-shadow: 0 0 3px rgba(0,0,0,.95), 0 0 6px rgba(0,0,0,.7); pointer-events: none; }
+.wk-marke i { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #fff; border: 0.5px solid rgba(0,0,0,.6); box-shadow: 0 0 3px rgba(0,0,0,.6); }
+.wk-marke .wk-name { position: absolute; left: 8px; top: -8px; font-weight: 500; }
+.wk-marke .wk-w { position: absolute; right: 7px; top: -34px; display: flex; align-items: center; gap: 1px; }
+.wk-marke .wk-w svg { width: 34px; height: 34px; display: block; filter: drop-shadow(0 0 2px rgba(0,0,0,.9)); }
+.wk-marke .wk-w b { font-size: 14px; font-weight: 500; }
+.wk-marke.is-hier i { width: 12px; height: 12px; left: -6px; top: -6px; background: var(--wk-akzent); box-shadow: 0 0 0 3px rgba(255,214,51,.3); }
+.wk-marke.is-hier .wk-name { color: var(--wk-akzent); font-weight: 600; font-size: 13.5px; }
+.wk-marke.is-hier .wk-w { top: -38px; }
+.wk-marke.is-hier .wk-w svg { width: 40px; height: 40px; }
+.wk-marke.is-hier .wk-w b { font-size: 16px; }
+.wk-ohne-wetter .wk-marke .wk-w { display: none; }
+
+/* Flächen und Bilder */
+.wk-flaeche { image-rendering: auto; }
+.wk-basis-bild { image-rendering: auto; }
+
+/* Quellen, Hinweise, Legende */
+.wk-quelle { position: absolute; left: 6px; right: 6px; bottom: 4px; z-index: 500; font-size: 10px; line-height: 1.25; letter-spacing: .04em; color: rgba(255,255,255,.85); text-shadow: 0 0 3px rgba(0,0,0,.95); pointer-events: none; }
+.wk-hinweis { position: absolute; left: 12px; right: 12px; bottom: 22px; z-index: 500; text-align: center; font-size: 12.5px; line-height: 1.4; color: #fff; padding: 6px 10px; background: rgba(11,26,46,.8); pointer-events: none; }
+.wk-legende { position: absolute; left: 6px; top: 6px; z-index: 500; font-size: 10.5px; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,.95); pointer-events: none; display: flex; align-items: center; gap: 6px; }
+.wk-legende i { display: block; width: 110px; height: 8px; border: 0.5px solid rgba(0,0,0,.5); }
+.wk-titel { position: absolute; right: 6px; top: 6px; z-index: 500; font-size: 11px; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,.95); pointer-events: none; text-align: right; line-height: 1.25; }
+.wk-titel b { display: block; font-size: 12.5px; }
+
+/* Leaflet-Feinheiten */
+.wk .leaflet-control-attribution { display: none; }
+.wk .leaflet-marker-icon { transition: none; }
+.wk .leaflet-image-layer { pointer-events: none; }
