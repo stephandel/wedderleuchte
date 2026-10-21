@@ -109,6 +109,27 @@
 .ks .ks-kopf-l { display: flex; justify-content: flex-start; min-width: 0; }
 .ks .ks-kopf-m { display: flex; justify-content: center; min-width: 0; }
 .ks .ks-kopf-r { display: flex; justify-content: flex-end; min-width: 0; gap: 8px; }
+/* A25: Umschalter „Einfach | Profi“: schmal als zweite Zeile zusammen mit Rückgängig/Wiederholen (oben bleiben „Anderes Foto“ und Bearbeiten/Teilen),
+   ab 600 px alles in einer Zeile mit dem Umschalter in der Mitte */
+.ks .ks-kopf-stufe { display: flex; justify-content: center; min-width: 0; }
+.ks .ks-kopf-stufe .ks-segment { width: min(100%, 280px); }
+.ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe) { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "l . r" "m s s"; row-gap: 4px; }
+.ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe) > .ks-kopf-l { grid-area: l; }
+.ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe) > .ks-kopf-m { grid-area: m; }
+.ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe) > .ks-kopf-r { grid-area: r; }
+.ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe) > .ks-kopf-stufe { grid-area: s; }
+.ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe) > .ks-kopf-m:empty { display: none; }
+.ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe):has(> .ks-kopf-m:empty) { grid-template-areas: "l . r" "s s s"; }
+/* Große Bedienung: oben „Anderes Foto“ und Bearbeiten/Teilen, darunter Rückgängig und der Umschalter */
+.ks.ks-gross .ks-kopf:has(> .ks-kopf-stufe) > .ks-kopf-r { order: 1; margin-left: auto; }
+.ks.ks-gross .ks-kopf:has(> .ks-kopf-stufe) > .ks-kopf-m { order: 2; }
+.ks.ks-gross .ks-kopf > .ks-kopf-stufe { order: 3; flex: 1 1 160px; }
+@container ks (min-width: 600px) {
+  .ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe) { grid-template-columns: 1fr auto auto 1fr; grid-template-areas: "l m s r"; }
+  .ks:not(.ks-gross) .ks-kopf:has(> .ks-kopf-stufe):has(> .ks-kopf-m:empty) { grid-template-areas: "l s s r"; }
+  .ks .ks-kopf-stufe .ks-segment { width: 220px; }
+}
+.ks .ks-profi-zeile { margin-top: 4px; border-top: .5px solid var(--ks-trenner); padding-top: 8px; }
 .ks .ks-titel { font-size: var(--ks-fs-body); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ks .ks-undo { display: flex; gap: 4px; }
 /* Kurzbeschriftung „Foto zurück/vor“ nur, wo Platz ist: Schritt für Schritt ab 380 px (nicht bei großer Bedienung), sonst ab 600 px */
@@ -227,6 +248,7 @@
 .ks .ks-leer-knoepfe { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .ks .ks-leer-knoepfe .ks-knopf { width: 100%; }
 .ks .ks-hilfe-fest { display: block; }
+.ks .ks-kamera-hinweis { display: block; }
 /* A7b: leiser Hinweis in der Ein-Tipp-Karte, dass das Foto automatisch verbessert wurde */
 .ks .ks-auto-hinweis { display: flex; align-items: center; gap: 6px; margin: 0; }
 .ks .ks-auto-hinweis .ks-ic { width: 16px; height: 16px; color: var(--ks-akzent); }
@@ -303,7 +325,9 @@
 }
 .ks .ks-blatt-schicht.ks-offen .ks-blatt-hinter { opacity: 1; }
 .ks .ks-blatt-schicht.ks-offen .ks-blatt { transform: none; }
-.ks .ks-blatt-griff { width: 36px; height: 5px; border-radius: 3px; background: var(--ks-trenner); margin: 6px auto 0; flex: none; }
+.ks .ks-blatt-griff { width: 36px; height: 5px; border-radius: 3px; background: var(--ks-trenner); margin: 6px auto 0; flex: none; touch-action: none; }
+.ks .ks-blatt-griff::before { content: ""; display: block; height: 5px; margin: -10px -20px; padding: 10px 20px; }   /* größere Fläche zum Greifen, ohne den Strich zu ändern */
+.ks .ks-blatt-kopf { touch-action: none; }
 .ks .ks-blatt-kopf { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 8px 2px var(--ks-rand); }
 .ks .ks-blatt-kopf h2 { font-size: var(--ks-fs-titel); font-weight: 700; }
 .ks .ks-blatt-inhalt:has(> .ks-reihe-ende:last-child) { padding-bottom: 0; }
@@ -366,7 +390,7 @@
 /* Ein-Tipp bei großer Bedienung auf kleinem Hochformat: Vorlagen samt Namen ohne Rollen sichtbar */
 .ks.ks-gross.ks-hoch[data-ks-variante="schnell"] .ks-seite { max-height: 64%; }
 /* Ein-Tipp mit fester Knopfreihe nach dem Foto: etwas mehr Höhe, damit die Vorlagen ganz zu sehen sind */
-.ks.ks-hoch:not(.ks-gross):not(.ks-klein)[data-ks-variante="schnell"] .ks-seite:has(.ks-nach-foto) { max-height: 56%; }   /* auch wenn die Knöpfe mitrollen, sonst kippt die Höhe danach auf 52 % */
+.ks.ks-hoch:not(.ks-gross):not(.ks-klein)[data-ks-variante="schnell"] .ks-seite:has(> .ks-nach-foto) { max-height: 56%; }   /* auch wenn die Knöpfe mitrollen, sonst kippt die Höhe danach auf 52 % */
 /* Kleines Hochformat (iPhone SE, Studio unter 600 px hoch): niedrigere Vorlagen-Vorschau, damit die Namen im Rollbereich nicht angeschnitten sind */
 .ks.ks-hoch.ks-klein[data-ks-variante="schnell"] .ks-vorlage img { height: calc(72px * var(--ks-tk)); }
 .ks.ks-gross.ks-hoch.ks-klein[data-ks-variante="schnell"] .ks-vorlage img { height: calc(56px * var(--ks-tk)); }
@@ -502,6 +526,39 @@
 .ks .ks-galerie-hinweis { font-size: var(--ks-fs-cap); line-height: 1.3; color: var(--ks-text2); }
 .ks .ks-galerie-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
 .ks .ks-galerie-raster .ks-galerie-thumb { width: 100%; height: auto; aspect-ratio: 1; }
+/* Galerie-Leiste in der Ein-Tipp-Karte (über den Vorlagen, Plan 21.10.): kompakter Kopf (der Knopf „Alle“ ragt nach oben in den Abstand), etwas mehr Höhe für die Seite */
+.ks .ks-galerie-kompakt .ks-galerie-kopf { min-height: 36px; }
+.ks .ks-galerie-kompakt .ks-galerie-kopf .ks-knopf { margin-top: -8px; }
+.ks .ks-galerie-kompakt .ks-galerie-thumb { width: 52px; height: 52px; }
+.ks.ks-hoch[data-ks-variante="schnell"] .ks-seite:has(.ks-galerie-kompakt) { max-height: 70%; }
+/* Knapp (große Bedienung, schmal unter 360 px, unter 700 px Höhe): die Leiste wird eine Zeile, Bilder links, „Alle“ rechts, ohne Titel (die Gruppe heißt für Vorleser weiter „Meine Wetterfotos“) */
+.ks.ks-gross .ks-galerie-kompakt, .ks.ks-klein .ks-galerie-kompakt { flex-direction: row; align-items: center; gap: 8px; }
+.ks.ks-gross .ks-galerie-kompakt .ks-galerie-titel { display: none; }
+.ks.ks-klein .ks-galerie-kompakt .ks-galerie-titel { display: none; }
+.ks.ks-gross .ks-galerie-kompakt .ks-galerie-kopf { order: 2; flex: none; min-height: 0; }
+.ks.ks-klein .ks-galerie-kompakt .ks-galerie-kopf { order: 2; flex: none; min-height: 0; }
+.ks.ks-gross .ks-galerie-kompakt .ks-galerie-kopf .ks-knopf { margin-top: 0; padding: 0 8px; }
+.ks.ks-klein .ks-galerie-kompakt .ks-galerie-kopf .ks-knopf { margin-top: 0; padding: 0 8px; }
+.ks.ks-gross .ks-galerie-kompakt .ks-galerie-reihe { order: 1; flex: 1 1 auto; min-width: 0; }
+.ks.ks-klein .ks-galerie-kompakt .ks-galerie-reihe { order: 1; flex: 1 1 auto; min-width: 0; }
+.ks.ks-gross .ks-galerie-kompakt .ks-galerie-thumb { width: 44px; height: 44px; }
+.ks.ks-klein .ks-galerie-kompakt .ks-galerie-thumb { width: 44px; height: 44px; }
+@container ks (max-height: 699px) {
+  .ks .ks-galerie-kompakt { flex-direction: row; align-items: center; gap: 8px; }
+  .ks .ks-galerie-kompakt .ks-galerie-titel { display: none; }
+  .ks .ks-galerie-kompakt .ks-galerie-kopf { order: 2; flex: none; min-height: 0; }
+  .ks .ks-galerie-kompakt .ks-galerie-kopf .ks-knopf { margin-top: 0; padding: 0 8px; }
+  .ks .ks-galerie-kompakt .ks-galerie-reihe { order: 1; flex: 1 1 auto; min-width: 0; }
+  .ks .ks-galerie-kompakt .ks-galerie-thumb { width: 44px; height: 44px; }
+}
+/* Nach dem Teilen (Ein-Tipp-Karte): einzeilige Reihe an der Stelle des Links; „Teilen“ und der Optionen-Knopf teilen sich eine Zeile */
+.ks .ks-nach-schnell { border-top: 0; padding: 0; }
+.ks.ks-gross .ks-nach-schnell .ks-ic { display: none; }   /* große Schrift: ohne Symbol passen beide Knöpfe in eine Zeile */
+.ks.ks-gross .ks-nach-schnell .ks-nach-reihe .ks-nach-knopf { padding: 6px 8px; }
+.ks .ks-teilen-reihe { display: flex; gap: 8px; align-items: center; }
+.ks .ks-teilen-reihe .ks-gross-knopf { flex: 1 1 auto; width: auto; }
+.ks .ks-nach-schnell .ks-nach-reihe { flex-wrap: wrap; justify-content: center; gap: 4px 8px; }
+.ks .ks-nach-schnell .ks-nach-reihe .ks-nach-knopf { flex: 0 1 auto; white-space: nowrap; padding: 6px 10px; min-height: calc(44px * var(--ks-tk)); }
 .ks .ks-leer-inhalt .ks-galerie-streifen { width: 100%; text-align: left; margin-top: 8px; }
 .ks .ks-blatt-galerie-eintrag .ks-zeig-bild { max-height: 36cqh; }
 
@@ -511,6 +568,15 @@
   .ks .ks-kontext { padding-top: 6px; }
 }
 .ks.ks-klein .ks-kopf { gap: 4px; }
+/* Schmal (unter 360 px): „Anderes Foto“ und „Teilen“ nehmen, was sie brauchen, Foto zurück/vor sitzen dazwischen */
+@container ks (max-width: 359px) {
+  .ks .ks-kopf:not(:has(.ks-schritt-kopf)) { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .ks .ks-kopf .ks-knopf.ks-flach { padding: 0 6px; }
+  .ks .ks-kopf .ks-knopf.ks-pille .ks-ic { display: none; }
+  /* A25: bei 320 px passten „Anderes Foto“, Rückgängig/Wiederholen und „Bearbeiten“ nicht nebeneinander (überlappten um 30 px): Symbol weg, Rand schmaler */
+  .ks .ks-kopf .ks-knopf[data-akt="anpassen-einfach"] .ks-ic { display: none; }
+  .ks .ks-kopf { padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); }
+}
 .ks.ks-klein .ks-knopf.ks-werkzeug { min-width: 44px; padding: 4px 2px; }
 .ks.ks-hoch.ks-klein .ks-seite { max-height: 50%; }
 .ks.ks-quer[data-ks-variante="assistent"] .ks-kopf { min-height: 0; }

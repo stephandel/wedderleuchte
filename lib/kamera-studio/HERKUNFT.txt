@@ -1,5 +1,5 @@
 Kamera-Studio, unverändert kopiert mit tools/kamera-studio-holen.js
 Quelle: Wetter Apps/Kamera Konfigurator/src/ (privat: GitHub kamera-konfigurator-quelle)
-Stand der Quelle: 8abc060 2026-10-21 Ein-Tipp-Karte: „Motiv aufs Foto“ im Blatt „Anpassen“ (Entscheidung Nr. 9), damit die Apps es erreichen
+Stand der Quelle: 35fd2fc 2026-10-21 Konfigurator: Umschalter und Start-Stufe in einem Feld, damit die Seite nach dem Rebase unter der Panelhöhen-Grenze des b-test bleibt
 Dateien: ks-symbole.js, ks-engine.js, ks-studio.js, ks-studio.css
 Nicht von Hand ändern: Änderungen in der Quelle machen, dann neu holen.
