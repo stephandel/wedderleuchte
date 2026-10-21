@@ -1,5 +1,5 @@
 /* app.js – Wedderleuchte 0.9.0 (gebaut auf dem Code der WeddaApp)
-   Reiter: Wetter (Startseite mit 4 Modulen auf dem Himmel-Verlauf), Graphs (meteogramm.js), Kamera (Teilen-Bildschirm), Rad/Sat (wpkarte.js, dazu Karten), Mehr.
+   Reiter: Wetter (Startseite mit 4 Modulen auf dem Himmel-Verlauf), Graphs (meteogramm.js), Kamera (Wetterfoto-Studio aus lib/kamera-studio/), Rad/Sat (wpkarte.js, dazu Karten), Mehr.
    Daten: Open-Meteo (best_match). Gemerkt wird nur im Browser (localStorage, Schlüssel wedder-…). */
 (function () {
   'use strict';
@@ -471,7 +471,7 @@
     bar.classList.toggle('nur-symbole', eng);
   }
   function waehleTab(id) {
-    if (id === 'kamera') { teilenAuf(true); return; }
+    if (id === 'kamera') { studioAuf(true, $('[data-tab="kamera"]')); return; }
     tab = id;
     $$('.reiter').forEach(function (s) { s.hidden = s.id !== 'tab-' + id; });
     kopfAktualisieren(); leisteMarkieren();
@@ -490,212 +490,111 @@
     document.documentElement.classList.toggle('schrift-gross', px >= 20.7);   // 130 % = 20,8 px, Browser messen 20,797
   }
 
-  // ---------- Teilen-Bildschirm ----------
-  var VORLAGEN = ['Klassisch', 'Glas', 'Minimal', 'Rahmen', 'Polaroid', 'Zeitstempel'];
-  var vorlage = speicher.lesen('vorlage', 'Klassisch');
-  if (VORLAGEN.indexOf(vorlage) < 0) vorlage = 'Klassisch';
-  var foto = null;            // ImageBitmap | HTMLImageElement
-  var symbolBild = null, symbolArt = '';
+  // ---------- Wetterfoto: Kamera-Studio (lib/kamera-studio/, unverändert aus dem Kamera-Konfigurator) ----------
+  // Einstellung wie in der WeddaApp (Kamera-Konfigurator vom 20.10.2026): Oberfläche „Ein-Tipp-Karte“, alle Funktionen an,
+  // Auslöser frei verschiebbar, Galerie 3 Originale / 5 bearbeitete. Zugang: Reiter „Kamera“ (runder Knopf) und Teilen-Symbol oben.
+  // Der Nutzer darf Auslöser und Sucher-Knöpfe am Zahnrad im Studio ändern, den Zugang nicht.
+  var KS_ORDNER = 'lib/kamera-studio/';
+  // Eigener Speichername: Galerie (IndexedDB) und Nutzerwahl getrennt von WeddaApp, Camera App und Kamera-Konfigurator unter derselben Adresse
+  var KS_SPEICHER = 'wedderleuchte';
+  var KS_EINSTELLUNG = {
+    variante: 'schnell', funktionen: {},
+    optionen: { zugangAktion: 'kamera', ausloeserOrt: 'frei', galerieOriginale: 3, galerieBearbeitet: 5, vorschauStart: 'studio',
+      nutzerDarf: { zugang: [], ausloeser: ['studio'], galerie: [], sucher: ['studio'] } }
+  };
+  var ks = null, ksLaden = null, studioZuletztFokus = null;
 
-  function farbe(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-  function infos() {
-    var m = daten && status === 'ok' ? aufbereiten() : null, d = new Date();
-    var i = {
-      app: APP_NAME, ort: ort.name.split(',')[0], datum: pad(d.getDate()) + '.' + pad(d.getMonth() + 1) + '.' + String(d.getFullYear()).slice(2),
-      temp: '–', art: 'wolke', wind: '–', regen: '–', sonne: '–', text: ''
+  // Ortszeit mit Versatz (das Studio liest Stunde und Minute direkt aus dem Text, deshalb nie UTC mit „Z“)
+  function versatz(sek) { var a = Math.abs(sek); return (sek < 0 ? '-' : '+') + pad(Math.floor(a / 3600)) + ':' + pad(Math.floor(a % 3600 / 60)); }
+  function ortszeitJetzt() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + 'T' + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':00' + versatz(-d.getTimezoneOffset() * 60);
+  }
+  // Wetter im Format des Studios (SPEC „Wetter“); ohne Daten nur Ort und Zeit, damit nie Beispielwerte auf dem Foto landen.
+  // Gemerkte Daten gelten auch während eines Neuladens (status „laden“).
+  function studioWetter() {
+    var m = daten ? aufbereiten() : null, gps = ort.id === 'gps';
+    var w = { ort: { stadt: gps ? '' : ort.name.split(',')[0], stadtteil: '', land: '', lat: ort.lat, lon: ort.lon }, zeit: ortszeitJetzt() };
+    if (!m) return w;
+    var c = m.c, d = m.d, code = aktuellCode(m);
+    w.temp = c.temperature_2m; w.gefuehlt = c.apparent_temperature; w.code = code; w.lage = codeInfo(code, c.is_day)[1];
+    w.zeit = m.jetzt + ':00' + versatz(m.offset);
+    w.wind = c.wind_speed_10m; w.windRichtung = c.wind_direction_10m == null ? null : RICHTUNG_KURZ[Math.round(c.wind_direction_10m / 45) % 8]; w.boeen = c.wind_gusts_10m;
+    w.regen = d.precipitation_sum[0]; w.regenRisiko = d.precipitation_probability_max ? d.precipitation_probability_max[0] : null;
+    w.feuchte = c.relative_humidity_2m; w.druck = c.pressure_msl; w.uv = d.uv_index_max ? d.uv_index_max[0] : null;
+    w.sonnenaufgang = d.sunrise ? uhrzeit(d.sunrise[0]) : null; w.sonnenuntergang = d.sunset ? uhrzeit(d.sunset[0]) : null;
+    w.modell = 'Open-Meteo';
+    return w;
+  }
+  // Studio-Dateien erst bei Bedarf laden (CSS, dann die drei Skripte in fester Reihenfolge); sie liegen im Offline-Speicher
+  // Scheitert eine Datei, kommen alle wieder heraus, damit ein neuer Versuch sauber beginnt
+  function studioLaden() {
+    if (window.KSStudio) return Promise.resolve();
+    if (ksLaden) return ksLaden;
+    var neu = [];
+    var holen = function (tag, datei) {
+      return new Promise(function (ok, fehl) {
+        var e = document.createElement(tag);
+        if (tag === 'link') { e.rel = 'stylesheet'; e.href = KS_ORDNER + datei; } else e.src = KS_ORDNER + datei;
+        e.onload = ok; e.onerror = fehl; neu.push(e); document.head.appendChild(e);
+      });
     };
-    if (m) {
-      var info = codeInfo(aktuellCode(m), m.c.is_day);
-      i.temp = grad(m.c.temperature_2m); i.art = info[0]; i.text = info[1];
-      i.wind = wind(m.c.wind_speed_10m) + ' ' + windEinheit().name + ' ' + RICHTUNG_KURZ[Math.round(m.c.wind_direction_10m / 45) % 8];
-      i.regen = zahl(m.d.precipitation_sum[0], 1) + ' mm';
-      i.sonne = m.d.sunshine_duration ? zahl(m.d.sunshine_duration[0] / 3600, 1) + ' h' : '–';
-    }
-    return i;
+    ksLaden = ['ks-symbole.js', 'ks-engine.js', 'ks-studio.js'].reduce(function (kette, datei) {
+      return kette.then(function () { return holen('script', datei); });
+    }, holen('link', 'ks-studio.css')).catch(function (e) {
+      neu.forEach(function (x) { x.remove(); }); ksLaden = null; throw e;
+    });
+    return ksLaden;
   }
-  function symbolLaden(art) {
-    if (symbolBild && symbolArt === art) return Promise.resolve(symbolBild);
-    var svg = WetterSymbol(art), defs = document.getElementById('ws-defs');
-    var inner = defs ? defs.innerHTML : '';
-    svg = svg.replace('<svg ', '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" ').replace(/(<svg[^>]*>)/, '$1' + inner);
-    return new Promise(function (ok) {
-      var img = new Image();
-      img.onload = function () { symbolBild = img; symbolArt = art; ok(img); };
-      img.onerror = function () { ok(null); };
-      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  function studioLadenZeigen() {
+    $('#ksWurzel').innerHTML = '<p class="studio-laedt" role="status">Wetterfoto wird geladen …</p>';
+    studioLaden().then(function () { if (!$('#studio').hidden && !ks) studioMount(); }).catch(function () {
+      $('#ksWurzel').innerHTML = '<div class="studio-laedt" role="status"><p>Das Wetterfoto ließ sich nicht laden. Prüfe die Verbindung.</p>' +
+        '<button type="button" class="button" id="studioNochmal">Erneut versuchen</button></div>';
     });
   }
-  function himmelFarben() {
-    var g = farbe('--himmel-klar'); var f = g.match(/#[0-9a-fA-F]{6}/g) || [];
-    return f.length >= 2 ? f : [farbe('--radar-grund'), farbe('--radar-grund')];
-  }
-  // Format wie das Foto: kurze Seite 1080 px, Seitenverhältnis begrenzt auf 9:16 bis 16:9; ohne Foto 3:4
-  function bildFormat() {
-    if (!foto) return [1080, 1440];
-    var v = Math.min(16 / 9, Math.max(9 / 16, foto.width / foto.height));
-    return v < 1 ? [1080, Math.round(1080 / v)] : [Math.round(1080 * v), 1080];
-  }
-  // Wo die Werte stehen (je Vorlage); dort wird die Helligkeit gemessen. Rahmen und Polaroid schreiben auf den hellen Rand.
-  function wertebereich(bx, by, bw, bh) {
-    if (vorlage === 'Klassisch') return [bx, by, bw, 210];
-    if (vorlage === 'Glas') return [bx + 40, by + bh - 340, bw - 80, 300];
-    if (vorlage === 'Minimal') return [bx, by + bh - 130, bw, 130];
-    if (vorlage === 'Zeitstempel') return [bx + bw / 2, by + bh - 220, bw / 2, 220];
-    return null;
-  }
-  // Farbton automatisch: Bild auf 24 × 32 px verkleinern, mittlere Helligkeit im Wertebereich; über 60 % hell
-  function istHell(cv, r) {
-    if (!foto || !r) return false;
-    var hoch = cv.height >= cv.width, kw = hoch ? 24 : 32, kh = hoch ? 32 : 24;
-    var k = document.createElement('canvas'); k.width = kw; k.height = kh;
-    var kx = k.getContext('2d'); kx.drawImage(cv, 0, 0, kw, kh);
-    var sx = kw / cv.width, sy = kh / cv.height;
-    var x0 = Math.floor(r[0] * sx), y0 = Math.floor(r[1] * sy), w = Math.max(1, Math.ceil(r[2] * sx)), h = Math.max(1, Math.ceil(r[3] * sy));
-    try {
-      var p = kx.getImageData(x0, y0, Math.min(w, kw - x0), Math.min(h, kh - y0)).data, summe = 0;
-      for (var j = 0; j < p.length; j += 4) summe += (0.2126 * p[j] + 0.7152 * p[j + 1] + 0.0722 * p[j + 2]) / 255;
-      return summe / (p.length / 4) > 0.6;
-    } catch (e) { return false; }
-  }
-  function bildZeichnen() {
-    var cv = $('#bild'), x = cv.getContext('2d'), f = bildFormat(), W = f[0], H = f[1], i = infos();
-    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
-    var band = farbe('--bild-band'), text = farbe('--bild-text'), fam = farbe('--font');
-    return symbolLaden(i.art).then(function (sym) {
-      var aussen = vorlage === 'Rahmen' ? 48 : vorlage === 'Polaroid' ? 60 : 0, unten = vorlage === 'Polaroid' ? 240 : aussen;
-      x.clearRect(0, 0, W, H);
-      x.fillStyle = vorlage === 'Polaroid' || vorlage === 'Rahmen' ? text : farbe('--bild-schwarz'); x.fillRect(0, 0, W, H);
-      var bx = aussen, by = aussen, bw = W - 2 * aussen, bh = H - aussen - unten;
-      x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip();
-      if (foto) {
-        var fw = foto.width, fh = foto.height, s = Math.max(bw / fw, bh / fh);
-        x.drawImage(foto, bx + (bw - fw * s) / 2, by + (bh - fh * s) / 2, fw * s, fh * s);
-        if (istHell(cv, wertebereich(bx, by, bw, bh))) { band = farbe('--bild-band-hell'); text = farbe('--bild-text-dunkel'); }
-      } else {
-        var cols = himmelFarben(), gr = x.createLinearGradient(0, by, 0, by + bh);
-        gr.addColorStop(0, cols[0]); gr.addColorStop(1, cols[cols.length - 1]); x.fillStyle = gr; x.fillRect(bx, by, bw, bh);
-        x.fillStyle = text; x.font = '500 40px ' + fam; x.textAlign = 'center'; x.fillText('Tippe auf „Fotos“ oder „Kamera“', W / 2, by + bh / 2);
-      }
-      var sz = function (px, gew) { x.font = (gew || 400) + ' ' + px + 'px ' + fam; };
-      x.textBaseline = 'middle'; x.fillStyle = text; x.textAlign = 'left';
-      var drawSym = function (px, py, s_) { if (sym) x.drawImage(sym, px, py, s_, s_); };
-
-      if (vorlage === 'Klassisch') {          // Band oben: links Ort+Temperatur, Mitte Wind, rechts Regen+Sonne
-        x.fillStyle = band; x.fillRect(bx, by, bw, 210); x.fillStyle = text;
-        drawSym(bx + 24, by + 20, 120);
-        sz(96, 300); x.textAlign = 'left'; x.fillText(i.temp, bx + 150, by + 74);
-        sz(40, 600); x.fillText(i.ort, bx + 150, by + 156);
-        sz(36, 400); x.fillText(i.datum, bx + 150, by + 192);
-        sz(40, 600); x.textAlign = 'center'; x.fillText(i.wind, bx + bw * 0.55, by + 105);
-        x.textAlign = 'right'; sz(38, 500); x.fillText('Regen ' + i.regen, bx + bw - 28, by + 80); x.fillText('Sonne ' + i.sonne, bx + bw - 28, by + 136);
-      } else if (vorlage === 'Glas') {         // abgerundete Platte unten
-        var ph = 300, py = by + bh - ph - 40;
-        x.fillStyle = band; rundRect(x, bx + 40, py, bw - 80, ph, 40); x.fill(); x.fillStyle = text;
-        drawSym(bx + 70, py + 30, 150); sz(120, 200); x.textAlign = 'left'; x.fillText(i.temp, bx + 240, py + 100);
-        sz(44, 600); x.fillText(i.ort + ' · ' + i.datum, bx + 240, py + 200);
-        sz(36, 400); x.fillText(i.wind + ' · ' + i.regen + ' · ' + i.sonne, bx + 70, py + 262);
-      } else if (vorlage === 'Minimal') {      // dünnes Band unten
-        x.fillStyle = band; x.fillRect(bx, by + bh - 130, bw, 130); x.fillStyle = text;
-        sz(64, 300); x.textAlign = 'left'; x.fillText(i.temp, bx + 40, by + bh - 65);
-        sz(34, 500); x.textAlign = 'right'; x.fillText(i.ort + ' · ' + i.datum, bx + bw - 40, by + bh - 85);
-        sz(28, 400); x.fillText(i.wind + ' · ' + i.regen + ' · ' + i.sonne, bx + bw - 40, by + bh - 40);
-      } else if (vorlage === 'Rahmen') {       // heller Rahmen, Info im unteren Rand
-        x.fillStyle = farbe('--bild-schwarz'); x.textAlign = 'left'; sz(34, 600);
-        x.fillText(i.temp + ' · ' + i.ort + ' · ' + i.datum, 48, H - 24);
-      } else if (vorlage === 'Polaroid') {     // breiter Rand unten
-        x.fillStyle = farbe('--bild-schwarz'); x.textAlign = 'left';
-        drawSym(60, H - 232, 110); sz(80, 300); x.fillText(i.temp, 190, H - 168);
-        sz(40, 600); x.fillText(i.ort + ' · ' + i.datum, 60, H - 70);
-        sz(32, 400); x.textAlign = 'right'; x.fillText(i.wind, W - 60, H - 170); x.fillText(i.regen + ' · ' + i.sonne, W - 60, H - 120);
-      } else if (vorlage === 'Zeitstempel') {  // Leuchtschein statt Fläche
-        x.shadowColor = text === farbe('--bild-text') ? farbe('--bild-schwarz') : farbe('--bild-band-hell'); x.shadowBlur = 24; x.fillStyle = text; x.textAlign = 'right';
-        sz(86, 300); x.fillText(i.temp + '  ' + i.datum, bx + bw - 50, by + bh - 150);
-        sz(40, 500); x.fillText(i.ort + ' · ' + i.wind, bx + bw - 50, by + bh - 90);
-        sz(34, 400); x.fillText(i.regen + ' · ' + i.sonne, bx + bw - 50, by + bh - 44);
-        x.shadowBlur = 0;
-      }
-      x.restore();
-      // App-Name klein in der Ecke; auf dem Foto immer weiß mit Leuchtschein, weil die Ecke nicht gemessen wird
-      var aufRand = vorlage === 'Polaroid' || vorlage === 'Rahmen';
-      x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillStyle = aufRand ? farbe('--bild-schwarz') : farbe('--bild-text'); x.globalAlpha = .85;
-      if (!aufRand) { x.shadowColor = farbe('--bild-schwarz'); x.shadowBlur = 12; }
-      sz(26, 600);
-      if (vorlage === 'Klassisch') { x.textAlign = 'right'; x.fillText(APP_NAME, W - 24, H - 28); }
-      else if (vorlage === 'Polaroid') { x.textAlign = 'right'; x.fillText(APP_NAME, W - 60, H - 40); }
-      else if (vorlage === 'Rahmen') { x.textAlign = 'right'; x.fillText(APP_NAME, W - 48, H - 24); }
-      else { x.fillText(APP_NAME, 28, 36); }
-      x.globalAlpha = 1; x.shadowBlur = 0;
-    });
-  }
-  function rundRect(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
-
-  function vorlagenBauen() {
-    $('#vorlagen').innerHTML = VORLAGEN.map(function (v) { return '<button type="button" class="vorlage" role="radio" data-vorlage="' + v + '" aria-checked="' + (v === vorlage) + '">' + v + '</button>'; }).join('');
-  }
-  var teilenZuletztFokus = null;
-  // Hinter dem Teilen-Bildschirm ist nichts bedienbar (auch nicht für VoiceOver)
+  // Hinter dem Wetterfoto ist nichts bedienbar (auch nicht für VoiceOver)
   function hintergrundSperren(an) {
     $$('#kopf, #inhalt, #leiste, #meldung').forEach(function (e) { if (an) e.setAttribute('inert', ''); else e.removeAttribute('inert'); });
   }
-  // kamera: vom runden Kamera-Knopf, öffnet gleich die Kamera (geht nur direkt im Antippen)
-  function teilenAuf(kamera) {
-    teilenZuletztFokus = document.activeElement;
-    $('#teilen').hidden = false; document.body.style.overflow = 'hidden'; hintergrundSperren(true);
-    vorlagenBauen(); bildZeichnen(); $('#teilenZu').focus();
-    if (kamera === true) $('#dateiKamera').click();
+  function studioMount() {
+    $('#ksWurzel').innerHTML = '';
+    ks = KSStudio.mount($('#ksWurzel'), { variante: KS_EINSTELLUNG.variante, funktionen: KS_EINSTELLUNG.funktionen, optionen: KS_EINSTELLUNG.optionen, wetter: studioWetter(), theme: 'auto', appName: APP_NAME, speicher: KS_SPEICHER });
   }
-  function teilenZu() {
-    $('#teilen').hidden = true; document.body.style.overflow = ''; hintergrundSperren(false);
-    if (teilenZuletztFokus && teilenZuletztFokus.focus) teilenZuletztFokus.focus();
+  // kamera: der Knopf soll gleich die Kamera öffnen (geht nur direkt im Antippen, also nur, wenn das Studio schon geladen ist)
+  // knopf: der angetippte Knopf, dorthin kehrt der Fokus zurück (Safari fokussiert angetippte Knöpfe nicht)
+  function studioAuf(kamera, knopf) {
+    if (!$('#studio').hidden) return;
+    studioZuletztFokus = knopf || document.activeElement;
+    $('#studio').hidden = false; document.body.style.overflow = 'hidden'; hintergrundSperren(true);
+    if (window.KSStudio) {
+      studioMount();
+      if (kamera) ks.neuesFoto(); else $('#studioZu').focus();
+      return;
+    }
+    $('#studioZu').focus();
+    studioLadenZeigen();
   }
-  function fotoLaden(datei) {
-    if (!datei) return;
-    var fertig = function (b) { foto = b; bildZeichnen(); };
-    if (window.createImageBitmap) {
-      createImageBitmap(datei, { imageOrientation: 'from-image' }).then(fertig).catch(function () { alsBild(datei, fertig); });
-    } else alsBild(datei, fertig);
-  }
-  function alsBild(datei, fertig) {
-    var u = URL.createObjectURL(datei), im = new Image();
-    im.onload = function () { fertig(im); URL.revokeObjectURL(u); }; im.onerror = function () { hinweis('Das Foto ließ sich nicht öffnen.'); URL.revokeObjectURL(u); };
-    im.src = u;
-  }
-  function teilenGo() {
-    bildZeichnen().then(function () {
-      $('#bild').toBlob(function (blob) {
-        if (!blob) { hinweis('Das Bild ließ sich nicht erstellen.'); return; }
-        var datei = new File([blob], 'wedderleuchte-' + ort.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.jpg', { type: 'image/jpeg' });
-        if (navigator.canShare && navigator.canShare({ files: [datei] }) && navigator.share) {
-          navigator.share({ files: [datei] }).catch(function (e) { if (e && e.name !== 'AbortError') herunterladen(blob, datei.name); });
-        } else herunterladen(blob, datei.name);
-      }, 'image/jpeg', 0.9);
-    });
-  }
-  function herunterladen(blob, name) {
-    var u = URL.createObjectURL(blob), a = document.createElement('a'); a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(u); }, 4000); hinweis('Das Bild wurde gespeichert.');
+  function studioZu() {
+    if (ks) { try { ks.zerstoere(); } catch (e) { } ks = null; }
+    $('#ksWurzel').innerHTML = '';
+    $('#studio').hidden = true; document.body.style.overflow = ''; hintergrundSperren(false);
+    // Wurde der Knopf inzwischen neu gezeichnet (Tab-Leiste), den Kamera-Knopf neu suchen
+    var f = studioZuletztFokus && studioZuletztFokus.isConnected ? studioZuletztFokus : $('[data-tab="kamera"]');
+    if (f && f.focus) f.focus();
   }
 
   // ---------- Ereignisse ----------
   function binden() {
     $('#kopfOrte').innerHTML = Ikon('pin'); $('#kopfSuche').innerHTML = Ikon('search'); $('#kopfTeilen').innerHTML = Ikon('share');
-    $('#teilenGo').innerHTML = Ikon('share');
     $('#kopfOrte').addEventListener('click', function () { waehleTab('mehr'); });
     $('#kopfSuche').addEventListener('click', function () { waehleTab('mehr'); var f = $('#suchfeld'); if (f) f.focus(); });
-    $('#kopfTeilen').addEventListener('click', function () { teilenAuf(false); });
+    $('#kopfTeilen').addEventListener('click', function () { studioAuf(false, $('#kopfTeilen')); });
     $('#leiste').addEventListener('click', function (e) { var b = e.target.closest('[data-tab]'); if (b) waehleTab(b.dataset.tab); });
-    $('#teilenZu').addEventListener('click', teilenZu);
-    $('#teilenGo').addEventListener('click', teilenGo);
-    $('#teilenFotos').addEventListener('click', function () { $('#dateiFotos').click(); });
-    $('#teilenKamera').addEventListener('click', function () { $('#dateiKamera').click(); });
-    $('#dateiFotos').addEventListener('change', function (e) { fotoLaden(e.target.files[0]); e.target.value = ''; });
-    $('#dateiKamera').addEventListener('change', function (e) { fotoLaden(e.target.files[0]); e.target.value = ''; });
-    $('#vorlagen').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-vorlage]'); if (!b) return;
-      vorlage = b.dataset.vorlage; speicher.schreiben('vorlage', vorlage); vorlagenBauen(); bildZeichnen();
-      var n = $('[data-vorlage="' + vorlage + '"]'); if (n) n.focus();
-    });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('#teilen').hidden) teilenZu(); });
+    $('#studioZu').addEventListener('click', studioZu);
+    $('#ksWurzel').addEventListener('click', function (e) { if (e.target.closest('#studioNochmal')) studioLadenZeigen(); });
+    // Esc schließt das Wetterfoto erst, wenn das Studio selbst nichts mehr zu schließen hatte (es meldet das mit preventDefault)
+    window.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !e.defaultPrevented && !$('#studio').hidden) studioZu(); });
 
     $('#inhalt').addEventListener('click', function (e) {
       var t = e.target;
@@ -741,6 +640,8 @@
     if (offline && daten) hinweis('Offline · Stand ' + stand(daten.geholt));
     waehleTab('wetter');
     if (!offline) laden(); else if (!daten) { status = 'fehler'; zeichnen(); }
+    if (/[?&]kamera=1/.test(location.search)) studioAuf(false);
+    else setTimeout(function () { studioLaden().catch(function () { }); }, 1500);   // vorladen, damit der Knopf gleich die Kamera öffnen kann
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () { });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();

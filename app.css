@@ -227,24 +227,15 @@ body { background: var(--radar-grund); }
 #karte [data-ebene="druck"] { display: none; }
 #karte .wk-tk { width: var(--tap); height: var(--tap); }
 
-/* ---------- Teilen-Bildschirm ---------- */
-.teilen { position: fixed; inset: 0; z-index: 50; background: var(--bild-schwarz); color: var(--bild-text); display: flex; flex-direction: column; padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left); }
-.teilen-kopf { display: flex; min-height: var(--tap); align-items: center; padding: 0 var(--rand); }
-.teilen-text { min-width: var(--tap); min-height: var(--tap); font-size: var(--fs-body); color: var(--bild-text); padding: 0 var(--s2); border-radius: var(--r-button); }
-.teilen-text:active { opacity: .6; }
-.teilen-buehne { flex: 1; min-height: 0; display: grid; place-items: center; padding: 0 var(--rand); }
-.teilen-buehne canvas { max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; border-radius: var(--s2); background: var(--radar-grund); }
-.vorlagen { display: flex; gap: var(--s2); overflow-x: auto; padding: var(--s3) var(--rand); scrollbar-width: none; }
-.vorlagen::-webkit-scrollbar { display: none; }
-.vorlage { flex: none; min-width: var(--tap); min-height: var(--tap); padding: 0 var(--s3); border-radius: var(--r-chip); font-size: var(--fs-subhead); color: var(--bild-text); border: 1px solid var(--label-3); }
-.vorlage[aria-checked="true"] { background: var(--akzent); border-color: var(--akzent); color: var(--auf-akzent); font-weight: 600; }
-.teilen-unten { display: flex; align-items: center; justify-content: space-between; padding: var(--s2) var(--rand) var(--s4); }
-.teilen-unten .teilen-text { min-width: calc(var(--tap) * 1.5); }
-.teilen-unten .teilen-text:last-child { text-align: right; }
-.teilen-ausloeser { width: calc(var(--tap) * 1.6); height: calc(var(--tap) * 1.6); border-radius: 50%; background: var(--bild-text); border: var(--s1) solid var(--bild-schwarz); outline: 2px solid var(--bild-text); color: var(--bild-schwarz); display: grid; place-items: center; }
-.teilen-ausloeser .ikon { width: calc(var(--ikon-groesse) * 1.3); height: calc(var(--ikon-groesse) * 1.3); }
-.teilen-ausloeser:active { transform: scale(.94); }
-.teilen-ausloeser:focus-visible { outline-color: var(--akzent); outline-width: 3px; }
+/* ---------- Wetterfoto: Studio im Vollbild ---------- */
+.studio { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--label); display: flex; flex-direction: column; padding: var(--safe-top) var(--safe-right) 0 var(--safe-left); }
+.studio-kopf { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: var(--tap); padding: 0 var(--s2) 0 var(--rand); }
+.studio-titel { font-size: var(--fs-title3); font-weight: 600; }
+.studio-zu { min-width: var(--tap); min-height: var(--tap); padding: 0 var(--s2); font-size: var(--fs-body); font-weight: 600; color: var(--akzent-text); border-radius: var(--r-button); }
+.studio-zu:active { opacity: .6; }
+.studio-wurzel { flex: 1; min-height: 0; position: relative; padding-bottom: var(--safe-bottom); }
+.studio-laedt { padding: var(--s6) var(--rand); text-align: center; color: var(--label-2); }
+.studio-laedt .button { margin-top: var(--s4); }
 
 /* ---------- breite Bildschirme (iPad) ---------- */
 @media (min-width: 768px) {
@@ -266,10 +257,6 @@ body { background: var(--radar-grund); }
   .raster > .aktuell-kachel { grid-column: 1; grid-row: 1 / span 4; align-self: start; }
   .aktuell { grid-template-columns: 1fr; }
   .hero { font-size: min(calc(var(--fs-hero) * .8), 20vh); }
-  .teilen { flex-direction: row; flex-wrap: wrap; }
-  .teilen-kopf { width: 100%; min-height: calc(var(--tap) - var(--s2)); }
-  .teilen-buehne { flex: 1 1 40%; height: calc(100% - var(--tap)); }
-  .vorlagen { flex-wrap: wrap; overflow: visible; }
   #karte { --wk-hoehe: calc(100dvh - var(--kopf-hoehe) - var(--leiste-hoehe) - var(--s8) * 3); }
 }
 

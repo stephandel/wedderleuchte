@@ -30,7 +30,7 @@
     <p class="kopf-modell" id="kopfModell">Modell: Beste Mischung</p>
   </div>
   <button type="button" class="kopf-knopf" id="kopfSuche" aria-label="Ort suchen"></button>
-  <button type="button" class="kopf-knopf" id="kopfTeilen" aria-label="Wetter mit Foto teilen"></button>
+  <button type="button" class="kopf-knopf" id="kopfTeilen" aria-label="Wetterfoto"></button>
 </header>
 
 <div class="meldung" id="meldung" role="status" hidden></div>
@@ -44,20 +44,13 @@
 
 <nav class="leiste glas" id="leiste" aria-label="Reiter"></nav>
 
-<!-- Teilen-Bildschirm: immer schwarz -->
-<div class="teilen" id="teilen" role="dialog" aria-modal="true" aria-label="Wetter mit Foto teilen" hidden>
-  <div class="teilen-kopf">
-    <button type="button" class="teilen-text" id="teilenZu">Abbrechen</button>
+<!-- Wetterfoto: Kamera-Studio aus lib/kamera-studio/, wird erst bei Bedarf geladen -->
+<div class="studio" id="studio" role="dialog" aria-modal="true" aria-label="Wetterfoto" hidden>
+  <div class="studio-kopf">
+    <h2 class="studio-titel">Wetterfoto</h2>
+    <button type="button" class="studio-zu" id="studioZu">Fertig</button>
   </div>
-  <div class="teilen-buehne"><canvas id="bild" width="1080" height="1440" role="img" aria-label="Vorschau des Wetterbilds"></canvas></div>
-  <div class="vorlagen" id="vorlagen" role="radiogroup" aria-label="Vorlage"></div>
-  <div class="teilen-unten">
-    <button type="button" class="teilen-text" id="teilenFotos">Fotos</button>
-    <button type="button" class="teilen-ausloeser" id="teilenGo" aria-label="Teilen"></button>
-    <button type="button" class="teilen-text" id="teilenKamera">Kamera</button>
-  </div>
-  <input type="file" id="dateiFotos" accept="image/*" hidden>
-  <input type="file" id="dateiKamera" accept="image/*" capture="environment" hidden>
+  <div class="studio-wurzel" id="ksWurzel"></div>
 </div>
 
 <script src="symbole.js"></script>
