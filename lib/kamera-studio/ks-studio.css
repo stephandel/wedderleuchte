@@ -90,7 +90,7 @@
 .ks button:disabled { cursor: default; }
 .ks :focus-visible { outline: 3px solid var(--ks-akzent); outline-offset: 2px; }
 .ks .ks-ic { width: calc(22px * var(--ks-tk)); height: calc(22px * var(--ks-tk)); flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.ks .ks-datei, .ks .ks-datei-kamera { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; left: -9999px; }
+.ks .ks-datei, .ks .ks-datei-kamera, .ks .ks-datei-motiv { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; left: -9999px; }
 
 /* ---------- Grundgerüst ---------- */
 .ks .ks-app { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--ks-bg); }
@@ -192,6 +192,7 @@
   background: transparent; font-size: var(--ks-fs-cap); font-weight: 500; color: var(--ks-text2); border-radius: 12px;
 }
 .ks .ks-knopf.ks-werkzeug.ks-an, .ks .ks-knopf.ks-werkzeug[aria-pressed="true"] { color: var(--ks-akzent); background: var(--ks-fuellung-an); }
+.ks .ks-knopf.ks-werkzeug.ks-an .ks-knopf-text, .ks .ks-knopf.ks-werkzeug[aria-pressed="true"] .ks-knopf-text { color: var(--ks-text); }   /* Beschriftung 11 px: Akzent auf Akzent-Fläche reichte nur für 3,8:1 */
 
 /* Chips und Segmente */
 .ks .ks-chips { display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 2px; margin: -2px; scroll-snap-type: x proximity; }
@@ -737,3 +738,13 @@
 .ks .ks-za-zeile.ks-za-pille .ks-za-sub { display: none; }
 @media (hover: hover) and (pointer: fine) { .ks .ks-st-ikon:hover, .ks .ks-st-tab:hover, .ks .ks-st-zeile:hover { filter: brightness(1.08); } }
 @media (prefers-reduced-transparency: reduce) { .ks .ks-st-schwebend .ks-za-symbol, .ks .ks-st-schwebend .ks-za-symbolText { background: var(--ks-bg2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+
+/* Querformat: Platz für 12 px Beschriftung der Werkzeuge */
+.ks.ks-klein.ks-quer .ks-werkzeugleiste .ks-werkzeug .ks-knopf-text { font-size: 0.75rem; letter-spacing: 0; }
+
+/* Große Schrift im Hochformat: alle sechs Werkzeuge bleiben, die Leiste rollt seitlich (statt Anpassen und Format zu verstecken) */
+.ks.ks-gross.ks-hoch .ks-werkzeugleiste { overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+.ks.ks-gross.ks-hoch .ks-werkzeugleiste::-webkit-scrollbar { display: none; }
+.ks.ks-gross.ks-hoch .ks-werkzeugleiste .ks-knopf.ks-werkzeug { flex: 0 0 auto; min-width: calc(76px * var(--ks-tk)); }
+/* Niedriges Querformat (iPhone SE quer): Vorlagenbilder kleiner, damit eine Reihe ganz in den Rollbereich passt */
+@media (max-height: 340px) { .ks.ks-quer .ks-vorlage img { height: 52px; } }
