@@ -641,7 +641,9 @@
       else { if (ebeneGewechselt) { for (var i in frameLayer) { var f = frameLayer[i]; ['sat', 'satsw', 'regen', 'radar'].forEach(function (k) { if (f[k]) f[k].setOpacity(0); }); } } bildebenenZeigen(); if (ebeneGewechselt) markenSetzen(); }
     }
     function lade(an2) { clearTimeout(ladeUhr); if (an2) el.lade.hidden = false; else ladeUhr = setTimeout(function () { el.lade.hidden = true; }, 150); }
-    function hinweis(text) { hinweisText = text; el.hinweis.hidden = !text; el.hinweis.textContent = text; }
+    // Der Hinweis steht über der Quellenzeile; die kann zweizeilig sein (zweite Meinung A32: vorher überlappten beide)
+    function hinweisSetzen() { if (!el.hinweis.hidden) el.hinweis.style.bottom = (el.quelle.offsetHeight + 8) + 'px'; }
+    function hinweis(text) { hinweisText = text; el.hinweis.hidden = !text; el.hinweis.textContent = text; hinweisSetzen(); }
 
     // Ohne Netz: das gespeicherte Bild soll die ganze Fläche ausfüllen (wie „cover"), zoomen darf man näher heran,
     // aber nicht weiter weg als bis zum Bildrand. Wird die Fläche anders (Querformat), rechnen wir neu.
@@ -726,7 +728,7 @@
       if (!map) return;
       map.invalidateSize({ animate: false });
       if (OFFLINE) offlineAnsicht(false);
-      ticks();
+      ticks(); hinweisSetzen();
     }
     window.addEventListener('resize', groesseGeaendert);
     window.addEventListener('orientationchange', function () { setTimeout(groesseGeaendert, 300); });

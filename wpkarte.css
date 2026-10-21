@@ -53,7 +53,7 @@
 .wk-marke .wk-w svg { width: 34px; height: 34px; display: block; filter: drop-shadow(0 0 2px rgba(0,0,0,.9)); }
 .wk-marke .wk-w b { font-size: 14px; font-weight: 500; }
 .wk-marke.is-hier i { width: 12px; height: 12px; left: -6px; top: -6px; background: var(--wk-akzent); box-shadow: 0 0 0 3px rgba(255,214,51,.3); }
-.wk-marke.is-hier .wk-name { color: var(--wk-akzent); font-weight: 600; font-size: 13.5px; }
+.wk-marke.is-hier .wk-name { color: #fff; font-weight: 600; font-size: 13.5px; top: -11px; padding: 1px 6px; border-radius: 6px; background: rgba(0,0,0,.62); text-shadow: none; }   /* Pille: auf jedem Kartengrund mind. 4,5:1 (zweite Meinung A32; vorher Akzentblau auf Kartenblau) */
 .wk-marke.is-hier .wk-w { top: -38px; }
 .wk-marke.is-hier .wk-w svg { width: 40px; height: 40px; }
 .wk-marke.is-hier .wk-w b { font-size: 16px; }
@@ -99,3 +99,9 @@
 .wk-vb-fertig { flex: none; min-width: 44px; min-height: 44px; padding: 0 10px; border: 0; background: none; color: var(--wk-fertig); font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .wk-vb-fertig:active, .wk-vb-chip:active { opacity: .6; }
 .wk-vb-fertig:focus-visible, .wk-vb-chip:focus-visible { outline: 2px solid var(--wk-akzent); outline-offset: -2px; }
+/* Niedriges Blatt (iPhone quer): Ebenenleiste zweispaltig, damit alle Knöpfe ohne Scrollen sichtbar bleiben (zweite Meinung A32).
+   width !important, weil Apps die Leiste per ID-Selektor auf eine Knopfbreite setzen. */
+@media (max-height: 500px) {
+  .wk-vollbild .wk-leiste { display: grid; grid-template-columns: repeat(2, auto); align-content: start; width: auto !important; overflow-y: auto; }
+  .wk-vollbild .wk-trenner { display: none; }
+}

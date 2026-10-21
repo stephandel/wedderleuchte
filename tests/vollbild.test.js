@@ -166,6 +166,25 @@ const KARTE = {
     const drin = b => !!b && b[0] >= 0 && b[1] >= 0 && b[2] <= k.vw + 1 && b[3] <= k.vh;   // 1 px: die Ebenenleiste hat einen halben Pixel Rand
     pruefe(name + ': Karte füllt das Blatt zwischen Kopf, Ebenenleiste und Zeitleiste; Leaflet kennt die neue Größe', k.karte[1] === k.kopf[3] && k.karte[3] === k.zeit[1] && k.karte[2] === k.leiste[0] && k.mapGr[0] === k.karte[2] - k.karte[0] && k.mapGr[1] === k.karte[3] - k.karte[1] && k.zeit[3] === k.vh, k);
     pruefe(name + ': + und −, Abspielen und Zeit-Regler im Bild', [k.plus, k.minus, k.play, k.regler].every(drin), k);
+    // Zweite Meinung: quer war die Ebenenleiste höher als die Karte, oben und unten angeschnitten
+    const l = await p.evaluate(() => { const le = document.querySelector('#karte .wk-leiste'), lr = le.getBoundingClientRect();
+      const kn = [...le.querySelectorAll('button')].filter(x => getComputedStyle(x).display !== 'none').map(x => { const r = x.getBoundingClientRect(); return [Math.round(r.top), Math.round(r.bottom), Math.round(r.width), Math.round(r.height)]; });
+      return { scroll: le.scrollHeight - le.clientHeight, oben: Math.round(lr.top), unten: Math.round(lr.bottom), kn }; });
+    pruefe(name + ': Ebenenleiste ganz sichtbar, ohne Scrollen, jeder Knopf mind. 44 px', l.scroll <= 0 && l.kn.every(x => x[0] >= l.oben - 1 && x[1] <= l.unten + 1 && x[2] >= 43.5 && x[3] >= 43.5), l);
+    // Zweite Meinung: Hinweis und Quellenzeile untereinander; Name des Orts lesbar auf jedem Kartenuntergrund
+    const u = await p.evaluate(() => {
+      const w = document.querySelector('#karte'), h = w.querySelector('.wk-hinweis'), q = w.querySelector('.wk-quelle'), n = w.querySelector('.wk-marke.is-hier .wk-name');
+      const rgba = c => { const z = (c.replace(/^color\(srgb/, '').match(/[\d.]+/g) || []).map(Number); const f = /^color\(srgb/.test(c) ? 255 : 1; return [z[0] * f, z[1] * f, z[2] * f, z.length > 3 ? z[3] : 1]; };
+      const L = c => { const [r, g, b] = c.slice(0, 3).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
+      let kontrast = null;
+      if (n) {   // schlechtester Fall: die Pille liegt über weißer oder schwarzer Karte
+        const t = rgba(getComputedStyle(n).color), bg = rgba(getComputedStyle(n).backgroundColor), a = bg[3];
+        kontrast = Math.min(...[[255, 255, 255], [0, 0, 0]].map(k => { const m = [0, 1, 2].map(i => bg[i] * a + k[i] * (1 - a)); const x = L(t), y = L(m); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }));
+      }
+      return { hinweis: !h.hidden, hUnten: Math.round(h.getBoundingClientRect().bottom), qOben: Math.round(q.getBoundingClientRect().top), kontrast: kontrast && Math.round(kontrast * 100) / 100 };
+    });
+    pruefe(name + ': Hinweis steht über der Quellenzeile (keine Überlappung)', !u.hinweis || u.hUnten <= u.qOben, u);
+    pruefe(name + ': Name des Orts auf der Karte mit Kontrast mind. 4,5:1 auf hellem und dunklem Grund', u.kontrast === null || u.kontrast >= 4.5, u);
     pruefe(name + ': Umschalter „Radar & Satellit | Karten“ im Blatt-Kopf', k.chips.join('|') === 'Radar & Satellit:true|Karten:false', k.chips);
     const z0 = await p.evaluate(() => document.querySelector('#karte .wk-leaflet')._wkMap.getZoom());
     await p.click('#karte [data-zoom="1"]'); await p.waitForTimeout(300);
@@ -192,7 +211,7 @@ async function zuGraphs(p) { await p.click('#leiste [data-tab="graphs"]'); await
       await s.ctx.close();
     }
     console.log('2) Karte (Rad/Sat) im Vollbild: 390 hell und dunkel, quer 844 × 390, 1280 × 800');
-    for (const o of [{ name: 'karte-390-hell' }, { name: 'karte-390-dunkel', farbe: 'dark' }, { name: 'karte-390-130', schrift: true }, { name: 'karte-844-quer', breite: 844, hoehe: 390 }, { name: 'karte-1280', breite: 1280, hoehe: 800 }]) {
+    for (const o of [{ name: 'karte-390-hell' }, { name: 'karte-390-dunkel', farbe: 'dark' }, { name: 'karte-390-130', schrift: true }, { name: 'karte-844-quer', breite: 844, hoehe: 390 }, { name: 'karte-844-quer-130', breite: 844, hoehe: 390, schrift: true }, { name: 'karte-1280', breite: 1280, hoehe: 800 }]) {
       const s = await neueSeite(b, Object.assign({ speicher: { [VORSATZ + 'radsat-modus']: '"radsat"' } }, o));
       await zuKarte(s.p);
       await blattPruefen(s, Object.assign({}, KARTE, { name: o.name }));
