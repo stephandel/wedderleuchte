@@ -361,7 +361,7 @@
       ziel: '#graphs', orte: [{ id: ort.id, name: ort.name, lat: ort.lat, lon: ort.lon }],
       modelle: [{ id: 'best_match', name: 'Mix', lang: 'Beste Mischung', hinweis: 'Open-Meteo nimmt je Region das passendste Modell' }],
       karte: false, zeilen: ['sonne', 'temp', 'wind', 'regen'], zeilenStandard: ['sonne', 'temp', 'wind', 'regen'],
-      werteKlug: false, wertePaare: [], merkschluessel: 'wedder-mg', zeitzone: 'auto'
+      werteKlug: false, wertePaare: [], vollbildStart: vbImmer() && tab === 'graphs', beiVollbildZu: vbZurueck, merkschluessel: 'wedder-mg', zeitzone: 'auto'
     });
     mgSchluessel = schl;
   }
@@ -389,7 +389,7 @@
       orte: sortierteOrte().map(function (o) { return { id: o.id, name: o.name, lat: o.lat, lon: o.lon }; }), offset: off,
       symbol: function (code, tag, w) { return symbolFuerCode(w ? kartenCode(code, tag, w) : code, tag); },
       offline: false,
-      wechsel: [{ id: 'radsat', name: 'Radar & Satellit' }, { id: 'karten', name: 'Karten' }], aktiv: radsatModus, vollbildStart: kartenVoll,
+      wechsel: [{ id: 'radsat', name: 'Radar & Satellit' }, { id: 'karten', name: 'Karten' }], aktiv: radsatModus, vollbildStart: kartenVoll || (vbImmer() && tab === 'radsat'), beiVollbildZu: vbZurueck,
       beiWechsel: function (id) {
         radsatModus = id; speicher.schreiben('radsat-modus', id); kartenVoll = true; renderRadSat(); kartenVoll = false;
         var c = $('#karte [data-wechsel="' + id + '"]'); if (c) c.focus();
@@ -422,6 +422,8 @@
       '<section class="abschnitt"><h2>Orte und Favoriten</h2><div class="gruppe">' + liste +
       '<div class="zeile"><button type="button" class="zeile-text tippbar" id="gpsKnopf"><b>Aktuellen Standort verwenden</b><small>Fragt vorher bei dir nach</small></button><span class="ikon-knopf" aria-hidden="true">' + Ikon('pin') + '</span></div></div></section>' +
       '<section class="abschnitt"><h2>Darstellung</h2><div class="gruppe"><div class="einstell"><span id="windLabel">Wind in</span><div class="segment" role="radiogroup" aria-labelledby="windLabel">' + seg + '</div></div>' +
+      '<label class="einstell schalter-zeile tippbar"><span><b>Meteogramm und Karten immer im Vollbild</b><small>Graphs und Rad/Sat (auch Karten) öffnen über den ganzen Bildschirm; „Fertig“ führt zurück.</small></span>' +
+      '<input type="checkbox" role="switch" id="vollbildImmer"' + (vbImmer() ? ' checked' : '') + '></label>' +
       '<div class="einstell"><span>Temperatur in °C. Hell und Dunkel folgen deinem iPhone.</span></div></div></section>' +
       '<section class="abschnitt"><h2>Quellen</h2><div class="gruppe"><ul class="quellen-liste">' +
       '<li>Wetterdaten: Open-Meteo.com (CC BY 4.0), Modell „Beste Mischung“</li><li>Karte: © OpenStreetMap-Mitwirkende, OpenTopoMap (CC BY-SA)</li><li>Radar: RainViewer</li><li>Satellit: EUMETSAT</li></ul></div></section>' +
@@ -478,14 +480,25 @@
     var eng = $$('.tab span', bar).some(function (sp) { return sp.scrollWidth > sp.clientWidth + 1; });
     bar.classList.toggle('nur-symbole', eng);
   }
+  // „Meteogramm und Karten immer im Vollbild“ (A32 P3): Graphs und Rad/Sat öffnen gleich als Blatt, „Fertig“ und Zurück führen zum
+  // vorherigen Reiter (unbekannt: Wetter). Vorgabe aus design.json (einstellungen.vollbildImmer), danach gilt die Wahl unter „Mehr“.
+  var VOLLBILD_IMMER_STANDARD = false;
+  function vbImmer() { return speicher.lesen('vollbild-immer', VOLLBILD_IMMER_STANDARD) === true; }
+  var vbVorher = 'wetter';
+  function vbZurueck() {
+    if (!vbImmer() || (tab !== 'graphs' && tab !== 'radsat')) return;
+    waehleTab(vbVorher);
+    var t = $('#leiste [data-tab="' + vbVorher + '"]'); if (t) t.focus({ preventScroll: true });
+  }
   function waehleTab(id) {
+    if (id !== tab && id !== 'kamera' && tab !== 'graphs' && tab !== 'radsat') vbVorher = tab;
     if (id === 'kamera') { studioAuf(true, $('[data-tab="kamera"]')); return; }
     tab = id;
     $$('.reiter').forEach(function (s) { s.hidden = s.id !== 'tab-' + id; });
     kopfAktualisieren(); leisteMarkieren();
     if (id === 'wetter') renderWetter();
-    else if (id === 'graphs') renderGraphs();
-    else if (id === 'radsat') renderRadSat();
+    else if (id === 'graphs') { renderGraphs(); if (vbImmer() && mgInstanz) mgInstanz.vollbild(true); }
+    else if (id === 'radsat') { renderRadSat(); if (vbImmer() && karten[radsatModus]) karten[radsatModus].vollbild(true); }
     else if (id === 'mehr') renderMehr();
     window.scrollTo(0, 0);
   }
@@ -624,6 +637,7 @@
         if (ort.id === wid) { ort = orte[0]; speicher.schreiben('ort', ort); daten = null; mgAbbauen(); kartenAbbauen(); laden(); }
         renderMehr(); return;
       }
+      if (t.id === 'vollbildImmer') { speicher.schreiben('vollbild-immer', t.checked); return; }
       var w = t.closest('[data-wind]'); if (w) { windId = w.dataset.wind; speicher.schreiben('wind', windId); renderMehr(); var nw = $('[data-wind="' + windId + '"]'); if (nw) nw.focus(); return; }
       var md = t.closest('[data-modus]'); if (md) { radsatModus = md.dataset.modus; speicher.schreiben('radsat-modus', radsatModus); renderRadSat(); var nm = $('[data-modus="' + radsatModus + '"]'); if (nm) nm.focus(); return; }
       if (t.closest('#gpsKnopf')) return void gpsFragen();

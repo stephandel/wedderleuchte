@@ -201,6 +201,11 @@ body { background: var(--radar-grund); }
 .segment button[aria-checked="true"] { background: var(--bg-2); font-weight: 600; }
 .einstell { padding: var(--s3) var(--s4); display: flex; flex-direction: column; gap: var(--s2); }
 .einstell > span { font-size: var(--fs-subhead); }
+/* Schalter-Zeile unter „Darstellung“ (A32: Meteogramm und Karten immer im Vollbild) */
+.schalter-zeile { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--s3); min-height: var(--tap); cursor: pointer; }
+.schalter-zeile > span { display: flex; flex-direction: column; gap: var(--s1); font-size: var(--fs-subhead); }
+.schalter-zeile small { font-size: var(--fs-footnote); color: var(--label-2); }
+.schalter-zeile input { flex: none; width: var(--s6); height: var(--s6); accent-color: var(--akzent); }
 .quellen-liste { margin: 0; padding: var(--s3) var(--s4); list-style: none; display: grid; gap: var(--s2); font-size: var(--fs-subhead); max-inline-size: 65ch; }
 .quellen-liste a { color: var(--akzent-text); }
 

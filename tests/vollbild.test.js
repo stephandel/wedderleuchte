@@ -217,6 +217,47 @@ async function zuGraphs(p) { await p.click('#leiste [data-tab="graphs"]'); await
       pruefe('keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
       await s.ctx.close();
     }
+    console.log('5) Einstellung „Meteogramm und Karten immer im Vollbild“ (A32 P3)');
+    {
+      const s = await neueSeite(b, { speicher: { [VORSATZ + 'radsat-modus']: '"radsat"' } }), p = s.p;
+      const blatt = sel => p.evaluate(sel => { const e = document.querySelector(sel); if (!e) return false; const r = e.getBoundingClientRect(); return Math.round(r.width) === innerWidth && Math.round(r.height) === innerHeight && !!document.querySelector('#leiste').closest('[inert]'); }, sel);
+      const reiter = () => p.evaluate(() => ['wetter', 'graphs', 'radsat', 'mehr'].filter(t => !document.getElementById('tab-' + t).hidden)[0]);
+      await p.click('#leiste [data-tab="mehr"]'); await p.waitForTimeout(300);
+      const sch = await p.$('#vollbildImmer');
+      pruefe('Mehr → Darstellung: Schalter „Meteogramm und Karten immer im Vollbild“ (role=switch, aus, Zeile mind. 44 px)', !!sch && await sch.getAttribute('role') === 'switch' && !(await sch.isChecked()) && /immer im Vollbild/.test(await p.textContent('#tab-mehr')) && (await p.evaluate(() => document.getElementById('vollbildImmer').closest('label').getBoundingClientRect().height)) >= 44);
+      if (sch) {
+        await foto(p, 'vollbild-immer-mehr');
+        await sch.check(); await p.waitForTimeout(100);
+        pruefe('Wahl gespeichert (' + VORSATZ + 'vollbild-immer)', await p.evaluate(k => localStorage.getItem(k), VORSATZ + 'vollbild-immer') === 'true');
+        await p.click('#leiste [data-tab="wetter"]'); await p.waitForTimeout(200);
+        await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(700);
+        pruefe('Tipp auf Graphs öffnet das Meteogramm direkt als Blatt, Fokus auf „Fertig“', await blatt('#graphs') && await p.evaluate(() => document.activeElement && document.activeElement.classList.contains('mg-vb-fertig')));
+        await foto(p, 'vollbild-immer-graphs');
+        await p.click('#graphs .mg-vb-fertig'); await p.waitForTimeout(400);
+        pruefe('„Fertig“ führt zum vorherigen Reiter (Wetter), Seite frei', await reiter() === 'wetter' && !(await blatt('#graphs')) && await p.evaluate(() => !document.querySelector('#leiste').closest('[inert]')), await reiter());
+        await p.click('#leiste [data-tab="mehr"]'); await p.waitForTimeout(200);
+        await p.click('#leiste [data-tab="radsat"]'); await p.waitForTimeout(900);
+        pruefe('Tipp auf Rad/Sat öffnet die Karte direkt als Blatt', await blatt('#karte'));
+        await p.click('#karte [data-wechsel="karten"]'); await p.waitForTimeout(800);
+        pruefe('Umschalter im Blatt: Karten bleiben im Blatt', await blatt('#karte') && await p.evaluate(() => document.querySelectorAll('#karte [data-ebene]').length) === 6);
+        await foto(p, 'vollbild-immer-karten');
+        await p.evaluate(() => history.back()); await p.waitForTimeout(500);
+        pruefe('Zurück führt zum vorherigen Reiter (Mehr)', await reiter() === 'mehr' && !(await blatt('#karte')), await reiter());
+        await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(500); await p.keyboard.press('Escape'); await p.waitForTimeout(400);
+        pruefe('Esc aus Graphs führt ebenfalls zurück (Mehr)', await reiter() === 'mehr', await reiter());
+        await p.reload(); await p.waitForSelector('.aktuell-kachel', { timeout: 10000 }); await p.waitForTimeout(300);
+        await p.click('#leiste [data-tab="mehr"]'); await p.waitForTimeout(300);
+        pruefe('Nach einem Neustart ist die Wahl noch gesetzt', await p.isChecked('#vollbildImmer'));
+        await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(700);
+        pruefe('Nach dem Neustart öffnet Graphs wieder als Blatt', await blatt('#graphs'));
+        await p.click('#graphs .mg-vb-fertig'); await p.waitForTimeout(300);
+        await p.uncheck('#vollbildImmer');
+        await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(500);
+        pruefe('Schalter aus: Graphs öffnet wieder normal mit Tab-Leiste', await reiter() === 'graphs' && !(await blatt('#graphs')));
+      }
+      pruefe('keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
+      await s.ctx.close();
+    }
     console.log('4) Reduzierte Bewegung');
     {
       const s = await neueSeite(b, { bewegung: 'reduce' });
