@@ -1,0 +1,660 @@
+/* ks-studio.css – Kamera-Studio, Oberflächen (Paket U)
+ * Alles unter .ks – kein Einfluss auf die umgebende Seite.
+ * Farben/Maße als --ks-…, hell und dunkel; data-ks-theme="hell|dunkel|auto". */
+
+.ks {
+  --ks-k: 1;      /* Schriftfaktor (zusätzlich zu rem = Systemschriftgröße) */
+  --ks-tk: 1;     /* Faktor für Tippflächen */
+  --ks-akzent: #086ADC;
+  --ks-akzent-flaeche: #086ADC;
+  --ks-auf-akzent: #FFFFFF;
+  --ks-bg: #F2F2F7;
+  --ks-bg2: #FFFFFF;
+  --ks-buehne: #E5E5EA;
+  --ks-text: #000000;
+  --ks-text2: #52525A;
+  --ks-fuellung: rgba(120, 120, 128, .14);
+  --ks-fuellung-an: rgba(8, 106, 220, .14);
+  --ks-trenner: rgba(60, 60, 67, .22);
+  --ks-glas: rgba(255, 255, 255, .74);
+  --ks-glas-rand: rgba(255, 255, 255, .45);
+  --ks-schatten: 0 8px 32px rgba(0, 0, 0, .14);
+  --ks-rot: #C4001A;
+  --ks-gruen: #1B7F3A;
+  --ks-gefahr-flaeche: #C4001A;
+  --ks-gruen-flaeche: #248A3D;
+  --ks-warn: #C25E00;
+  --ks-toast-bg: rgba(28, 28, 30, .94);
+  --ks-toast-text: #FFFFFF;
+  --ks-toast-link: #64B5FF;
+  --ks-hinter: rgba(0, 0, 0, .32);
+  --ks-ease: cubic-bezier(.32, .72, 0, 1);
+  --ks-dauer: 280ms;
+  --ks-tap: calc(44px * var(--ks-tk));
+  --ks-fs-titel: calc(1.25rem * var(--ks-k));
+  --ks-fs-body: calc(1.0625rem * var(--ks-k));
+  --ks-fs-sub: calc(0.9375rem * var(--ks-k));
+  --ks-fs-fuss: calc(0.8125rem * var(--ks-k));
+  --ks-fs-cap: calc(0.75rem * var(--ks-k));
+  --ks-rand: 16px;
+
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  container-type: size;
+  container-name: ks;
+  box-sizing: border-box;
+  font-family: -apple-system, "SF Pro Text", system-ui, sans-serif;
+  font-size: var(--ks-fs-body);
+  line-height: 1.35;
+  color: var(--ks-text);
+  background: var(--ks-bg);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  text-align: left;
+  color-scheme: light;
+}
+.ks.ks-gross { --ks-k: 1.25; --ks-tk: 1.25; }
+/* Automatisch groß (Systemschrift ≥ 20 px): Schrift ist schon groß, nur Tippflächen größer und weniger Werkzeuge */
+.ks.ks-gross.ks-gross-auto { --ks-k: 1; --ks-tk: 1.2; }
+
+/* Dunkel: fest, automatisch, und für Kamera-artige Varianten immer */
+.ks[data-ks-theme="dunkel"], .ks.ks-dunkel-fest {
+  --ks-akzent: #0A84FF; --ks-akzent-flaeche: #086ADC;
+  --ks-bg: #000000; --ks-bg2: #1C1C1E; --ks-buehne: #0B0B0C; --ks-text: #FFFFFF; --ks-text2: #B4B4BB;
+  --ks-fuellung: rgba(120, 120, 128, .32); --ks-fuellung-an: rgba(10, 132, 255, .26); --ks-trenner: rgba(84, 84, 88, .6);
+  --ks-glas: rgba(28, 28, 30, .66); --ks-glas-rand: rgba(255, 255, 255, .14); --ks-schatten: 0 8px 32px rgba(0, 0, 0, .5);
+  --ks-rot: #FF6961; --ks-gruen: #30D158; --ks-hinter: rgba(0, 0, 0, .55);
+  --ks-gefahr-flaeche: #D70015; --ks-gruen-flaeche: #30D158; --ks-warn: #FF9F0A;
+  --ks-toast-bg: rgba(58, 58, 60, .96); --ks-toast-text: #FFFFFF; --ks-toast-link: #64B5FF;
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  .ks[data-ks-theme="auto"] {
+    --ks-akzent: #0A84FF; --ks-akzent-flaeche: #086ADC;
+    --ks-bg: #000000; --ks-bg2: #1C1C1E; --ks-buehne: #0B0B0C; --ks-text: #FFFFFF; --ks-text2: #B4B4BB;
+    --ks-fuellung: rgba(120, 120, 128, .32); --ks-fuellung-an: rgba(10, 132, 255, .26); --ks-trenner: rgba(84, 84, 88, .6);
+    --ks-glas: rgba(28, 28, 30, .66); --ks-glas-rand: rgba(255, 255, 255, .14); --ks-schatten: 0 8px 32px rgba(0, 0, 0, .5);
+    --ks-rot: #FF6961; --ks-gruen: #30D158; --ks-hinter: rgba(0, 0, 0, .55);
+    --ks-gefahr-flaeche: #D70015; --ks-gruen-flaeche: #30D158; --ks-warn: #FF9F0A;
+    --ks-toast-bg: rgba(58, 58, 60, .96); --ks-toast-text: #FFFFFF; --ks-toast-link: #64B5FF;
+    color-scheme: dark;
+  }
+}
+
+.ks *, .ks *::before, .ks *::after { box-sizing: border-box; }
+.ks h2, .ks h3, .ks p { margin: 0; }
+.ks button { font: inherit; color: inherit; background: none; border: 0; margin: 0; padding: 0; cursor: pointer; -webkit-user-select: none; user-select: none; touch-action: manipulation; }
+.ks button:disabled { cursor: default; }
+.ks :focus-visible { outline: 3px solid var(--ks-akzent); outline-offset: 2px; }
+.ks .ks-ic { width: calc(22px * var(--ks-tk)); height: calc(22px * var(--ks-tk)); flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.ks .ks-datei, .ks .ks-datei-kamera { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; left: -9999px; }
+
+/* ---------- Grundgerüst ---------- */
+.ks .ks-app { position: absolute; inset: 0; display: flex; flex-direction: column; background: var(--ks-bg); }
+.ks .ks-kopf {
+  flex: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+  min-height: calc(52px * var(--ks-tk));
+  padding: max(6px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 6px max(12px, env(safe-area-inset-left));
+  background: var(--ks-bg); border-bottom: .5px solid var(--ks-trenner); z-index: 3;
+}
+.ks .ks-kopf:empty { display: none; }
+/* Große Bedienung: Kopfzeile bricht um, statt Knöpfe zu überlagern */
+.ks.ks-gross .ks-kopf { display: flex; flex-wrap: wrap; justify-content: space-between; row-gap: 0; }
+.ks.ks-gross .ks-kopf > * { flex: 0 0 auto; }
+.ks.ks-gross .ks-kopf > .ks-schritt-kopf { flex: 1 1 100%; }
+@container ks (max-width: 520px) { .ks.ks-gross .ks-kopf-r { margin-left: auto; } }
+.ks .ks-kopf-l { display: flex; justify-content: flex-start; min-width: 0; }
+.ks .ks-kopf-m { display: flex; justify-content: center; min-width: 0; }
+.ks .ks-kopf-r { display: flex; justify-content: flex-end; min-width: 0; gap: 8px; }
+.ks .ks-titel { font-size: var(--ks-fs-body); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ks .ks-undo { display: flex; gap: 4px; }
+/* Kurzbeschriftung „Foto zurück/vor“ nur, wo Platz ist: Schritt für Schritt ab 380 px (nicht bei großer Bedienung), sonst ab 600 px */
+.ks .ks-undo-text { display: none; font-size: var(--ks-fs-fuss); }
+@container ks (min-width: 600px) { .ks .ks-undo .ks-undo-text { display: inline; } .ks .ks-undo .ks-knopf.ks-rund { width: auto; padding: 0 10px; } }
+/* Kurzbeschriftung „Foto zurück/vor“ erst ab 380 px: darunter bricht „Schritt x von 6 · Name“ auf 2–3 Zeilen um (gemessen bei 340/358) */
+@container ks (min-width: 380px) { .ks:not(.ks-gross)[data-ks-variante="assistent"] .ks-undo .ks-undo-text { display: inline; } .ks:not(.ks-gross)[data-ks-variante="assistent"] .ks-undo .ks-knopf.ks-rund { width: auto; padding: 0 10px; } }
+
+.ks .ks-haupt { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.ks .ks-buehne { flex: 1 1 auto; min-height: 120px; position: relative; overflow: hidden; background: var(--ks-buehne); }
+.ks .ks-flaeche { position: absolute; visibility: hidden; }
+.ks .ks-flaeche > canvas, .ks .ks-karte-seite > canvas { display: block; width: 100%; height: 100%; border-radius: 2px; box-shadow: 0 2px 16px rgba(0, 0, 0, .18); }
+.ks .ks-ebene { position: absolute; inset: 0; }
+.ks .ks-ebene.ks-ebene-aktiv { touch-action: none; }
+.ks .ks-leer:empty, .ks .ks-zusatz:empty { display: none; }
+.ks .ks-leer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto; background: var(--ks-bg); }
+
+.ks .ks-seite {
+  flex: 0 1 auto; max-height: 52%; min-height: 0; display: flex; flex-direction: column;
+  background: var(--ks-bg); border-top: .5px solid var(--ks-trenner);
+  padding: 0 max(0px, env(safe-area-inset-right)) max(0px, env(safe-area-inset-bottom)) max(0px, env(safe-area-inset-left));
+}
+.ks .ks-seite:empty { display: none; }
+.ks .ks-seite-inhalt { flex: 0 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; padding: 12px var(--ks-rand); display: flex; flex-direction: column; gap: 12px; overscroll-behavior: contain; }
+.ks .ks-seite-inhalt:empty { display: none; }
+.ks .ks-seite-fuss { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 8px var(--ks-rand) 12px; }
+
+/* Quer: Bild links, Werkzeuge rechts. Breit: Seitenleiste */
+.ks.ks-quer .ks-haupt, .ks.ks-breit .ks-haupt { flex-direction: row; }
+.ks.ks-quer .ks-seite { width: min(340px, 44%); max-height: none; border-top: 0; border-left: .5px solid var(--ks-trenner); }
+.ks.ks-breit .ks-seite { width: 360px; max-height: none; border-top: 0; border-left: .5px solid var(--ks-trenner); }
+.ks.ks-quer .ks-seite-inhalt, .ks.ks-breit .ks-seite-inhalt { flex: 1 1 auto; }
+.ks.ks-quer .ks-kopf { min-height: 48px; padding-top: max(4px, env(safe-area-inset-top)); padding-bottom: 4px; }
+.ks.ks-breit { --ks-rand: 20px; }
+
+/* ---------- Knöpfe ---------- */
+.ks .ks-knopf {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: var(--ks-tap); min-width: var(--ks-tap); padding: 0 14px; border-radius: 12px;
+  background: var(--ks-fuellung); color: var(--ks-text); font-size: var(--ks-fs-sub); font-weight: 600;
+  transition: transform 160ms var(--ks-ease), opacity 160ms var(--ks-ease), background-color 200ms var(--ks-ease);
+  white-space: nowrap; text-decoration: none; flex: none;
+}
+.ks .ks-knopf:active:not(:disabled) { transform: scale(.97); opacity: .75; }
+.ks .ks-knopf:disabled { opacity: .55; }
+.ks .ks-knopf.ks-flach { background: transparent; color: var(--ks-akzent); }
+.ks .ks-knopf.ks-primaer { background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+.ks .ks-knopf.ks-gefahr { background: var(--ks-gefahr-flaeche); color: #fff; }
+.ks .ks-knopf.ks-rot, .ks .ks-knopf.ks-flach.ks-rot { color: var(--ks-rot); }
+.ks .ks-knopf.ks-pille { border-radius: 999px; }
+.ks .ks-knopf.ks-rund { padding: 0; border-radius: 999px; width: var(--ks-tap); }
+.ks .ks-knopf.ks-breit-knopf { flex: 1 1 auto; min-width: min(100%, 140px); }
+.ks .ks-knopf.ks-gross-knopf { width: 100%; min-height: calc(3.25rem * var(--ks-k)); font-size: var(--ks-fs-body); border-radius: 14px; }
+.ks .ks-knopf.ks-klein-knopf { align-self: center; font-size: var(--ks-fs-fuss); }
+.ks .ks-kopf .ks-knopf.ks-flach { padding: 0 8px; }
+
+/* Werkzeug-Knopf: Symbol + Beschriftung untereinander */
+.ks .ks-knopf.ks-werkzeug {
+  flex-direction: column; gap: 2px; padding: 4px 6px; min-width: calc(52px * var(--ks-tk)); min-height: calc(52px * var(--ks-tk));
+  background: transparent; font-size: var(--ks-fs-cap); font-weight: 500; color: var(--ks-text2); border-radius: 12px;
+}
+.ks .ks-knopf.ks-werkzeug.ks-an, .ks .ks-knopf.ks-werkzeug[aria-pressed="true"] { color: var(--ks-akzent); background: var(--ks-fuellung-an); }
+
+/* Chips und Segmente */
+.ks .ks-chips { display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 2px; margin: -2px; scroll-snap-type: x proximity; }
+.ks .ks-chips::-webkit-scrollbar { display: none; }
+.ks .ks-chips.ks-umbruch { flex-wrap: wrap; overflow: visible; }
+.ks .ks-knopf.ks-chip { border-radius: 999px; font-weight: 500; padding: 0 14px; scroll-snap-align: start; }
+.ks .ks-knopf.ks-chip.ks-an { background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+.ks .ks-haken-chip .ks-ic { width: 16px; height: 16px; stroke-width: 3; }
+.ks .ks-format-bild { display: inline-block; height: 16px; max-width: 24px; border: 2px solid currentColor; border-radius: 3px; }
+.ks .ks-segment { display: flex; gap: 2px; padding: 2px; border-radius: 12px; background: var(--ks-fuellung); max-width: 100%; }
+.ks .ks-segment .ks-knopf.ks-chip { flex: 1 1 0; min-width: 0; border-radius: 10px; background: transparent; padding: 0 8px; overflow: hidden; text-overflow: ellipsis; }
+.ks .ks-segment .ks-knopf.ks-chip.ks-an { background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+.ks .ks-raster-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; }
+
+.ks .ks-reihe { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.ks .ks-reihe-mitte { justify-content: center; }
+.ks .ks-reihe-ende { justify-content: flex-end; margin-top: 4px; }
+.ks .ks-gruppe { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.ks .ks-gruppe-titel { font-size: var(--ks-fs-fuss); font-weight: 600; color: var(--ks-text2); text-transform: none; }
+.ks .ks-hilfe { font-size: var(--ks-fs-fuss); color: var(--ks-text2); line-height: 1.35; }
+.ks .ks-text { font-size: var(--ks-fs-body); color: var(--ks-text); }
+.ks .ks-wert { font-size: var(--ks-fs-fuss); color: var(--ks-text2); font-variant-numeric: tabular-nums; }
+
+/* Schalter-Zeile (an/aus) */
+.ks .ks-schalter-zeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: var(--ks-tap); padding: 4px 0; font-size: var(--ks-fs-body); text-align: left; }
+.ks .ks-schalter { position: relative; flex: none; width: 51px; height: 31px; border-radius: 999px; background: var(--ks-fuellung); transition: background-color 200ms var(--ks-ease); box-shadow: inset 0 0 0 1px var(--ks-trenner); }
+.ks .ks-schalter::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(0, 0, 0, .25); transition: transform 240ms var(--ks-ease); }
+.ks [aria-checked="true"] > .ks-schalter { background: var(--ks-gruen-flaeche); }
+.ks [aria-checked="true"] > .ks-schalter::after { transform: translateX(20px); }
+
+/* Regler */
+.ks .ks-regler { display: flex; flex-direction: column; gap: 2px; }
+.ks .ks-regler-kopf { display: flex; justify-content: space-between; font-size: var(--ks-fs-sub); font-weight: 500; }
+.ks .ks-regler-kopf output { color: var(--ks-text2); font-variant-numeric: tabular-nums; }
+.ks .ks-regler-zeile { display: flex; align-items: center; gap: 4px; }
+.ks input[type="range"] { flex: 1; min-width: 0; height: var(--ks-tap); margin: 0; background: transparent; -webkit-appearance: none; appearance: none; touch-action: pan-y; }
+.ks input[type="range"]::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: var(--ks-fuellung); box-shadow: inset 0 0 0 1px var(--ks-trenner); }
+.ks input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -12px; border-radius: 50%; background: #fff; box-shadow: 0 1px 6px rgba(0, 0, 0, .3); border: .5px solid rgba(0, 0, 0, .1); }
+.ks input[type="range"]::-moz-range-track { height: 4px; border-radius: 2px; background: var(--ks-fuellung); }
+.ks input[type="range"]::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 0; box-shadow: 0 1px 6px rgba(0, 0, 0, .3); }
+
+/* Eingabefelder (≥ 16 px, sonst zoomt iOS) */
+.ks .ks-eingabe { width: 100%; min-height: var(--ks-tap); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--ks-trenner); background: var(--ks-bg2); color: var(--ks-text); font: inherit; font-size: max(1rem, var(--ks-fs-body)); resize: vertical; }
+.ks textarea.ks-eingabe { min-height: 88px; }
+.ks .ks-eingabe::placeholder { color: var(--ks-text2); opacity: 1; }
+.ks .ks-hand { font-family: Noteworthy, "Bradley Hand", "Snell Roundhand", cursive; }
+
+/* ---------- Leerzustand ---------- */
+.ks .ks-leer-inhalt { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; width: 100%; max-width: 360px; margin: auto; }
+.ks .ks-leer-inhalt h2 { font-size: calc(1.375rem * var(--ks-k)); font-weight: 700; }
+.ks .ks-leer-inhalt > p { color: var(--ks-text2); font-size: var(--ks-fs-sub); }
+.ks .ks-leer-symbol { width: 64px; height: 64px; border-radius: 18px; display: grid; place-items: center; background: var(--ks-fuellung-an); color: var(--ks-akzent); }
+.ks .ks-leer-symbol .ks-ic { width: 32px; height: 32px; }
+.ks .ks-leer-knoepfe { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.ks .ks-leer-knoepfe .ks-knopf { width: 100%; }
+.ks .ks-hilfe-fest { display: block; }
+.ks .ks-nur-zeiger { display: none; }
+@media (hover: hover) and (pointer: fine) { .ks .ks-nur-zeiger { display: block; } }
+.ks .ks-meldung { width: 100%; padding: 12px; border-radius: 12px; background: var(--ks-fuellung); color: var(--ks-text); font-size: var(--ks-fs-sub); text-align: left; border-left: 4px solid var(--ks-warn); }
+.ks .ks-skelett { width: 160px; height: 120px; border-radius: 16px; background: var(--ks-fuellung); animation: ks-puls 1.2s ease-in-out infinite alternate; }
+@keyframes ks-puls { from { opacity: .5; } to { opacity: 1; } }
+.ks .ks-ablegen { display: none; position: absolute; inset: 8px; border: 3px dashed var(--ks-akzent); border-radius: 16px; background: var(--ks-fuellung-an); place-items: center; font-size: var(--ks-fs-titel); font-weight: 600; color: var(--ks-akzent); z-index: 30; pointer-events: none; }
+.ks.ks-zieht-datei .ks-ablegen { display: grid; }
+
+/* Antippbare Felder auf dem Bild */
+.ks .ks-feld { position: absolute; border-radius: 8px; background: transparent; touch-action: none; }
+.ks .ks-feld.ks-gewaehlt { outline: 2px dashed #fff; outline-offset: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5), 0 0 0 4px rgba(0, 0, 0, .15); }
+@media (hover: hover) and (pointer: fine) { .ks .ks-feld:hover { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .7); } }
+
+/* Schwebende Knöpfe über dem Bild (Glas) */
+.ks .ks-schwebe { position: absolute; z-index: 2; }
+.ks .ks-schwebe-ol { top: 10px; left: 10px; }
+.ks .ks-glas-knopf, .ks .ks-knopf.ks-glas-knopf {
+  background: var(--ks-glas); color: var(--ks-text); border: 1px solid var(--ks-glas-rand); box-shadow: var(--ks-schatten);
+  -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .ks .ks-glas-knopf { background: var(--ks-bg2); } }
+.ks .ks-knopf.ks-original { border-radius: 999px; font-size: var(--ks-fs-fuss); padding: 0 12px; }
+.ks .ks-knopf.ks-original[aria-pressed="true"] { background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+
+/* Kontextstreifen für gewähltes Element */
+.ks .ks-kontext { display: flex; flex-direction: column; gap: 6px; padding: 10px var(--ks-rand) 12px; }
+.ks .ks-kontext-kopf { display: flex; align-items: center; gap: 8px; }
+.ks .ks-kontext-kopf strong { font-size: var(--ks-fs-body); }
+.ks .ks-kontext-kopf .ks-knopf { margin-left: auto; }
+.ks .ks-kontext-reihe { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px; }
+.ks .ks-kontext-reihe .ks-knopf.ks-werkzeug { flex: 1 1 0; max-width: 72px; color: var(--ks-text); }
+
+/* Werkzeugleiste */
+.ks .ks-werkzeugleiste { flex-direction: row; justify-content: space-around; gap: 2px; padding-top: 4px; padding-bottom: max(8px, env(safe-area-inset-bottom)); border-top: .5px solid var(--ks-trenner); }
+.ks .ks-werkzeugleiste .ks-knopf.ks-werkzeug { flex: 1 1 0; min-width: 44px; max-width: 80px; padding: 4px 1px; }
+.ks .ks-werkzeug .ks-knopf-text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- Zuschneiden ---------- */
+.ks .ks-zs { position: absolute; }
+.ks .ks-zs-flaeche { position: absolute; inset: 0; width: 100%; height: 100%; cursor: move; touch-action: none; border: 1px solid rgba(255, 255, 255, .9); }
+.ks .ks-raster { position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(to right, transparent calc(33.33% - .5px), rgba(255,255,255,.5) calc(33.33% - .5px), rgba(255,255,255,.5) calc(33.33% + .5px), transparent calc(33.33% + .5px), transparent calc(66.66% - .5px), rgba(255,255,255,.5) calc(66.66% - .5px), rgba(255,255,255,.5) calc(66.66% + .5px), transparent calc(66.66% + .5px)),
+              linear-gradient(to bottom, transparent calc(33.33% - .5px), rgba(255,255,255,.5) calc(33.33% - .5px), rgba(255,255,255,.5) calc(33.33% + .5px), transparent calc(33.33% + .5px), transparent calc(66.66% - .5px), rgba(255,255,255,.5) calc(66.66% - .5px), rgba(255,255,255,.5) calc(66.66% + .5px), transparent calc(66.66% + .5px)); }
+.ks .ks-griff { position: absolute; width: 48px; height: 48px; touch-action: none; z-index: 1; }
+.ks .ks-griff span { position: absolute; width: 24px; height: 24px; border: 0 solid #fff; filter: drop-shadow(0 0 2px rgba(0, 0, 0, .6)); }
+.ks .ks-griff-nw { left: -24px; top: -24px; cursor: nwse-resize; } .ks .ks-griff-nw span { left: 21px; top: 21px; border-left-width: 4px; border-top-width: 4px; }
+.ks .ks-griff-ne { right: -24px; top: -24px; cursor: nesw-resize; } .ks .ks-griff-ne span { right: 21px; top: 21px; border-right-width: 4px; border-top-width: 4px; }
+.ks .ks-griff-sw { left: -24px; bottom: -24px; cursor: nesw-resize; } .ks .ks-griff-sw span { left: 21px; bottom: 21px; border-left-width: 4px; border-bottom-width: 4px; }
+.ks .ks-griff-se { right: -24px; bottom: -24px; cursor: nwse-resize; } .ks .ks-griff-se span { right: 21px; bottom: 21px; border-right-width: 4px; border-bottom-width: 4px; }
+.ks.ks-zuschneiden .ks-buehne { background: #000; }
+.ks.ks-zuschneiden .ks-flaeche > canvas { box-shadow: none; }
+
+/* ---------- Blätter (unten; quer/breit als Seitenfeld) ---------- */
+.ks .ks-blatt-schicht { position: absolute; inset: 0; z-index: 20; }
+.ks .ks-blatt-schicht[hidden] { display: none; }
+.ks .ks-blatt-hinter { position: absolute; inset: 0; background: var(--ks-hinter); opacity: 0; transition: opacity var(--ks-dauer) var(--ks-ease); }
+.ks .ks-blatt {
+  position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; display: flex; flex-direction: column;
+  background: var(--ks-bg2); border-radius: 16px 16px 0 0; box-shadow: 0 -8px 32px rgba(0, 0, 0, .2);
+  transform: translateY(100%); transition: transform var(--ks-dauer) var(--ks-ease);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.ks .ks-blatt-schicht.ks-offen .ks-blatt-hinter { opacity: 1; }
+.ks .ks-blatt-schicht.ks-offen .ks-blatt { transform: none; }
+.ks .ks-blatt-griff { width: 36px; height: 5px; border-radius: 3px; background: var(--ks-trenner); margin: 6px auto 0; flex: none; }
+.ks .ks-blatt-kopf { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 8px 2px var(--ks-rand); }
+.ks .ks-blatt-kopf h2 { font-size: var(--ks-fs-titel); font-weight: 700; }
+.ks .ks-blatt-inhalt:has(> .ks-reihe-ende:last-child) { padding-bottom: 0; }
+.ks .ks-blatt-inhalt > .ks-reihe-ende:last-child { position: sticky; bottom: 0; margin: 0 calc(var(--ks-rand) * -1); padding: 8px var(--ks-rand) 16px; background: var(--ks-bg2); border-top: .5px solid var(--ks-trenner); }
+.ks .ks-blatt-inhalt { overflow-y: auto; overflow-x: hidden; padding: 4px var(--ks-rand) 16px; display: flex; flex-direction: column; gap: 14px; overscroll-behavior: contain; }
+.ks.ks-quer .ks-blatt, .ks.ks-breit .ks-blatt {
+  left: auto; top: 8px; bottom: 8px; right: 8px; width: min(420px, calc(100% - 16px)); max-height: none;
+  border-radius: 16px; transform: translateX(calc(100% + 16px));
+  margin-right: env(safe-area-inset-right);
+}
+.ks.ks-quer .ks-blatt-griff, .ks.ks-breit .ks-blatt-griff { display: none; }
+.ks.ks-quer .ks-blatt-schicht.ks-offen .ks-blatt, .ks.ks-breit .ks-blatt-schicht.ks-offen .ks-blatt { transform: none; }
+
+/* Senden */
+.ks .ks-senden-knoepfe { display: flex; flex-wrap: wrap; gap: 8px; }
+.ks .ks-senden-knoepfe .ks-knopf { flex: 1 1 140px; min-height: calc(50px * var(--ks-tk)); }
+.ks .ks-datei-info { font-size: var(--ks-fs-fuss); color: var(--ks-text2); font-variant-numeric: tabular-nums; word-break: break-word; }
+.ks .ks-hinweis-zeile { display: flex; gap: 8px; align-items: flex-start; font-size: var(--ks-fs-fuss); color: var(--ks-text2); }
+.ks .ks-hinweis-zeile .ks-ic { width: 18px; height: 18px; color: var(--ks-gruen); margin-top: 1px; }
+.ks .ks-alt { font-size: var(--ks-fs-sub); padding: 10px 12px; border-radius: 12px; background: var(--ks-fuellung); }
+
+/* Text-Blatt */
+.ks .ks-schrift-chip .ks-probe { font-size: calc(1.1875rem * var(--ks-k)); font-weight: 600; line-height: 1; }
+.ks .ks-farben { display: flex; flex-wrap: wrap; gap: 4px; }
+.ks .ks-farbe { width: var(--ks-tap); height: var(--ks-tap); border-radius: 50%; display: grid; place-items: center; }
+.ks .ks-farbe span { width: 30px; height: 30px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(128, 128, 128, .6); }
+.ks .ks-farbe.ks-an { box-shadow: inset 0 0 0 3px var(--ks-akzent); }
+.ks .ks-emoji { display: flex; flex-direction: column; gap: 8px; }
+.ks .ks-emoji-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 2px; }
+.ks .ks-emoji-knopf { min-width: 44px; min-height: 44px; font-size: calc(1.625rem * var(--ks-k)); border-radius: 10px; line-height: 1; }
+.ks .ks-emoji-knopf:active { background: var(--ks-fuellung); transform: scale(.94); }
+.ks .ks-sticker-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+.ks .ks-knopf.ks-sticker-knopf { flex-direction: column; min-height: 88px; padding: 8px 4px; font-size: var(--ks-fs-cap); font-weight: 500; white-space: normal; }
+.ks .ks-sticker-wert { font-size: calc(1.25rem * var(--ks-k)); font-weight: 700; }
+.ks .ks-sticker-svg svg { width: 36px; height: 36px; display: block; }
+
+/* Hinweis (Toast) */
+.ks .ks-toast { position: absolute; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0; z-index: 40; pointer-events: none;
+  transition: opacity 240ms var(--ks-ease), transform 240ms var(--ks-ease); width: max-content; max-width: calc(100% - 32px); }
+.ks .ks-toast.ks-sichtbar { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.ks .ks-toast-inhalt { display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 16px; min-height: 48px; border-radius: 999px; background: var(--ks-toast-bg); color: var(--ks-toast-text); font-size: var(--ks-fs-sub); font-weight: 500; box-shadow: 0 8px 32px rgba(0, 0, 0, .3); }
+.ks .ks-toast-inhalt > span { padding: 6px 10px 6px 0; }
+.ks .ks-knopf.ks-toast-knopf { color: var(--ks-toast-link); }
+
+/* ---------- Variante: bisher (Nachbau, schwarz) ---------- */
+.ks[data-ks-variante="bisher"] .ks-buehne { background: #000; }
+.ks .ks-bisher-leiste { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; justify-items: center; padding-top: 4px; }
+.ks .ks-knopf.ks-ausloeser { width: calc(72px * var(--ks-tk)); height: calc(72px * var(--ks-tk)); border-radius: 50%; padding: 0; background: #fff; color: #000; box-shadow: 0 0 0 4px rgba(255, 255, 255, .35); }
+.ks .ks-teilen-rund .ks-knopf-text { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.ks .ks-teilen-rund .ks-ic { width: 28px; height: 28px; }
+
+/* ---------- Variante: schnell (Vorlagen-Karussell) ---------- */
+.ks .ks-karussell { display: flex; gap: 10px; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; padding: 4px 2px 6px; margin: 0 -2px; scrollbar-width: none; }
+.ks .ks-karussell::-webkit-scrollbar { display: none; }
+.ks .ks-vorlage { flex: none; width: calc(96px * var(--ks-tk)); display: flex; flex-direction: column; gap: 6px; align-items: stretch; scroll-snap-align: start; border-radius: 14px; padding: 4px; }
+.ks .ks-vorlage img { width: 100%; height: calc(110px * var(--ks-tk)); object-fit: contain; background: var(--ks-fuellung); border-radius: 10px; display: block; }
+.ks .ks-vorlage span { font-size: var(--ks-fs-fuss); font-weight: 500; text-align: center; color: var(--ks-text2); }
+.ks .ks-vorlage.ks-an { box-shadow: inset 0 0 0 3px var(--ks-akzent); }
+.ks .ks-vorlage.ks-an span { color: var(--ks-akzent); font-weight: 700; }
+/* Ein-Tipp bei großer Bedienung auf kleinem Hochformat: Vorlagen samt Namen ohne Rollen sichtbar */
+.ks.ks-gross.ks-hoch[data-ks-variante="schnell"] .ks-seite { max-height: 64%; }
+/* Ein-Tipp mit fester Knopfreihe nach dem Foto: etwas mehr Höhe, damit die Vorlagen ganz zu sehen sind */
+.ks.ks-hoch:not(.ks-gross):not(.ks-klein)[data-ks-variante="schnell"] .ks-seite:has(.ks-nach-foto) { max-height: 56%; }   /* auch wenn die Knöpfe mitrollen, sonst kippt die Höhe danach auf 52 % */
+/* Kleines Hochformat (iPhone SE, Studio unter 600 px hoch): niedrigere Vorlagen-Vorschau, damit die Namen im Rollbereich nicht angeschnitten sind */
+.ks.ks-hoch.ks-klein[data-ks-variante="schnell"] .ks-vorlage img { height: calc(72px * var(--ks-tk)); }
+.ks.ks-gross.ks-hoch.ks-klein[data-ks-variante="schnell"] .ks-vorlage img { height: calc(56px * var(--ks-tk)); }
+.ks.ks-gross.ks-hoch.ks-klein[data-ks-variante="schnell"] .ks-seite-inhalt > .ks-hilfe { display: none; }
+.ks.ks-quer .ks-karussell, .ks.ks-breit .ks-karussell { flex-wrap: wrap; overflow: visible; }
+.ks.ks-quer .ks-vorlage { width: calc(50% - 5px); }
+.ks.ks-quer .ks-vorlage img { height: 76px; }
+.ks.ks-breit .ks-vorlage { width: calc(50% - 5px); }
+.ks.ks-breit .ks-vorlage img { height: 140px; }
+
+/* ---------- Variante: assistent ---------- */
+.ks .ks-schritt-kopf { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 4px; width: 100%; min-width: 0; padding: 2px 0; }
+.ks .ks-schritt-zeile { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: var(--ks-tap); }
+.ks .ks-schritt-nr { font-size: var(--ks-fs-fuss); font-weight: 600; color: var(--ks-akzent); }
+.ks[data-ks-variante="assistent"] .ks-titel { font-size: calc(1.25rem * var(--ks-k)); font-weight: 700; white-space: normal; }
+.ks .ks-fortschritt { height: 4px; border-radius: 2px; background: var(--ks-fuellung); overflow: hidden; margin-bottom: 4px; }
+.ks .ks-fortschritt span { display: block; height: 100%; background: var(--ks-akzent); transition: width var(--ks-dauer) var(--ks-ease); }
+.ks .ks-nav { flex-direction: row; gap: 12px; border-top: .5px solid var(--ks-trenner); }
+.ks .ks-nav > * { flex: 1 1 0; }
+/* Letzter Schritt: Pfeil „Zurück“ und Teilen/Sichern/Kopieren in einer Zeile, damit der Rollbereich Platz behält */
+.ks .ks-fuss-senden { flex-direction: row; align-items: center; gap: 8px; border-top: .5px solid var(--ks-trenner); }
+.ks .ks-fuss-senden > .ks-hilfe { flex: 1 1 0; margin: 0; }
+.ks .ks-fuss-senden .ks-senden-knoepfe { flex: 1 1 0; min-width: 0; }
+.ks .ks-fuss-senden .ks-senden-knoepfe .ks-knopf { flex: 1 1 auto; min-width: 0; padding: 0 10px; }
+.ks .ks-fuss-senden .ks-senden-knoepfe .ks-knopf { padding: 0 6px; font-size: .9375rem; }   /* auch bei großer Bedienung: Tippfläche groß, Schrift so, dass alle in eine Zeile passen */
+.ks .ks-fuss-senden .ks-senden-knoepfe .ks-ic { display: none; }
+@container ks (max-width: 340px) { .ks .ks-fuss-senden { gap: 6px; } .ks .ks-fuss-senden .ks-senden-knoepfe { gap: 6px; } .ks .ks-fuss-senden .ks-senden-knoepfe .ks-knopf { padding: 0 4px; font-size: .875rem; } }
+.ks .ks-ueberspringen { padding: 0 var(--ks-rand) 8px; text-align: center; }
+.ks.ks-klein .ks-ueberspringen { display: none; }
+/* Quer/breit: Seitenfeld rechts hat die volle Höhe */
+.ks[data-ks-variante="assistent"] .ks-seite { max-height: 58%; }
+.ks.ks-quer[data-ks-variante="assistent"] .ks-seite, .ks.ks-breit[data-ks-variante="assistent"] .ks-seite { max-height: none; }
+.ks.ks-hoch.ks-klein[data-ks-variante="assistent"] .ks-seite { max-height: 68%; }   /* kleines Hochformat: mehr Platz für Einstellungen, Vorschau behält mind. 120 px */
+
+/* ---------- Variante: bühne (Vollbild, Leiste rechts) ---------- */
+.ks[data-ks-variante="buehne"] .ks-buehne { background: #000; }
+.ks .ks-leiste-senkrecht { position: absolute; right: max(8px, env(safe-area-inset-right)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 6px; z-index: 2; max-height: calc(100% - 16px); overflow-y: auto; scrollbar-width: none; padding: 2px; }
+.ks .ks-leiste-senkrecht .ks-knopf.ks-werkzeug { color: var(--ks-text); min-width: calc(60px * var(--ks-tk)); }
+.ks.ks-klein .ks-leiste-senkrecht .ks-knopf.ks-werkzeug { min-height: 48px; }
+.ks[data-ks-variante="buehne"] .ks-seite { max-height: 46%; }
+
+/* ---------- Variante: postkarte (3D-Wendekarte) ---------- */
+.ks .ks-karte { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform 600ms var(--ks-ease); }
+.ks .ks-karte.ks-gewendet { transform: rotateY(180deg); }
+.ks .ks-karte-seite { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.ks .ks-karte-seite.ks-hinten { transform: rotateY(180deg); visibility: hidden; transition: visibility 0s linear 300ms; }
+.ks .ks-karte-seite > canvas { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+.ks .ks-karte-seite.ks-vorne { transition: visibility 0s linear 300ms; }
+.ks .ks-karte.ks-gewendet .ks-hinten { visibility: visible; }
+.ks .ks-karte.ks-gewendet .ks-vorne { visibility: hidden; }
+.ks .ks-karte.ks-gewendet .ks-vorne .ks-ebene { display: none; }
+.ks[data-ks-variante="postkarte"] .ks-buehne { perspective: 1400px; }
+.ks[data-ks-variante="postkarte"] .ks-karte-seite > canvas { border-radius: 6px; box-shadow: 0 6px 24px rgba(0, 0, 0, .22); }
+
+/* ---------- Variante: sucher ---------- */
+/* Rahmen = der Bildausschnitt im gewählten Format; außen bleibt die Bühne schwarz */
+.ks .ks-sucher-wartet { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); max-width: calc(100% - 32px); padding: 8px 14px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font-size: var(--ks-fs-sub); font-weight: 600; text-align: center; z-index: 2; pointer-events: none; }
+.ks .ks-sucher-wartet:empty { display: none; }
+.ks .ks-sucher-rahmen { position: absolute; display: none; overflow: hidden; background: #000; z-index: 1; }
+.ks.ks-live .ks-sucher-rahmen { display: block; }
+.ks .ks-video, .ks .ks-beispiel-bild { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; display: block; transform-origin: center; }
+.ks .ks-beispiel-bild[hidden], .ks .ks-beispiel-modus .ks-video { display: none; }
+.ks .ks-live-cv { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.ks .ks-live-overlay { position: absolute; inset: 0; pointer-events: none; }
+.ks .ks-raster-live { display: none; }
+.ks .ks-raster-live.ks-an { display: block; }
+.ks .ks-waage { position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: none; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.ks .ks-waage.ks-an { display: flex; }
+.ks .ks-waage-linie { width: 72%; height: 3px; border-radius: 2px; background: #fff; box-shadow: 0 0 0 1px rgba(0, 0, 0, .5); transition: transform 120ms linear; }
+.ks .ks-waage.ks-eben .ks-waage-linie { background: #FFD60A; }
+.ks .ks-waage-text { padding: 2px 12px; border-radius: 999px; background: rgba(0, 0, 0, .78); color: #fff; font-size: var(--ks-fs-fuss); font-weight: 600; }
+.ks .ks-zaehler { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; font-size: 6rem; font-weight: 700; color: #fff; text-shadow: 0 2px 18px rgba(0, 0, 0, .65); }
+.ks .ks-beispiel-hinweis { position: absolute; top: 8px; left: 8px; right: 8px; margin: 0; padding: 8px 12px; border-radius: 12px; background: rgba(0, 0, 0, .85); color: #fff; font-size: var(--ks-fs-sub); line-height: 1.3; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
+.ks .ks-beispiel-hinweis[hidden] { display: none; }
+.ks .ks-beispiel-hinweis span { font-size: var(--ks-fs-fuss); font-weight: 400; }
+/* Zoom steht senkrecht am rechten Rand: so liegt er nie auf der Wetterkarte (unten/oben) und nicht auf dem Auslöser */
+.ks .ks-sucher-zoom { position: absolute; right: max(8px, env(safe-area-inset-right)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; z-index: 2; padding: 3px; border-radius: 24px; background: var(--ks-glas); border: 1px solid var(--ks-glas-rand); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
+.ks .ks-sucher-zoom .ks-knopf.ks-chip { background: transparent; border-radius: 999px; padding: 0 10px; min-width: var(--ks-tap); }
+.ks .ks-sucher-zoom .ks-knopf.ks-chip.ks-an { background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+.ks .ks-knopf.ks-grau { opacity: .55; }
+.ks .ks-sucher-regler { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 4px; }
+.ks .ks-sucher-regler .ks-knopf.ks-werkzeug { flex: 0 0 auto; color: var(--ks-text); min-width: calc(56px * var(--ks-tk)); }
+.ks .ks-sucher-regler .ks-knopf.ks-werkzeug.ks-an { color: var(--ks-akzent); }
+.ks .ks-sucher-regler .ks-knopf.ks-werkzeug.ks-grau { color: var(--ks-text2); }
+/* Auslöser: Mitte (3 Spalten), links/rechts (Fotos auf der anderen Seite), frei (eigene Ebene über dem ganzen Sucher, mit Finger oder Pfeiltasten verschiebbar; Startplatz = leere Mitte der Bedienleiste) */
+.ks .ks-sucher-leiste.ks-ausl-rechts, .ks .ks-sucher-leiste.ks-ausl-links { display: flex; flex-direction: row; justify-content: space-between; align-items: center; }
+.ks .ks-ausl-hinweis { text-align: center; }
+.ks .ks-ausl-platz { display: block; width: calc(72px * var(--ks-tk)); height: calc(72px * var(--ks-tk)); }
+.ks .ks-frei-ebene { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.ks .ks-frei-ebene > .ks-knopf { pointer-events: auto; }
+.ks .ks-knopf.ks-ausloeser-frei {
+  --ks-ar: calc(36px * var(--ks-tk));
+  position: absolute; z-index: 3; touch-action: none; transform: translate(-50%, -50%);
+  left: clamp(calc(var(--ks-ar) + 16px + env(safe-area-inset-left, 0px)), calc(var(--ax, .5) * 100%), calc(100% - var(--ks-ar) - 16px - env(safe-area-inset-right, 0px)));
+  top: clamp(calc(var(--ks-ar) + 16px), calc(var(--ay, 1) * 100%), calc(100% - var(--ks-ar) - 12px - env(safe-area-inset-bottom, 0px)));
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, .35), 0 4px 16px rgba(0, 0, 0, .5);
+}
+.ks .ks-knopf.ks-ausloeser-frei:active:not(:disabled) { transform: translate(-50%, -50%) scale(.97); }
+.ks .ks-ausloeser.ks-laeuft .ks-ausloeser-ring { width: 32px; height: 32px; border-radius: 8px; border-color: #C4001A; background: #C4001A; }
+.ks .ks-live-karte { position: absolute; left: 16px; right: 16px; bottom: 16px; display: flex; gap: 12px; align-items: center; padding: 12px 16px; border-radius: 16px; color: #fff;
+  background: rgba(0, 0, 0, .42); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border: 1px solid rgba(255, 255, 255, .2); }
+.ks .ks-live-karte.ks-pos-oben, .ks .ks-live-karte.ks-pos-oben-links, .ks .ks-live-karte.ks-pos-oben-rechts { top: 16px; bottom: auto; }
+.ks .ks-live-karte > div { display: flex; flex-wrap: wrap; gap: 2px 12px; }
+.ks .ks-live-symbol svg { width: 44px; height: 44px; display: block; }
+.ks .ks-live-zeile { font-size: var(--ks-fs-sub); font-weight: 600; }
+.ks .ks-live-zeile.ks-z-temperatur { font-size: calc(1.75rem * var(--ks-k)); line-height: 1.1; width: 100%; }
+.ks .ks-sucher-leiste { display: grid; grid-template-columns: 1fr auto 1fr; justify-items: center; align-items: center; }
+.ks .ks-ausloeser-ring { width: 58px; height: 58px; border-radius: 50%; border: 3px solid #000; display: block; }
+.ks .ks-sucher-fertig { padding-top: 12px; }
+.ks .ks-sucher-fertig .ks-reihe .ks-knopf { flex: 1 1 0; }
+.ks[data-ks-variante="sucher"] .ks-buehne { background: #000; }
+
+/* ---------- Nach dem Foto, Meine Wetterfotos, Zahnrad (Paket I-B) ---------- */
+.ks .ks-nach-foto { flex: none; display: flex; flex-direction: column; gap: 6px; padding: 8px var(--ks-rand) 10px; border-top: .5px solid var(--ks-trenner); }
+.ks .ks-seite-inhalt > .ks-nach-foto { padding: 8px 0 0; }
+.ks .ks-nach-rolle { border-top: 0; }
+.ks .ks-nach-reihe { display: flex; gap: 8px; align-items: stretch; }
+.ks .ks-nach-reihe .ks-nach-knopf { flex: 1 1 0; min-width: min-content; padding: 6px 10px; font-size: var(--ks-fs-fuss); line-height: 1.2; white-space: normal; text-align: center; }   /* Wörter brechen nie mitten im Wort: der Knopf wird nie schmaler als sein längstes Wort */
+.ks .ks-nach-reihe .ks-nach-knopf.ks-primaer { flex-grow: 1.5; }
+.ks .ks-nach-reihe .ks-nach-knopf .ks-ic { width: 18px; height: 18px; }
+.ks .ks-nach-reihe > .ks-rund { align-self: center; }
+.ks .ks-galerie-streifen { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ks .ks-galerie-kopf { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: var(--ks-tap); }
+.ks .ks-galerie-titel { font-size: var(--ks-fs-sub); font-weight: 600; color: var(--ks-text); }
+.ks .ks-galerie-reihe { display: flex; gap: 8px; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; padding: 2px; margin: -2px; }
+.ks .ks-galerie-reihe::-webkit-scrollbar { display: none; }
+.ks .ks-galerie-thumb { position: relative; flex: none; width: 56px; height: 56px; border-radius: 10px; overflow: hidden; background: var(--ks-fuellung); transition: transform 160ms var(--ks-ease), opacity 160ms var(--ks-ease); }
+.ks .ks-galerie-thumb:active { transform: scale(.96); opacity: .75; }
+.ks .ks-galerie-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ks .ks-galerie-marke { position: absolute; right: 3px; bottom: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0, 0, 0, .7); color: #fff; display: grid; place-items: center; }
+.ks .ks-galerie-marke .ks-ic { width: 11px; height: 11px; stroke-width: 2.5; }
+.ks .ks-galerie-hinweis { font-size: var(--ks-fs-cap); line-height: 1.3; color: var(--ks-text2); }
+.ks .ks-galerie-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 8px; }
+.ks .ks-galerie-raster .ks-galerie-thumb { width: 100%; height: auto; aspect-ratio: 1; }
+.ks .ks-leer-inhalt .ks-galerie-streifen { width: 100%; text-align: left; margin-top: 8px; }
+.ks .ks-blatt-galerie-eintrag .ks-zeig-bild { max-height: 36cqh; }
+
+/* ---------- Kleine Höhe / kleine Breite ---------- */
+@container ks (max-height: 420px) {
+  .ks .ks-seite-fuss { padding-top: 4px; padding-bottom: 6px; }
+  .ks .ks-kontext { padding-top: 6px; }
+}
+.ks.ks-klein .ks-kopf { gap: 4px; }
+.ks.ks-klein .ks-knopf.ks-werkzeug { min-width: 44px; padding: 4px 2px; }
+.ks.ks-hoch.ks-klein .ks-seite { max-height: 50%; }
+.ks.ks-quer[data-ks-variante="assistent"] .ks-kopf { min-height: 0; }
+.ks.ks-quer[data-ks-variante="assistent"] .ks-titel { font-size: var(--ks-fs-body); }
+
+/* Mac: Zeiger */
+@media (hover: hover) and (pointer: fine) {
+  .ks .ks-knopf:hover:not(:disabled) { filter: brightness(1.06); }
+  .ks .ks-knopf.ks-flach:hover:not(:disabled) { background: var(--ks-fuellung); }
+}
+
+/* Weniger Bewegung: nur Überblenden */
+@media (prefers-reduced-motion: reduce) {
+  .ks *, .ks *::before, .ks *::after { transition-duration: 1ms !important; animation: none !important; }
+  .ks .ks-karte { transition: none; transform: none !important; }
+  .ks .ks-karte-seite { transition: opacity 250ms linear !important; -webkit-backface-visibility: visible; backface-visibility: visible; }
+  .ks .ks-karte-seite.ks-hinten { transform: none; opacity: 0; pointer-events: none; }
+  .ks .ks-karte.ks-gewendet .ks-hinten { opacity: 1; pointer-events: auto; }
+  .ks .ks-karte.ks-gewendet .ks-vorne { opacity: 0; pointer-events: none; }
+  .ks .ks-blatt { transition: opacity 200ms linear !important; transform: none !important; opacity: 0; }
+  .ks .ks-blatt-schicht.ks-offen .ks-blatt { opacity: 1; }
+}
+
+/* Bühne quer/breit: Seitenfeld nur zeigen, wenn es mehr als die Hilfezeile enthält */
+.ks.ks-quer[data-ks-variante="buehne"] .ks-seite:has(> .ks-seite-inhalt > .ks-hilfe:only-child):not(:has(> .ks-nach-foto)),
+.ks.ks-breit[data-ks-variante="buehne"] .ks-seite:has(> .ks-seite-inhalt > .ks-hilfe:only-child):not(:has(> .ks-nach-foto)) { display: none; }
+
+/* Seitenleisten (quer/breit): Chips umbrechen statt seitlich scrollen, Werkzeuge als Raster */
+.ks.ks-quer .ks-seite .ks-chips, .ks.ks-breit .ks-seite .ks-chips, .ks.ks-quer .ks-blatt .ks-chips, .ks.ks-breit .ks-blatt .ks-chips { flex-wrap: wrap; overflow: visible; }
+.ks.ks-quer .ks-werkzeugleiste, .ks.ks-breit .ks-werkzeugleiste { display: grid; grid-template-columns: repeat(3, 1fr); }
+.ks.ks-quer .ks-werkzeugleiste .ks-knopf.ks-werkzeug, .ks.ks-breit .ks-werkzeugleiste .ks-knopf.ks-werkzeug { max-width: none; }
+.ks.ks-hoch .ks-werkzeugleiste { padding-left: 4px; padding-right: 4px; }
+.ks.ks-klein .ks-werkzeug .ks-knopf-text { font-size: 0.6875rem; letter-spacing: -.2px; }
+
+/* Inhalte in scrollenden Spalten nie zusammenquetschen */
+.ks .ks-seite-inhalt > *, .ks .ks-blatt-inhalt > *, .ks .ks-gruppe > *, .ks .ks-kontext > * { flex-shrink: 0; }
+.ks.ks-klein .ks-werkzeugleiste .ks-knopf.ks-werkzeug { padding: 4px 0; }
+.ks.ks-klein .ks-werkzeugleiste .ks-knopf-text { overflow: visible; text-overflow: clip; letter-spacing: -.3px; }
+.ks.ks-hoch.ks-klein .ks-seite { max-height: 58%; }
+
+/* Runde 2 ---------------------------------------------------------- */
+/* Werkzeug-Beschriftungen nie abschneiden (kurze Wörter, ab schmalem Container 11 px) */
+.ks .ks-werkzeug .ks-knopf-text { overflow: visible; text-overflow: clip; white-space: nowrap; }
+@container ks (max-width: 360px) { .ks .ks-werkzeugleiste .ks-knopf-text { font-size: 0.6875rem; letter-spacing: -.2px; } }
+/* „Original“ sitzt unter dem Bild, nicht darauf */
+.ks .ks-schwebe-unten { left: 50%; bottom: 6px; transform: translateX(-50%); }
+/* Frage „Wetter von damals?“ */
+.ks .ks-frage { position: absolute; z-index: 4; top: 10px; left: 50%; transform: translateX(-50%); width: min(420px, calc(100% - 24px));
+  display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; font-size: var(--ks-fs-sub);
+  background: var(--ks-glas); color: var(--ks-text); border: 1px solid var(--ks-glas-rand); box-shadow: var(--ks-schatten);
+  -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
+.ks .ks-frage .ks-reihe { gap: 4px; }
+.ks .ks-zeig-bild { display: block; max-width: 100%; max-height: 60cqh; margin: 0 auto; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,.2); -webkit-touch-callout: default; }
+.ks .ks-blinkt { box-shadow: 0 0 0 3px var(--ks-akzent) !important; }
+.ks .ks-knopf.ks-ki { align-self: flex-start; }
+.ks .ks-ebene2 { pointer-events: auto; }
+
+/* Runde 3 ---------------------------------------------------------- */
+/* Hinweis liegt bei offenem Blatt oben, damit er keine Knöpfe verdeckt */
+.ks .ks-blatt-schicht:not([hidden]) ~ .ks-toast { top: calc(12px + env(safe-area-inset-top)); bottom: auto; transform: translate(-50%, -20px); }
+.ks .ks-blatt-schicht:not([hidden]) ~ .ks-toast.ks-sichtbar { transform: translate(-50%, 0); }
+/* Text-Blatt nur gut halbhoch, damit das Foto sichtbar bleibt */
+.ks.ks-hoch .ks-blatt.ks-blatt-text, .ks.ks-hoch .ks-blatt.ks-blatt-gruss { max-height: 62%; }
+/* Postkarte: Werkzeuge fest unten */
+.ks[data-ks-variante="postkarte"] .ks-werkzeugleiste { flex-direction: row; }
+
+.ks.ks-gross .ks-werkzeugleiste .ks-knopf.ks-werkzeug { max-width: none; }
+.ks .ks-kopf.ks-kopf-leer { display: none; }
+
+/* ---------- Paket I-C: App-Startseite (Nachbau der WetterPro-App) und Zugangsknopf ---------- */
+.ks .ks-nur-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.ks .ks-start { --ks-st-tab-h: calc(56px * var(--ks-tk)); position: absolute; inset: 0; z-index: 10; display: flex; flex-direction: column; background: var(--ks-bg); }
+.ks .ks-start[hidden] { display: none; }
+.ks.ks-auf-start .ks-app { visibility: hidden; }
+
+.ks .ks-st-kopf {
+  flex: none; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 4px; min-height: calc(56px * var(--ks-tk));
+  padding: max(6px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left));
+  background: var(--ks-bg); border-bottom: .5px solid var(--ks-trenner);
+}
+.ks .ks-st-seite { display: flex; align-items: center; min-width: 0; }
+.ks .ks-st-seite-r { justify-content: flex-end; }
+.ks .ks-st-titel { min-width: 0; text-align: center; }
+.ks .ks-st-ort { margin: 0; font-size: var(--ks-fs-body); font-weight: 600; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ks .ks-st-sub { font-size: var(--ks-fs-fuss); color: var(--ks-text2); line-height: 1.3; }
+.ks .ks-st-text { font-size: var(--ks-fs-body); color: var(--ks-text); }
+.ks .ks-st-ikon { display: grid; place-items: center; flex: none; width: var(--ks-tap); height: var(--ks-tap); border-radius: 50%; color: var(--ks-akzent); }
+
+.ks .ks-st-haupt {
+  flex: 1 1 auto; min-height: 0; overflow-x: hidden; overflow-y: auto; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 12px;
+  padding: 12px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
+}
+.ks .ks-st-haupt > * { flex: none; width: 100%; max-width: 640px; margin-inline: auto; min-width: 0; }
+.ks .ks-st-seitentitel { font-size: calc(1.75rem * var(--ks-k)); font-weight: 700; line-height: 1.15; }
+.ks .ks-st-karte { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-radius: 16px; background: var(--ks-bg2); }
+.ks .ks-st-karte-titel { font-size: var(--ks-fs-fuss); font-weight: 600; color: var(--ks-text2); }
+.ks .ks-st-sym { display: inline-grid; place-items: center; flex: none; }
+.ks .ks-st-sym svg { display: block; width: 100%; height: 100%; }
+.ks .ks-st-aktuell { display: flex; align-items: center; gap: 16px; }
+.ks .ks-st-aktuell .ks-st-sym { width: 64px; height: 64px; }
+.ks .ks-st-temp { font-size: calc(3rem * var(--ks-k)); font-weight: 300; line-height: 1; font-variant-numeric: tabular-nums; }
+.ks .ks-st-lage { font-size: var(--ks-fs-body); }
+.ks .ks-st-stunden, .ks .ks-st-tage { list-style: none; margin: 0; padding: 0; }
+.ks .ks-st-stunden { display: flex; justify-content: space-between; gap: 4px; }
+.ks .ks-st-stunden li { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; font-size: var(--ks-fs-sub); }
+.ks .ks-st-stunden .ks-st-sym, .ks .ks-st-tage .ks-st-sym { width: 32px; height: 32px; }
+.ks .ks-st-tage li { display: grid; grid-template-columns: minmax(0, 1fr) 32px auto; align-items: center; gap: 12px; min-height: 44px; border-top: .5px solid var(--ks-trenner); font-size: var(--ks-fs-sub); }
+.ks .ks-st-tage li:first-child { border-top: 0; }
+.ks .ks-st-hl { font-variant-numeric: tabular-nums; color: var(--ks-text2); text-align: right; }
+.ks .ks-st-tag { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ks .ks-st-fuss { text-align: center; }
+.ks .ks-st-liste { list-style: none; margin: 0; padding: 0; border-radius: 16px; background: var(--ks-bg2); overflow: hidden; }
+.ks .ks-st-liste li + li { border-top: .5px solid var(--ks-trenner); }
+.ks .ks-st-zeile { display: flex; align-items: center; gap: 12px; width: 100%; min-height: calc(48px * var(--ks-tk)); padding: 6px 16px; text-align: left; font-size: var(--ks-fs-body); color: var(--ks-text); }
+.ks .ks-st-zeile span { flex: 1 1 auto; min-width: 0; }
+.ks .ks-st-zeile .ks-ic:first-child { color: var(--ks-akzent); }
+.ks .ks-st-zeile .ks-ic:last-child { width: 16px; height: 16px; color: var(--ks-text2); }
+.ks .ks-st-wetterfoto .ks-gruppe-titel { color: var(--ks-text2); }
+
+/* Tab-Leiste unten */
+.ks .ks-st-tabs {
+  flex: none; display: flex; align-items: stretch; background: var(--ks-bg2); border-top: .5px solid var(--ks-trenner);
+  padding: 0 max(0px, env(safe-area-inset-right)) env(safe-area-inset-bottom) max(0px, env(safe-area-inset-left));
+}
+.ks .ks-st-tab { flex: 1 1 0; min-width: 0; min-height: var(--ks-st-tab-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; color: var(--ks-text2); font-size: var(--ks-fs-cap); font-weight: 500; }
+.ks .ks-st-tab span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ks .ks-st-tab[aria-current="page"] { color: var(--ks-akzent); }
+
+/* Zugangsknopf: eine Bauform, das Aussehen kommt aus ks-za-… */
+.ks .ks-za { display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: none; min-width: var(--ks-tap); min-height: var(--ks-tap); border-radius: 999px; color: var(--ks-akzent); font-size: var(--ks-fs-sub); font-weight: 600; white-space: nowrap; transition: transform 160ms var(--ks-ease), opacity 160ms var(--ks-ease); }
+.ks .ks-za:active { transform: scale(.96); opacity: .8; }
+.ks .ks-za-sym { display: inline-grid; place-items: center; flex: none; }
+.ks .ks-za-rund .ks-za-sym { width: var(--ks-tap); height: var(--ks-tap); border-radius: 50%; background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+.ks .ks-za-pille { padding: 0 16px; background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+.ks .ks-za-symbolText { padding: 0 8px; }
+.ks .ks-st-tabs .ks-za { flex: 1 1 0; min-width: 0; flex-direction: column; gap: 2px; border-radius: 0; padding: 4px 2px; min-height: var(--ks-st-tab-h); color: var(--ks-text2); font-size: var(--ks-fs-cap); font-weight: 500; }
+.ks .ks-st-tabs .ks-za-rund .ks-za-sym { width: calc(48px * var(--ks-tk)); height: calc(48px * var(--ks-tk)); box-shadow: 0 2px 8px rgba(0, 0, 0, .25); }
+.ks .ks-st-tabs .ks-za .ks-za-text { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+/* Schwebend: in einer Ecke über dem Inhalt, unten über der Tab-Leiste */
+.ks .ks-st-schwebend { position: absolute; z-index: 2; }
+.ks .ks-st-schwebend .ks-za { box-shadow: var(--ks-schatten); }
+.ks .ks-st-schwebend .ks-za-rund .ks-za-sym { width: calc(56px * var(--ks-tk)); height: calc(56px * var(--ks-tk)); }
+.ks .ks-st-schwebend .ks-za-symbol, .ks .ks-st-schwebend .ks-za-symbolText { background: var(--ks-glas); border: 1px solid var(--ks-glas-rand); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
+.ks .ks-st-schwebend .ks-za-rund { box-shadow: none; }
+.ks .ks-st-schwebend .ks-za-rund .ks-za-sym { box-shadow: var(--ks-schatten); }
+.ks .ks-st-pos-ol, .ks .ks-st-pos-or { top: calc(max(6px, env(safe-area-inset-top)) + 56px * var(--ks-tk) + 12px); }
+.ks .ks-st-pos-ul, .ks .ks-st-pos-ur { bottom: calc(var(--ks-st-tab-h) + env(safe-area-inset-bottom) + 12px); }
+.ks .ks-st-pos-ol, .ks .ks-st-pos-ul { left: max(16px, env(safe-area-inset-left)); }
+.ks .ks-st-pos-or, .ks .ks-st-pos-ur { right: max(16px, env(safe-area-inset-right)); }
+/* Kachel und Zeile im Tab „Mehr“ */
+.ks .ks-st-zugangskarte { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.ks .ks-st-zk-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ks .ks-st-zugangszeile { display: flex; }
+.ks .ks-za-zeile { width: 100%; justify-content: flex-start; gap: 12px; padding: 8px 16px; min-height: calc(56px * var(--ks-tk)); border-radius: 16px; background: var(--ks-bg2); text-align: left; }
+.ks .ks-za-zeile.ks-za-pille { justify-content: center; background: var(--ks-akzent-flaeche); }
+.ks .ks-za-zeile.ks-za-symbolText .ks-za-sym { width: calc(36px * var(--ks-tk)); height: calc(36px * var(--ks-tk)); border-radius: 50%; background: var(--ks-akzent-flaeche); color: var(--ks-auf-akzent); }
+.ks .ks-za-zeile .ks-za-sub { margin-left: auto; font-size: var(--ks-fs-fuss); font-weight: 400; color: var(--ks-text2); }
+.ks .ks-za-zeile.ks-za-pille .ks-za-sub { display: none; }
+@media (hover: hover) and (pointer: fine) { .ks .ks-st-ikon:hover, .ks .ks-st-tab:hover, .ks .ks-st-zeile:hover { filter: brightness(1.08); } }
+@media (prefers-reduced-transparency: reduce) { .ks .ks-st-schwebend .ks-za-symbol, .ks .ks-st-schwebend .ks-za-symbolText { background: var(--ks-bg2); -webkit-backdrop-filter: none; backdrop-filter: none; } }
