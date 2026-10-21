@@ -258,6 +258,26 @@ async function zuGraphs(p) { await p.click('#leiste [data-tab="graphs"]'); await
       pruefe('keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
       await s.ctx.close();
     }
+    console.log('6) Zweite Meinung: schnelles Auf/Zu/Auf');
+    {
+      const s = await neueSeite(b, { speicher: { [VORSATZ + 'radsat-modus']: '"radsat"' } }), p = s.p;
+      for (const [sel, auf, zu, name, hin] of [['#graphs', '#graphs .mg-btn-voll', '#graphs .mg-vb-fertig', 'Meteogramm', zuGraphs], ['#karte', '#karte .wk-voll', '#karte .wk-vb-fertig', 'Karte', zuKarte]]) {
+        await hin(p);
+        const l0 = await p.evaluate(() => history.length);
+        await p.evaluate(([a, z]) => { document.querySelector(a).click(); document.querySelector(z).click(); document.querySelector(a).click(); }, [auf, zu]);
+        await p.waitForTimeout(700);
+        const r = await p.evaluate(sel => { const e = document.querySelector(sel).getBoundingClientRect(); return { voll: Math.round(e.width) === innerWidth && Math.round(e.height) === innerHeight, inert: !!document.querySelector('#leiste').closest('[inert]'), zustand: history.state, laenge: history.length }; }, sel);
+        pruefe(name + ': Auf/Zu/Auf ohne Pause: Blatt bleibt offen, Seite gesperrt, Verlauf steht auf dem Blatt', r.voll && r.inert && !!r.zustand && !!r.zustand.wpVollbild, r);
+        if (!r.voll) continue;
+        await p.click(zu); await p.waitForTimeout(500);
+        const r2 = await p.evaluate(() => ({ zustand: history.state, inert: !!document.querySelector('#leiste').closest('[inert]') }));
+        await p.click(auf); await p.waitForTimeout(300); await p.click(zu); await p.waitForTimeout(500);
+        const l3 = await p.evaluate(() => history.length);
+        pruefe(name + ': danach schließt „Fertig“ sauber, normales Auf/Zu verlängert den Verlauf nicht weiter', !(r2.zustand && r2.zustand.wpVollbild) && !r2.inert && l3 <= r.laenge, [l0, r.laenge, l3, r2]);
+      }
+      pruefe('keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
+      await s.ctx.close();
+    }
     console.log('4) Reduzierte Bewegung');
     {
       const s = await neueSeite(b, { bewegung: 'reduce' });

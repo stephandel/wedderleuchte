@@ -668,7 +668,8 @@
     // ---------- Vollbild-Blatt (A32) ----------
     // Wie beim Meteogramm-Baustein: Klasse wk-vollbild (CSS heftet die Karte an alle Ränder), role="dialog", Rest der Seite inert,
     // ein Verlaufseintrag, damit Zurück das Blatt schließt. Danach rechnet Leaflet die neue Größe nach.
-    var vollbild = false, vb = { gesperrt: [], overflow: '', gepusht: false };
+    // zurueck: so viele history.back() sind unterwegs; ihr spätes popstate darf ein inzwischen neu geöffnetes Blatt nicht schließen
+    var vollbild = false, vb = { gesperrt: [], overflow: '', gepusht: false, zurueck: 0 };
     function vollbildSetzen(an, ausVerlauf) {
       an = !!an;
       if (an === vollbild || abgebaut) return;
@@ -681,12 +682,12 @@
         wurzel.setAttribute('role', 'dialog'); wurzel.setAttribute('aria-modal', 'true'); wurzel.setAttribute('aria-label', VOLLBILD_TITEL + ' im Vollbild');
         seiteSperren(true);
         // Steht der Verlauf schon auf einem Karten-Eintrag (Umschalter im Blatt baut die Karte neu), wird er weiterbenutzt
-        if (ZURUECK_GESTE) { try { if (history.state && history.state.wpVollbild === 'wk') vb.gepusht = true; else { history.pushState({ wpVollbild: 'wk' }, ''); vb.gepusht = true; } } catch (e) { } }
+        if (ZURUECK_GESTE) { try { if (!vb.zurueck && history.state && history.state.wpVollbild === 'wk') vb.gepusht = true; else { history.pushState({ wpVollbild: 'wk' }, ''); vb.gepusht = true; } } catch (e) { } }
         wurzel.querySelector('.wk-vb-fertig').focus({ preventScroll: true });
       } else {
         wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
         seiteSperren(false);
-        if (vb.gepusht) { vb.gepusht = false; if (!ausVerlauf && history.state && history.state.wpVollbild === 'wk') { try { history.back(); } catch (e) { } } }
+        if (vb.gepusht) { vb.gepusht = false; if (!ausVerlauf && history.state && history.state.wpVollbild === 'wk') { try { vb.zurueck++; history.back(); } catch (e) { vb.zurueck--; } } }
         if (b) b.focus({ preventScroll: true });
       }
       groesseGeaendert(); setTimeout(groesseGeaendert, 280);   // nach der Einblendung (250 ms) noch einmal messen
@@ -708,7 +709,11 @@
       }
     }
     function vbTaste(ev) { if (vollbild && ev.key === 'Escape' && !ev.defaultPrevented) { ev.preventDefault(); vollbildSetzen(false); } }
-    function vbZurueck() { if (vollbild && vb.gepusht) { vb.gepusht = false; vollbildSetzen(false, true); } }
+    function vbZurueck() {
+      // Das eigene Zurück von „Fertig“ kommt an; inzwischen neu geöffnet: Eintrag für das Blatt neu anlegen (wie im Meteogramm-Baustein)
+      if (vb.zurueck > 0) { vb.zurueck--; if (!vb.zurueck && vollbild && vb.gepusht && !(history.state && history.state.wpVollbild === 'wk')) { try { history.pushState({ wpVollbild: 'wk' }, ''); } catch (e) { } } return; }
+      if (vollbild && vb.gepusht) { vb.gepusht = false; vollbildSetzen(false, true); }
+    }
     document.addEventListener('keydown', vbTaste);
     global.addEventListener('popstate', vbZurueck);
     if (wurzel.querySelector('.wk-voll')) wurzel.querySelector('.wk-voll').addEventListener('click', function () { vollbildSetzen(!vollbild); });

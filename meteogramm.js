@@ -1813,7 +1813,8 @@
     // role="dialog", sperrt den Rest der Seite (inert, kein Mitscrollen) und legt einen Verlaufseintrag an, damit
     // Zurück (Browser, Wischgeste, Android-Taste) das Blatt schließt statt die Seite zu verlassen.
     // ausVerlauf: Schließen kam vom Zurück selbst (dann nicht noch einmal zurückgehen); oeffner: dorthin kehrt der Fokus zurück.
-    var vb = { gesperrt: [], overflow: '', gepusht: false, oeffner: null };
+    // zurueck: so viele history.back() sind unterwegs; ihr spätes popstate darf ein inzwischen neu geöffnetes Blatt nicht schließen
+    var vb = { gesperrt: [], overflow: '', gepusht: false, oeffner: null, zurueck: 0 };
     function vollbildSetzen(an, ausVerlauf, oeffner){
       an = !!an;
       if (an === vollbild) return;
@@ -1834,7 +1835,7 @@
         seiteSperren(false);
         if (vb.gepusht) {
           vb.gepusht = false;
-          if (!ausVerlauf && history.state && history.state.wpVollbild === 'mg') { try { history.back(); } catch(e){} }
+          if (!ausVerlauf && history.state && history.state.wpVollbild === 'mg') { try { vb.zurueck++; history.back(); } catch(e){ vb.zurueck--; } }
         }
         var z = vb.oeffner && vb.oeffner.isConnected ? vb.oeffner : b; vb.oeffner = null;
         if (z) z.focus({ preventScroll: true });
@@ -1861,7 +1862,12 @@
       }
     }
     function vbTaste(ev){ if (vollbild && ev.key === 'Escape' && !ev.defaultPrevented) { ev.preventDefault(); vollbildSetzen(false); } }
-    function vbZurueck(){ if (vollbild && vb.gepusht) { vb.gepusht = false; vollbildSetzen(false, true); } }
+    function vbZurueck(){
+      // Das eigene Zurück von „Fertig“ kommt an. Wurde inzwischen neu geöffnet, steht der Verlauf jetzt vor dem Blatt
+      // (WebKit springt zum Ziel von damals): Eintrag neu anlegen, damit die Zurück-Geste wieder das Blatt schließt.
+      if (vb.zurueck > 0) { vb.zurueck--; if (!vb.zurueck && vollbild && vb.gepusht && !(history.state && history.state.wpVollbild === 'mg')) { try { history.pushState({ wpVollbild: 'mg' }, ''); } catch(e){} } return; }
+      if (vollbild && vb.gepusht) { vb.gepusht = false; vollbildSetzen(false, true); }
+    }
     // Einmal je Gerät, nur auf dem iPhone im Hochformat: Querformat ist der Hauptnutzen des Vollbilds
     function querTipp(){
       var t = document.getElementById(kid('vbtitel')); if (!t) return;
