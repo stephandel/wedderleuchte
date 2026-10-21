@@ -237,6 +237,8 @@
 .ks .ks-motiv-schritte li::before { content: counter(ks-motiv); font-weight: 600; color: var(--ks-text); }
 .ks .ks-motiv-schritte svg { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: var(--ks-text); }
 .ks .ks-motiv-schritte .ks-motiv-akzent { stroke: var(--ks-akzent); }
+.ks .ks-motiv-mehr > summary { min-height: 44px; display: flex; align-items: center; color: var(--ks-akzent); font-size: var(--ks-fs-body); cursor: pointer; }
+.ks .ks-motiv-mehr[open] > summary { margin-bottom: 8px; }
 .ks .ks-nur-zeiger { display: none; }
 @media (hover: hover) and (pointer: fine) { .ks .ks-nur-zeiger { display: block; } }
 .ks .ks-meldung { width: 100%; padding: 12px; border-radius: 12px; background: var(--ks-fuellung); color: var(--ks-text); font-size: var(--ks-fs-sub); text-align: left; border-left: 4px solid var(--ks-warn); }
