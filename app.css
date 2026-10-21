@@ -56,6 +56,8 @@ body { background: var(--radar-grund); }
 #inhalt .segment button[aria-checked="true"] { background: var(--auf-himmel-auswahl); }
 #inhalt .chip { color: var(--auf-himmel-text); }   /* Durchgang 21.10.: Akzentblau auf hellem Himmel nur 3,7:1 */
 #inhalt :focus-visible { outline-color: var(--auf-himmel-text); }   /* blauer Ring war auf den Glas-Kacheln kaum zu sehen */
+#inhalt .suchfeld:focus-within { outline-color: var(--auf-himmel-text); }
+.kopf :focus-visible, .leiste :focus-visible { outline-color: var(--label); }   /* Ring auf dem hellen bzw. dunklen Glas dunkel bzw. hell statt Akzentblau */
 .quellen-zeile { background: var(--auf-himmel-kachel); border-radius: var(--r-button); padding: var(--s2) var(--s3); }
 @media (prefers-reduced-transparency: reduce) {
   #inhalt { --bg: var(--auf-himmel-kachel-voll); --bg-2: var(--auf-himmel-kachel-voll); }
@@ -240,7 +242,8 @@ body { background: var(--radar-grund); }
 #karte { --wk-fertig: var(--akzent-text); }
 #karte.wk-vollbild { --wk-zeit: var(--auf-himmel-kachel-voll); --wk-leiste: var(--auf-himmel-kachel-voll); }   /* im Blatt deckend, der Himmel liegt dahinter */
 #karte .wk-vb-chip[aria-checked="true"] { color: var(--auf-akzent); }
-#karte .wk-ticks, #karte .wk-quelle, #karte .wk-legende { font-size: var(--fs-caption); }
+#karte .wk-ticks, #karte .wk-quelle, #karte .wk-legende, #karte .wk-titel, #karte .wk-tage { font-size: var(--fs-caption); }
+#karte .wk-range { height: var(--tap); }   /* Zeit-Regler: Tippfläche mindestens 44 px */
 
 /* ---------- Wetterfoto: Studio im Vollbild ---------- */
 .studio { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--label); display: flex; flex-direction: column; padding: var(--safe-top) var(--safe-right) 0 var(--safe-left); }

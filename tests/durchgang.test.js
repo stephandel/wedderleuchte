@@ -59,17 +59,19 @@ async function neueSeite(b, w, farbe) {
 // Kontrast von Text (Farbe des Elements) bzw. Fokusring gegen den Hintergrund hinter dem Element, gemessen im Bildschirmfoto.
 // Elementtext und Ring werden dafür unsichtbar gemacht; schlechtester Wert (10-%-Quantil) über die Fläche des Elements.
 // farbe: 'text' = color des Elements, 'ring' = outline-color
-async function kontrastAuf(p, selektor, art) {
+async function kontrastAuf(p, selektor, art, fokusSel) {
   await p.evaluate(s => document.querySelector(s).scrollIntoView({ block: 'center' }), selektor);
   await p.waitForTimeout(300);
-  if (art === 'ring') await p.focus(selektor), await p.keyboard.press('Alt+Tab'), await p.keyboard.press('Alt+Shift+Tab');
+  if (art === 'ring' && fokusSel) await p.focus(fokusSel);   // Suchfeld: Ring über :focus-within
+  else if (art === 'ring') await p.focus(selektor), await p.keyboard.press('Alt+Tab'), await p.keyboard.press('Alt+Shift+Tab');
   const info = await p.evaluate(([s, art]) => {
     const e = document.querySelector(s), cs = getComputedStyle(e), r = e.getBoundingClientRect();
     const o = 2 + 2;   // Ring: Breite 2 px plus Abstand 2 px
     return { farbe: art === 'ring' ? cs.outlineColor : cs.color, x: r.left - (art === 'ring' ? o : 0), y: r.top - (art === 'ring' ? o : 0), w: r.width + (art === 'ring' ? 2 * o : 0), h: r.height + (art === 'ring' ? 2 * o : 0), ring: art === 'ring' ? cs.outlineStyle : 'text' };
   }, [selektor, art]);
-  await p.addStyleTag({ content: '* { transition: none !important; animation: none !important; color: transparent !important; -webkit-text-fill-color: transparent !important; outline-color: transparent !important; } svg { color: transparent !important; }' });
+  const stil = await p.addStyleTag({ content: '* { transition: none !important; animation: none !important; color: transparent !important; -webkit-text-fill-color: transparent !important; outline-color: transparent !important; } svg { color: transparent !important; }' });
   await p.waitForTimeout(150);
+  if (process.env.DEBUG_RING) console.log(JSON.stringify(info));
   const png = (await p.screenshot()).toString('base64');
   const wert = await p.evaluate(async ([png, info]) => {
     const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
@@ -87,6 +89,7 @@ async function kontrastAuf(p, selektor, art) {
     }
     l.sort((x, y) => x - y); return +l[Math.floor(l.length * .1)].toFixed(2);
   }, [png, info]);
+  await stil.evaluate(e => e.remove());
   return { wert, ring: info.ring };
 }
 
@@ -117,6 +120,27 @@ const LAGEN = {
         pruefe('Fokusring ' + sel + ', Lage ' + name + ': ' + k.wert + ':1', k.ring === 'solid' && k.wert >= 3, k);
         await ctx.close();
       }
+    }
+    console.log('3a) Fokusring im Suchfeld, in Kopf und Tab-Leiste mindestens 3:1');
+    for (const [name, w, farbe] of [['heiter hell', LAGEN.heiter, 'light'], ['nacht hell', LAGEN.nacht, 'light'], ['heiter dunkel', LAGEN.heiter, 'dark']]) {
+      const { ctx, p } = await neueSeite(b, w, farbe);
+      for (const sel of ['#kopfSuche', '[data-tab="graphs"]', '[data-tab="kamera"]']) {
+        const k = await kontrastAuf(p, sel, 'ring');
+        pruefe('Fokusring ' + sel + ', ' + name + ': ' + k.wert + ':1', k.ring === 'solid' && k.wert >= 3, k);
+      }
+      await p.click('[data-tab="mehr"]'); await p.waitForTimeout(300);
+      const k = await kontrastAuf(p, '.suchfeld', 'ring', '#suchfeld');
+      pruefe('Fokusring Suchfeld, ' + name + ': ' + k.wert + ':1', k.ring === 'solid' && k.wert >= 3, k);
+      await ctx.close();
+    }
+    console.log('3b) Rad/Sat: Zeit-Regler mindestens 44 px, Kartentitel mindestens 12 px');
+    {
+      const { ctx, p } = await neueSeite(b, LAGEN.heiter);
+      await p.click('[data-tab="radsat"]'); await p.waitForTimeout(1500);
+      const m = await p.evaluate(() => { const r = document.querySelector('#karte .wk-range'), t = document.querySelector('#karte .wk-titel'), d = document.querySelector('#karte .wk-tage'); return { regler: r && Math.round(r.getBoundingClientRect().height), titel: t && Math.min(parseFloat(getComputedStyle(t).fontSize), parseFloat(getComputedStyle(d).fontSize)) }; });
+      pruefe('Zeit-Regler der Karte mindestens 44 px hoch', m.regler >= 44, m);
+      pruefe('Kartentitel und Tagesnamen unter dem Regler mindestens 12 px', m.titel >= 12, m);
+      await ctx.close();
     }
     console.log('3) Fokus nach dem Ortswechsel');
     {
