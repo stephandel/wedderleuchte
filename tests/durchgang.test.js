@@ -40,8 +40,8 @@ function wetterBody(w) {
   Object.assign(d.current, w || {});
   return JSON.stringify(d);
 }
-async function neueSeite(b, w, farbe) {
-  const ctx = await b.newContext({ viewport: { width: 390, height: 844 }, colorScheme: farbe || 'light', serviceWorkers: 'block' });
+async function neueSeite(b, w, farbe, breite) {
+  const ctx = await b.newContext({ viewport: { width: breite || 390, height: 844 }, colorScheme: farbe || 'light', serviceWorkers: 'block' });
   const body = wetterBody(w);
   await ctx.route(u => /^https?:$/.test(u.protocol) && !u.href.startsWith(BASIS), route => {
     const u = new URL(route.request().url());
@@ -92,6 +92,49 @@ async function kontrastAuf(p, selektor, art, fokusSel) {
   await stil.evaluate(e => e.remove());
   return { wert, ring: info.ring };
 }
+
+// Alle Texte im Meteogramm: gezeichnete Größe = font-size × Skalierung des SVG
+const GROESSEN_JS = () => {
+  const aus = [];
+  document.querySelectorAll('#graphs text, #graphs small, #graphs span, #graphs div, #graphs button, #graphs b, #graphs label, #graphs p').forEach(e => {
+    if (!e.getClientRects().length || e.closest('[hidden]')) return;
+    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
+    let px = parseFloat(getComputedStyle(e).fontSize);
+    if (e instanceof SVGElement) { const m = e.getScreenCTM(); px *= Math.sqrt(Math.abs(m.a * m.d - m.b * m.c)); }
+    aus.push({ t: e.textContent.trim().slice(0, 16), cls: e.getAttribute('class') || e.tagName, px: Math.round(px * 100) / 100 });
+  });
+  return aus;
+};
+// Textproben (bis zu 3 je Klasse, nur sichtbar und nicht verdeckt): Ort und Schriftfarbe
+const PROBEN_JS = () => {
+  const je = {}, aus = [];
+  document.querySelectorAll('#graphs text, #graphs small, #graphs span, #graphs div, #graphs button, #graphs b, #graphs label, #graphs p').forEach(e => {
+    if (!e.getClientRects().length || e.closest('[hidden]')) return;
+    if (![...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim())) return;
+    const r = e.getBoundingClientRect(), cls = e.getAttribute('class') || e.tagName;
+    if (r.width < 4 || r.height < 4 || r.left < 0 || r.top < 0 || r.right > innerWidth || r.bottom > innerHeight) return;
+    const oben = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+    if (!oben || !(e === oben || e.contains(oben) || oben.contains(e))) return;
+    if ((je[cls] = (je[cls] || 0) + 1) > 3) return;
+    const cs = getComputedStyle(e);
+    aus.push({ t: e.textContent.trim().slice(0, 16), cls, x: r.left, y: r.top, w: r.width, h: r.height, fill: e instanceof SVGElement ? cs.fill : cs.color });
+  });
+  return aus;
+};
+// Kontrast Schriftfarbe gegen den häufigsten Pixel hinter dem Text (der echte Untergrund)
+const PIXEL_JS = async ({ png, fill }) => {
+  const img = new Image(); img.src = 'data:image/png;base64,' + png; await img.decode();
+  const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+  const g = c.getContext('2d'); g.drawImage(img, 0, 0);
+  const d = g.getImageData(0, 0, c.width, c.height).data, zaehler = {};
+  for (let i = 0; i < d.length; i += 4) { const k = d[i] + ',' + d[i + 1] + ',' + d[i + 2]; zaehler[k] = (zaehler[k] || 0) + 1; }
+  const grund = Object.entries(zaehler).sort((a, b) => b[1] - a[1])[0][0].split(',').map(Number);
+  const m = (fill.match(/[\d.]+/g) || [0, 0, 0]).map(Number), vorn = /^color\(/.test(fill) ? m.slice(0, 3).map(v => v * 255) : m.slice(0, 3), al = m.length > 3 ? m[3] : 1;
+  const mix = vorn.map((v, i) => v * al + grund[i] * (1 - al));
+  const L = q => { const [r, gg, b] = q.map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * gg + 0.0722 * b; };
+  const x = L(mix), y = L(grund);
+  return Math.round((Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05) * 100) / 100;
+};
 
 const LAGEN = {
   heiter: { weather_code: 0, is_day: 1, time: '2026-10-20T12:00' },
@@ -150,6 +193,28 @@ const LAGEN = {
       await p.click('[data-treffer="0"]'); await p.waitForTimeout(1200);
       const f = await p.evaluate(() => ({ id: document.activeElement.id, tag: document.activeElement.tagName, kopf: document.getElementById('kopfTitel').textContent }));
       pruefe('Nach dem Ortswechsel liegt der Fokus auf dem Ortsnamen im Kopf, nicht auf dem Seitenkörper', f.kopf === 'Heidelberg' && f.id === 'kopfTitel', f);
+      await ctx.close();
+    }
+    console.log('4) Meteogramm: jeder Text mindestens 11 px gezeichnet und Kontrast mindestens 4,5:1');
+    for (const farbe of ['light', 'dark']) for (const breite of [390, 1280]) for (const voll of [false, true]) {
+      const { ctx, p } = await neueSeite(b, LAGEN.heiter, farbe, breite);
+      await p.click('#leiste [data-tab="graphs"]');
+      await p.waitForSelector('#graphs .mg-svg .mg-sonne', { timeout: 10000 });
+      if (voll) await p.click('#graphs .mg-btn-voll');
+      await p.waitForTimeout(700);
+      await p.evaluate(() => { const w = document.querySelector('#graphs .mg-ax-wert'); if (w) w.hidden = false; });   // die Marke zeigt sich sonst nur beim Antippen
+      const l = await p.evaluate(GROESSEN_JS), name = farbe + ' ' + breite + (voll ? ' Vollbild' : '');
+      const klein = l.filter(x => x.px < 10.95);
+      pruefe(name + ': ' + l.length + ' Texte, keiner unter 11 px gezeichnet', l.length > 20 && !klein.length, klein.slice(0, 6));
+      if (breite === 390) {
+        const schwach = [], proben = await p.evaluate(PROBEN_JS);
+        for (const q of proben) {
+          const png = (await p.screenshot({ clip: { x: q.x, y: q.y, width: q.w, height: q.h } })).toString('base64');
+          const k = await p.evaluate(PIXEL_JS, { png, fill: q.fill });
+          if (k < 4.5) schwach.push({ t: q.t, cls: q.cls, k });
+        }
+        pruefe(name + ': ' + proben.length + ' Proben (je Klasse bis 3), Kontrast gegen den echten Untergrund mindestens 4,5:1', proben.length > 8 && !schwach.length, schwach.slice(0, 8));
+      }
       await ctx.close();
     }
   } finally {
