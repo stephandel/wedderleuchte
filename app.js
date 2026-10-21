@@ -450,6 +450,7 @@
     ort = { id: o.id, name: o.name, lat: o.lat, lon: o.lon }; speicher.schreiben('ort', ort);
     suchTreffer = []; suchText = ''; daten = null; radarBild = null; mgAbbauen(); kartenAbbauen();
     waehleTab('wetter'); laden();
+    $('#kopfTitel').focus();   // der Suchtreffer ist verschwunden, sonst läge der Fokus auf dem Seitenkörper
   }
   function gpsFragen() {
     if (!navigator.geolocation) { hinweis('Dieses Gerät kann den Standort nicht bestimmen.'); return; }

@@ -54,6 +54,8 @@ body { background: var(--radar-grund); }
   -webkit-backdrop-filter: blur(var(--glas-blur)) saturate(var(--glas-saettigung)); backdrop-filter: blur(var(--glas-blur)) saturate(var(--glas-saettigung));
 }
 #inhalt .segment button[aria-checked="true"] { background: var(--auf-himmel-auswahl); }
+#inhalt .chip { color: var(--auf-himmel-text); }   /* Durchgang 21.10.: Akzentblau auf hellem Himmel nur 3,7:1 */
+#inhalt :focus-visible { outline-color: var(--auf-himmel-text); }   /* blauer Ring war auf den Glas-Kacheln kaum zu sehen */
 .quellen-zeile { background: var(--auf-himmel-kachel); border-radius: var(--r-button); padding: var(--s2) var(--s3); }
 @media (prefers-reduced-transparency: reduce) {
   #inhalt { --bg: var(--auf-himmel-kachel-voll); --bg-2: var(--auf-himmel-kachel-voll); }
