@@ -214,6 +214,9 @@ body { background: var(--radar-grund); }
   --mg-text: var(--label); --mg-text-still: var(--label-2); --mg-akzent: var(--auf-himmel-akzent);
   --mg-schatten: none; --mg-serif: var(--font); --mg-mono: var(--font);
 }
+/* Meteogramm-Knöpfe 44 px und Einheiten nicht unter 11 px (A32: im Vollbild-Blatt fiel es auf; der Baustein hat 40 px und 0,78 em) */
+#graphs .mg-btn { min-height: var(--tap); min-width: var(--tap); }
+#graphs small { font-size: var(--fs-caption); }
 #karte-zeile { margin: 0 0 var(--s3); }
 #karte { --wk-hoehe: calc(100dvh - var(--kopf-hoehe) - var(--safe-top) - var(--leiste-hoehe) - var(--safe-bottom) - var(--s8) * 4 - var(--tap)); border-radius: var(--r-kachel); overflow: hidden; }
 #karte.wk {   /* wpkarte.js setzt .wk auf den Behälter selbst */
