@@ -216,7 +216,7 @@
 .ks .ks-eingabe { width: 100%; min-height: var(--ks-tap); padding: 10px 12px; border-radius: 12px; border: 1px solid var(--ks-trenner); background: var(--ks-bg2); color: var(--ks-text); font: inherit; font-size: max(1rem, var(--ks-fs-body)); resize: vertical; }
 .ks textarea.ks-eingabe { min-height: 88px; }
 .ks .ks-eingabe::placeholder { color: var(--ks-text2); opacity: 1; }
-.ks .ks-hand { font-family: Noteworthy, "Bradley Hand", "Snell Roundhand", cursive; }
+.ks .ks-hand { font-family: Noteworthy, "Bradley Hand", cursive; }
 
 /* ---------- Leerzustand ---------- */
 .ks .ks-leer-inhalt { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 12px; width: 100%; max-width: 360px; margin: auto; }
@@ -227,6 +227,16 @@
 .ks .ks-leer-knoepfe { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 .ks .ks-leer-knoepfe .ks-knopf { width: 100%; }
 .ks .ks-hilfe-fest { display: block; }
+/* A7b: leiser Hinweis in der Ein-Tipp-Karte, dass das Foto automatisch verbessert wurde */
+.ks .ks-auto-hinweis { display: flex; align-items: center; gap: 6px; margin: 0; }
+.ks .ks-auto-hinweis .ks-ic { width: 16px; height: 16px; color: var(--ks-akzent); }
+/* A23: drei Schritte „Motiv aus Fotos“, nebeneinander, Bilder in Linienform wie die Symbole */
+.ks .ks-motiv-hinweis { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.ks .ks-motiv-schritte { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; counter-reset: ks-motiv; }
+.ks .ks-motiv-schritte li { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; font-size: var(--ks-fs-fuss); color: var(--ks-text2); line-height: 1.3; counter-increment: ks-motiv; min-width: 0; overflow-wrap: break-word; }
+.ks .ks-motiv-schritte li::before { content: counter(ks-motiv); font-weight: 600; color: var(--ks-text); }
+.ks .ks-motiv-schritte svg { width: 40px; height: 40px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; color: var(--ks-text); }
+.ks .ks-motiv-schritte .ks-motiv-akzent { stroke: var(--ks-akzent); }
 .ks .ks-nur-zeiger { display: none; }
 @media (hover: hover) and (pointer: fine) { .ks .ks-nur-zeiger { display: block; } }
 .ks .ks-meldung { width: 100%; padding: 12px; border-radius: 12px; background: var(--ks-fuellung); color: var(--ks-text); font-size: var(--ks-fs-sub); text-align: left; border-left: 4px solid var(--ks-warn); }
@@ -429,6 +439,7 @@
 .ks .ks-zaehler { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; font-size: 6rem; font-weight: 700; color: #fff; text-shadow: 0 2px 18px rgba(0, 0, 0, .65); }
 .ks .ks-beispiel-hinweis { position: absolute; top: 8px; left: 8px; right: 8px; margin: 0; padding: 8px 12px; border-radius: 12px; background: rgba(0, 0, 0, .85); color: #fff; font-size: var(--ks-fs-sub); line-height: 1.3; display: flex; flex-direction: column; gap: 2px; pointer-events: none; }
 .ks .ks-beispiel-hinweis[hidden] { display: none; }
+.ks .ks-beispiel-hinweis.ks-hinweis-unten { top: auto; bottom: 8px; }
 .ks .ks-beispiel-hinweis span { font-size: var(--ks-fs-fuss); font-weight: 400; }
 /* Zoom steht senkrecht am rechten Rand: so liegt er nie auf der Wetterkarte (unten/oben) und nicht auf dem Auslöser */
 .ks .ks-sucher-zoom { position: absolute; right: max(8px, env(safe-area-inset-right)); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 4px; z-index: 2; padding: 3px; border-radius: 24px; background: var(--ks-glas); border: 1px solid var(--ks-glas-rand); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
