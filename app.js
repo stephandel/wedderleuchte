@@ -371,6 +371,7 @@
     ['radsat', 'karten'].forEach(function (k) { if (karten[k]) { try { karten[k].abbauen(); } catch (e) { } karten[k] = null; } });
   }
   var kartenOrt = '';
+  var kartenVoll = false;     // Umschalter im Vollbild-Blatt (A32): die neue Karte gleich wieder im Blatt aufbauen
   function renderRadSat() {
     var s = $('#tab-radsat');
     var schl = ort.id + '|' + radsatModus;
@@ -388,6 +389,11 @@
       orte: sortierteOrte().map(function (o) { return { id: o.id, name: o.name, lat: o.lat, lon: o.lon }; }), offset: off,
       symbol: function (code, tag, w) { return symbolFuerCode(w ? kartenCode(code, tag, w) : code, tag); },
       offline: false,
+      wechsel: [{ id: 'radsat', name: 'Radar & Satellit' }, { id: 'karten', name: 'Karten' }], aktiv: radsatModus, vollbildStart: kartenVoll,
+      beiWechsel: function (id) {
+        radsatModus = id; speicher.schreiben('radsat-modus', id); kartenVoll = true; renderRadSat(); kartenVoll = false;
+        var c = $('#karte [data-wechsel="' + id + '"]'); if (c) c.focus();
+      },
       merk: function (k, v) { if (v === undefined) return speicher.lesen('wk-' + k, null); speicher.schreiben('wk-' + k, v); return null; }
     });
     kartenOrt = schl;

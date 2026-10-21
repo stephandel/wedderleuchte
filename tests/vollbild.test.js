@@ -93,7 +93,7 @@ const MASSE_BLATT = (sel) => {
 // Kontrast Text zu Hintergrund (erster nicht durchsichtiger Hintergrund nach oben)
 const KONTRAST = (sel) => {
   const e = document.querySelector(sel); if (!e) return 0;
-  const farbe = c => (c.match(/[\d.]+/g) || []).slice(0, 3).map(Number);
+  const farbe = c => { const z = (c.replace(/^color\(srgb/, '').match(/[\d.]+/g) || []).slice(0, 3).map(Number); return /^color\(srgb/.test(c) ? z.map(v => v * 255) : z; };   // WebKit gibt color-mix als color(srgb 0…1) aus
   let g = e, bg = 'rgba(0, 0, 0, 0)';
   while (g && /rgba\(0, 0, 0, 0\)|transparent/.test(bg)) { bg = getComputedStyle(g).backgroundColor; g = g.parentElement; }
   const L = c => { const [r, gg, b] = farbe(c).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * r + 0.7152 * gg + 0.0722 * b; };
@@ -153,6 +153,30 @@ const MG = {
     await p.evaluate((sel) => { document.querySelector(sel).scrollTop = 0; }, '#graphs');
   }
 };
+// Karte: füllt das Blatt abzüglich Kopf, Ebenenleiste und Zeitleiste; Zoom, Zeit-Regler, Abspielen und Umschalter bedienbar
+const KARTE = {
+  sel: '#karte', knopf: '.wk-voll', knopfKlasse: 'wk-voll', fertig: '.wk-vb-fertig', marke: 'wk', label: 'Radar und Satellit im Vollbild', was: 'die Karte', reiter: 'radsat',
+  extra: async (p, name) => {
+    const k = await p.evaluate(() => {
+      const w = document.querySelector('#karte'), r = s => { const e = w.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.right), Math.round(b.bottom)]; };
+      const m = w.querySelector('.wk-leaflet')._wkMap.getSize();
+      return { karte: r('.wk-leaflet'), kopf: r('.wk-vb-kopf'), zeit: r('.wk-zeit'), leiste: r('.wk-leiste'), plus: r('[data-zoom="1"]'), minus: r('[data-zoom="-1"]'), play: r('.wk-play'), regler: r('.wk-range'), mapGr: [m.x, m.y], vw: innerWidth, vh: innerHeight,
+        chips: [...w.querySelectorAll('.wk-vb-chip')].map(c => c.textContent + ':' + c.getAttribute('aria-checked')) };
+    });
+    const drin = b => !!b && b[0] >= 0 && b[1] >= 0 && b[2] <= k.vw + 1 && b[3] <= k.vh;   // 1 px: die Ebenenleiste hat einen halben Pixel Rand
+    pruefe(name + ': Karte füllt das Blatt zwischen Kopf, Ebenenleiste und Zeitleiste; Leaflet kennt die neue Größe', k.karte[1] === k.kopf[3] && k.karte[3] === k.zeit[1] && k.karte[2] === k.leiste[0] && k.mapGr[0] === k.karte[2] - k.karte[0] && k.mapGr[1] === k.karte[3] - k.karte[1] && k.zeit[3] === k.vh, k);
+    pruefe(name + ': + und −, Abspielen und Zeit-Regler im Bild', [k.plus, k.minus, k.play, k.regler].every(drin), k);
+    pruefe(name + ': Umschalter „Radar & Satellit | Karten“ im Blatt-Kopf', k.chips.join('|') === 'Radar & Satellit:true|Karten:false', k.chips);
+    const z0 = await p.evaluate(() => document.querySelector('#karte .wk-leaflet')._wkMap.getZoom());
+    await p.click('#karte [data-zoom="1"]'); await p.waitForTimeout(300);
+    const z1 = await p.evaluate(() => document.querySelector('#karte .wk-leaflet')._wkMap.getZoom());
+    pruefe(name + ': + zoomt im Blatt', z1 > z0, [z0, z1]);
+    await p.click('#karte .wk-play'); await p.waitForTimeout(200);
+    pruefe(name + ': Abspielen startet im Blatt', await p.evaluate(() => document.querySelector('#karte .wk-play').getAttribute('aria-label') === 'Anhalten'));
+    await p.click('#karte .wk-play');
+  }
+};
+async function zuKarte(p) { await p.click('#leiste [data-tab="radsat"]'); await p.waitForSelector('#karte.wk .leaflet-container', { timeout: 10000 }); await p.waitForTimeout(500); }
 async function zuGraphs(p) { await p.click('#leiste [data-tab="graphs"]'); await p.waitForSelector('#graphs .mg-svg text', { timeout: 10000 }); await p.waitForTimeout(400); }
 
 (async () => {
@@ -167,13 +191,42 @@ async function zuGraphs(p) { await p.click('#leiste [data-tab="graphs"]'); await
       pruefe(o.name + ': keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
       await s.ctx.close();
     }
-    console.log('2) Reduzierte Bewegung');
+    console.log('2) Karte (Rad/Sat) im Vollbild: 390 hell und dunkel, quer 844 × 390, 1280 × 800');
+    for (const o of [{ name: 'karte-390-hell' }, { name: 'karte-390-dunkel', farbe: 'dark' }, { name: 'karte-390-130', schrift: true }, { name: 'karte-844-quer', breite: 844, hoehe: 390 }, { name: 'karte-1280', breite: 1280, hoehe: 800 }]) {
+      const s = await neueSeite(b, Object.assign({ speicher: { [VORSATZ + 'radsat-modus']: '"radsat"' } }, o));
+      await zuKarte(s.p);
+      await blattPruefen(s, Object.assign({}, KARTE, { name: o.name }));
+      pruefe(o.name + ': keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
+      await s.ctx.close();
+    }
+    console.log('3) Umschalter im Karten-Blatt: Karten statt Radar, Blatt bleibt offen, Fertig führt zurück');
+    {
+      const s = await neueSeite(b, { speicher: { [VORSATZ + 'radsat-modus']: '"radsat"' } });
+      await zuKarte(s.p);
+      const l0 = await s.p.evaluate(() => history.length);
+      await s.p.click('#karte .wk-voll'); await s.p.waitForTimeout(400);
+      await s.p.click('#karte [data-wechsel="karten"]'); await s.p.waitForTimeout(800);
+      const z = await s.p.evaluate(() => { const w = document.querySelector('#karte'), r = w.getBoundingClientRect(); return { voll: Math.round(r.width) === innerWidth && Math.round(r.height) === innerHeight, klasse: w.classList.contains('wk-vollbild'), chips: [...w.querySelectorAll('.wk-vb-chip')].map(c => c.getAttribute('aria-checked')).join(','), fokus: document.activeElement && document.activeElement.dataset.wechsel, ebenen: w.querySelectorAll('[data-ebene]').length, laenge: history.length, leiste: !!document.querySelector('#leiste').closest('[inert]'), label: w.getAttribute('aria-label') }; });
+      pruefe('Wechsel zu „Karten“: neue Karte gleich im Blatt, Umschalter gewählt, Fokus darauf', z.voll && z.klasse && z.chips === 'false,true' && z.fokus === 'karten' && z.ebenen === 6 && z.leiste, z);
+      pruefe('Wechsel legt keinen weiteren Verlaufseintrag an', z.laenge === l0 + 1, [l0, z.laenge]);
+      pruefe('Wahl wird gemerkt', await s.p.evaluate(v => localStorage.getItem(v + 'radsat-modus'), VORSATZ) === '"karten"');
+      await foto(s.p, 'vollbild-karte-wechsel-karten');
+      await s.p.click('#karte .wk-vb-fertig'); await s.p.waitForTimeout(400);
+      const zu = await s.p.evaluate(() => ({ voll: document.querySelector('#karte').classList.contains('wk-vollbild'), leiste: !!document.querySelector('#leiste').closest('[inert]'), zustand: history.state, modus: document.querySelector('[data-modus="karten"]').getAttribute('aria-checked') }));
+      pruefe('Fertig nach dem Wechsel: Blatt zu, Seite frei, Verlauf zurück, Reiter zeigt „Karten“', !zu.voll && !zu.leiste && !(zu.zustand && zu.zustand.wpVollbild) && zu.modus === 'true', zu);
+      pruefe('keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
+      await s.ctx.close();
+    }
+    console.log('4) Reduzierte Bewegung');
     {
       const s = await neueSeite(b, { bewegung: 'reduce' });
       await zuGraphs(s.p);
       await s.p.click('#graphs .mg-btn-voll');
       const a = await s.p.evaluate(() => { const st = getComputedStyle(document.getElementById('graphs')); return { name: st.animationName, dauer: st.animationDuration }; });
       pruefe('prefers-reduced-motion: Meteogramm-Blatt ohne Wachs-Animation', a.name === 'none' || a.dauer === '0s', a);
+      await s.p.click('#graphs .mg-vb-fertig'); await zuKarte(s.p); await s.p.click('#karte .wk-voll');
+      const k = await s.p.evaluate(() => { const st = getComputedStyle(document.getElementById('karte')); return { name: st.animationName, dauer: st.animationDuration }; });
+      pruefe('prefers-reduced-motion: Karten-Blatt ohne Wachs-Animation', k.name === 'none' || k.dauer === '0s', k);
       await s.ctx.close();
     }
   } finally { await b.close(); srv.close(); }

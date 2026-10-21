@@ -75,3 +75,27 @@
 .wk .leaflet-control-attribution { display: none; }
 .wk .leaflet-marker-icon { transition: none; }
 .wk .leaflet-image-layer { pointer-events: none; }
+
+/* Vollbild-Blatt (A32, 21.10.2026): ⤢ unten in der Ebenenleiste legt die Karte über den ganzen Bildschirm.
+   Fest an alle vier Ränder geheftet, Safe Areas als Innenabstand, Kopf mit „Fertig“ (44 px). z-index 90 wie beim Meteogramm.
+   !important, weil Apps den Behälter mit eigenen Regeln gestalten (ID-Selektoren, --wk-hoehe, Eckenradius). */
+.wk {
+  --wk-fertig: var(--wk-akzent);            /* Farbe von „Fertig“; Apps mit hellem Grund setzen hier ihre Textakzentfarbe */
+}
+.wk.wk-vollbild { position: fixed !important; inset: 0 !important; z-index: 90 !important; width: auto !important; height: auto !important; min-height: 0 !important; max-width: none !important;
+  margin: 0 !important; border: 0 !important; border-radius: 0 !important; overflow: hidden !important; background: var(--wk-zeit);
+  padding: 0 env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px) !important; animation: wk-vb-auf .25s ease-out; }
+.wk-vollbild .wk-zeit { padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); }
+@keyframes wk-vb-auf { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .wk.wk-vollbild { animation: none; } }
+.wk-vb-kopf { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: calc(44px + env(safe-area-inset-top, 0px));
+  padding: env(safe-area-inset-top, 0px) 4px 0 10px; background: var(--wk-zeit); border-bottom: 0.5px solid var(--wk-rand); }
+.wk-vb-kopf[hidden] { display: none; }
+.wk-vb-titel { min-width: 0; font-size: 15px; font-weight: 600; color: var(--wk-still); }
+.wk-vb-wechsel { display: flex; gap: 6px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.wk-vb-wechsel::-webkit-scrollbar { display: none; }
+.wk-vb-chip { flex: none; min-height: 44px; padding: 0 14px; border: 0.5px solid var(--wk-rand); border-radius: 22px; background: none; color: var(--wk-text); font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.wk-vb-chip[aria-checked="true"] { background: var(--wk-leiste-an); border-color: transparent; font-weight: 600; }
+.wk-vb-fertig { flex: none; min-width: 44px; min-height: 44px; padding: 0 10px; border: 0; background: none; color: var(--wk-fertig); font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.wk-vb-fertig:active, .wk-vb-chip:active { opacity: .6; }
+.wk-vb-fertig:focus-visible, .wk-vb-chip:focus-visible { outline: 2px solid var(--wk-akzent); outline-offset: -2px; }

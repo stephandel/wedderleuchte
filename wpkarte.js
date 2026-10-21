@@ -7,11 +7,17 @@
                  Zeitleiste über die letzten 2 Stunden in 10-Minuten-Schritten.
    Braucht Leaflet (global `L`). Ohne Netz (offline) zeigt er die gespeicherte Ansicht aus snapshot/karte.json.
 
-   var k = WetterKarte.einbauen({ ziel, modus, ort, orte, offset, symbol(code, istTag, werte), offline, snapshot, merk(k, v), beiZeit(text) });
-   k.zeigeOrt(ort, orte); k.sichtbar(); k.verlassen(); k.abbauen();
+   var k = WetterKarte.einbauen({ ziel, modus, ort, orte, offset, symbol(code, istTag, werte), offline, snapshot, merk(k, v), beiZeit(text),
+                                  vollbildKnopf, vollbildStart, vollbildTitel, beiVollbildZu(), zurueckGeste, wechsel: [{ id, name }], aktiv, beiWechsel(id) });
+   k.zeigeOrt(ort, orte); k.sichtbar(); k.verlassen(); k.vollbild(an); k.abbauen();
+   Vollbild (A32, 21.10.2026): ⤢ unten in der Ebenenleiste legt die Karte als Blatt über den ganzen Bildschirm, „Fertig“, Esc und
+   Zurück schließen. `wechsel` zeigt im Blatt-Kopf Umschalter (z. B. „Radar & Satellit | Karten“), die Wahl meldet beiWechsel(id).
    =========================================================================== */
 (function (global) {
   'use strict';
+
+  // Neu geladen, während ein Vollbild-Blatt offen war (A32): der Verlaufseintrag gehört zu keinem Blatt mehr
+  try { if (global.history && history.state && history.state.wpVollbild === 'wk') history.replaceState(null, ''); } catch (e) { }
 
   // ---------- Quellen ----------
   // Grundkarte: OpenTopoMap (frei nutzbar, CC-BY-SA, mit Grenzen und Ortsnamen; bis 14.10.2026 Esri Physical Map, die ohne Schlüssel nicht erlaubt ist).
@@ -77,6 +83,8 @@
     satregen: ic('<rect x="9.8" y="4.8" width="4.4" height="4.4" rx=".8" transform="rotate(45 12 7)"/><rect x="2.5" y="5.4" width="5" height="3.2" rx=".7"/><rect x="16.5" y="5.4" width="5" height="3.2" rx=".7"/><path d="M7.5 7h2.3M14.2 7h2.3"/><path d="M7.5 14.5l-1.6 4.5M12 14.5l-1.6 4.5M16.5 14.5l-1.6 4.5"/>'),
     plus:     ic('<circle cx="11" cy="11" r="7"/><path d="M16 16l5 5M11 8v6M8 11h6"/>'),
     minus:    ic('<circle cx="11" cy="11" r="7"/><path d="M16 16l5 5M8 11h6"/>'),
+    voll:     ic('<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'),
+    vollaus:  ic('<path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/>'),
     play:     '<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2l11 6-11 6z"/></svg>',
     pause:    '<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M3 2h4v12H3zM9 2h4v12H9z"/></svg>',
     anfang:   '<svg viewBox="0 0 16 16" aria-hidden="true" fill="currentColor"><path d="M2 2h2v12H2zM14 2 5 8l9 6z"/></svg>',
@@ -214,6 +222,10 @@
     var merk = cfg.merk || function () { return null; };
     var beiZeit = cfg.beiZeit || function () {};
     var MERK = 'wk-' + MODUS;
+    var VOLLBILD_KNOPF = cfg.vollbildKnopf !== false, VOLLBILD_START = cfg.vollbildStart === true, ZURUECK_GESTE = cfg.zurueckGeste !== false;
+    var VOLLBILD_TITEL = cfg.vollbildTitel || (MODUS === 'karten' ? 'Karten' : 'Radar und Satellit');
+    var BEI_VOLLBILD_ZU = typeof cfg.beiVollbildZu === 'function' ? cfg.beiVollbildZu : null;
+    var WECHSEL = Array.isArray(cfg.wechsel) && cfg.wechsel.length > 1 ? cfg.wechsel : null, BEI_WECHSEL = typeof cfg.beiWechsel === 'function' ? cfg.beiWechsel : null;
 
     // Ebenen je Modus. `flaeche` = genau eine davon gleichzeitig; `wetter` schaltet die Marken.
     var EBENEN = MODUS === 'karten'
@@ -237,7 +249,14 @@
 
     // ---------- Oberfläche ----------
     wurzel.classList.add('wk');
+    function escH(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
     wurzel.innerHTML =
+      // Kopf des Vollbild-Blatts (A32): Umschalter oder Titel links, „Fertig“ rechts; außerhalb des Blatts versteckt
+      '<div class="wk-vb-kopf" hidden>' +
+        (WECHSEL ? '<div class="wk-vb-wechsel" role="radiogroup" aria-label="Ansicht">' + WECHSEL.map(function (w) {
+          return '<button type="button" class="wk-vb-chip" role="radio" data-wechsel="' + escH(w.id) + '" aria-checked="' + (w.id === cfg.aktiv) + '">' + escH(w.name) + '</button>'; }).join('') + '</div>'
+          : '<span class="wk-vb-titel">' + escH(VOLLBILD_TITEL) + '</span>') +
+        '<button type="button" class="wk-vb-fertig">Fertig</button></div>' +
       '<div class="wk-oben">' +
         '<div class="wk-karte"><div class="wk-leaflet"></div>' +
           '<div class="wk-legende" hidden><span class="wk-leg-a"></span><i></i><span class="wk-leg-b"></span></div>' +
@@ -251,6 +270,7 @@
           '<div class="wk-trenner"></div>' +
           '<button type="button" class="wk-knopf" data-zoom="1" aria-label="Näher" title="Näher">' + ICONS.plus + '</button>' +
           '<button type="button" class="wk-knopf" data-zoom="-1" aria-label="Weiter" title="Weiter">' + ICONS.minus + '</button>' +
+          (VOLLBILD_KNOPF ? '<button type="button" class="wk-knopf wk-voll" aria-pressed="false" aria-label="Vollbild" title="Vollbild: über den ganzen Bildschirm">' + ICONS.voll + '</button>' : '') +
         '</div>' +
       '</div>' +
       '<div class="wk-zeit"><div class="wk-regler">' +
@@ -645,6 +665,58 @@
         b.disabled = +b.dataset.zoom > 0 ? z >= map.getMaxZoom() - 0.01 : z <= map.getMinZoom() + 0.01;
       });
     }
+    // ---------- Vollbild-Blatt (A32) ----------
+    // Wie beim Meteogramm-Baustein: Klasse wk-vollbild (CSS heftet die Karte an alle Ränder), role="dialog", Rest der Seite inert,
+    // ein Verlaufseintrag, damit Zurück das Blatt schließt. Danach rechnet Leaflet die neue Größe nach.
+    var vollbild = false, vb = { gesperrt: [], overflow: '', gepusht: false };
+    function vollbildSetzen(an, ausVerlauf) {
+      an = !!an;
+      if (an === vollbild || abgebaut) return;
+      vollbild = an;
+      wurzel.classList.toggle('wk-vollbild', an);
+      var b = wurzel.querySelector('.wk-voll'), kopf = wurzel.querySelector('.wk-vb-kopf');
+      if (b) { b.innerHTML = an ? ICONS.vollaus : ICONS.voll; b.setAttribute('aria-pressed', String(an)); b.setAttribute('aria-label', an ? 'Vollbild beenden' : 'Vollbild'); }
+      kopf.hidden = !an;
+      if (an) {
+        wurzel.setAttribute('role', 'dialog'); wurzel.setAttribute('aria-modal', 'true'); wurzel.setAttribute('aria-label', VOLLBILD_TITEL + ' im Vollbild');
+        seiteSperren(true);
+        // Steht der Verlauf schon auf einem Karten-Eintrag (Umschalter im Blatt baut die Karte neu), wird er weiterbenutzt
+        if (ZURUECK_GESTE) { try { if (history.state && history.state.wpVollbild === 'wk') vb.gepusht = true; else { history.pushState({ wpVollbild: 'wk' }, ''); vb.gepusht = true; } } catch (e) { } }
+        wurzel.querySelector('.wk-vb-fertig').focus({ preventScroll: true });
+      } else {
+        wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
+        seiteSperren(false);
+        if (vb.gepusht) { vb.gepusht = false; if (!ausVerlauf && history.state && history.state.wpVollbild === 'wk') { try { history.back(); } catch (e) { } } }
+        if (b) b.focus({ preventScroll: true });
+      }
+      groesseGeaendert(); setTimeout(groesseGeaendert, 280);   // nach der Einblendung (250 ms) noch einmal messen
+      if (!an && BEI_VOLLBILD_ZU) { try { BEI_VOLLBILD_ZU(); } catch (e) { } }
+    }
+    function seiteSperren(an) {
+      if (an) {
+        vb.gesperrt = [];
+        for (var k = wurzel; k && k !== document.body && k.parentNode; k = k.parentNode) {
+          Array.prototype.forEach.call(k.parentNode.children, function (g) {
+            if (g === k || g.hasAttribute('inert') || /^(SCRIPT|STYLE|LINK|TEMPLATE)$/.test(g.tagName)) return;
+            g.setAttribute('inert', ''); vb.gesperrt.push(g);
+          });
+        }
+        vb.overflow = document.documentElement.style.overflow; document.documentElement.style.overflow = 'hidden';
+      } else {
+        vb.gesperrt.forEach(function (g) { g.removeAttribute('inert'); }); vb.gesperrt = [];
+        document.documentElement.style.overflow = vb.overflow || '';
+      }
+    }
+    function vbTaste(ev) { if (vollbild && ev.key === 'Escape' && !ev.defaultPrevented) { ev.preventDefault(); vollbildSetzen(false); } }
+    function vbZurueck() { if (vollbild && vb.gepusht) { vb.gepusht = false; vollbildSetzen(false, true); } }
+    document.addEventListener('keydown', vbTaste);
+    global.addEventListener('popstate', vbZurueck);
+    if (wurzel.querySelector('.wk-voll')) wurzel.querySelector('.wk-voll').addEventListener('click', function () { vollbildSetzen(!vollbild); });
+    wurzel.querySelector('.wk-vb-fertig').addEventListener('click', function () { vollbildSetzen(false); });
+    wurzel.querySelectorAll('[data-wechsel]').forEach(function (c) {
+      c.addEventListener('click', function () { if (c.getAttribute('aria-checked') !== 'true' && BEI_WECHSEL) BEI_WECHSEL(c.dataset.wechsel); });
+    });
+
     function groesseGeaendert() {
       if (!map) return;
       map.invalidateSize({ animate: false });
@@ -690,6 +762,7 @@
       }
     }
     start();
+    if (VOLLBILD_START) vollbildSetzen(true);
     var uhr = setInterval(function () {           // Rad/Sat: alle 10 Minuten kann ein neues Bild da sein
       if (abgebaut || OFFLINE || MODUS !== 'radsat' || film) return;
       var alt = frames[frames.length - 1]; framesBauen();
@@ -706,7 +779,13 @@
       setzeOffset: function (s) { offset = s || 0; ticks(); if (frames.length) anzeigen(false); },
       sichtbar: function () { map.invalidateSize(); ticks(); markenSetzen(); },
       verlassen: function () { filmStopp(); },
-      abbauen: function () { window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
+      vollbild: function (an) { vollbildSetzen(an); },
+      // Offenes Blatt: Sperre aufheben; der Verlaufseintrag bleibt und wird von einem neuen Blatt weiterbenutzt (Umschalter im Blatt)
+      abbauen: function () {
+        if (vollbild) { vollbild = false; vb.gepusht = false; seiteSperren(false); }
+        document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck);
+        wurzel.classList.remove('wk-vollbild'); wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
+        window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
     };
   }
 

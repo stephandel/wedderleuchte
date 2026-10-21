@@ -229,6 +229,11 @@ body { background: var(--radar-grund); }
 #karte .wk-knopf.is-on { color: var(--auf-akzent); }
 #karte [data-ebene="druck"] { display: none; }
 #karte .wk-tk { width: var(--tap); height: var(--tap); }
+/* Vollbild-Blatt der Karte (A32): Fertig in der Textakzentfarbe, gewählter Umschalter wie gewählte Ebene, Beschriftungen nicht unter 11 px */
+#karte { --wk-fertig: var(--akzent-text); }
+#karte.wk-vollbild { --wk-zeit: var(--auf-himmel-kachel-voll); --wk-leiste: var(--auf-himmel-kachel-voll); }   /* im Blatt deckend, der Himmel liegt dahinter */
+#karte .wk-vb-chip[aria-checked="true"] { color: var(--auf-akzent); }
+#karte .wk-ticks, #karte .wk-quelle, #karte .wk-legende { font-size: var(--fs-caption); }
 
 /* ---------- Wetterfoto: Studio im Vollbild ---------- */
 .studio { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--label); display: flex; flex-direction: column; padding: var(--safe-top) var(--safe-right) 0 var(--safe-left); }
