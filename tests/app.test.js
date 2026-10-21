@@ -168,6 +168,9 @@ function kontrastHimmel(tokens) {
       pruefe('Einstellung wie WeddaApp: Ein-Tipp-Karte, Auslöser frei, Galerie 3/5', i && i.variante === 'schnell' && i.optionen.ausloeserOrt === 'frei' && i.optionen.galerieOriginale === 3 && i.optionen.galerieBearbeitet === 5, i && i.optionen);
       pruefe('Eigener Speichername: Nutzerwahl und Vorlage unter wedderleuchte-…', await p.evaluate(() => { const r = document.querySelector('#ksWurzel .ks'), n = r && r._ksInst; return !!n && n.nutzerPraefix === 'wedderleuchte-ks-nutzer-' && n.vorlageSchluessel === 'wedderleuchte-ks-vorlage'; }));
       await p.waitForFunction(() => [...document.querySelectorAll('#ksWurzel button')].some(x => x.textContent.trim() === 'Teilen'), null, { timeout: 8000 }).catch(() => {});
+      // Stephan, 21.10.2026: Umschalter „Einfach | Profi“ in den Apps einschalten (Mount-Option stufenWahl)
+      const stufen = await p.$$eval('#ksWurzel .ks-kopf-stufe [data-akt="stufe"]', l => l.map(b => b.textContent.trim()));
+      pruefe('Umschalter „Einfach | Profi“ im Studio-Kopf (stufenWahl an)', stufen.join('|') === 'Einfach|Profi', stufen);
       await p.waitForTimeout(800);   // Galerie speichert das Foto
       const dbs = await p.evaluate(() => indexedDB.databases ? indexedDB.databases().then(l => l.map(d => d.name)) : []);
       pruefe('Galerie getrennt: IndexedDB „wedderleuchte-ks-galerie“, nicht weddaapp/wpcamera/ks-galerie', dbs.includes('wedderleuchte-ks-galerie') && !dbs.some(n => /weddaapp|wpcamera|^ks-galerie$/.test(n)), dbs);
