@@ -139,10 +139,12 @@
       daten = { ort: ort.id, roh: j, geholt: Date.now() };
       speicher.schreiben('daten-' + ort.id, daten);
       status = 'ok'; offline = false; zeichnen(); hinweis('');
+      if (ks) ks.setze({ wetter: studioWetter() });   // offenes Wetterfoto bekommt die neuen Werte
     }).catch(function () {
       if (gemerkt && gemerkt.roh) { daten = gemerkt; status = 'ok'; offline = true; hinweis('Offline · Stand ' + stand(gemerkt.geholt)); }
       else { daten = null; status = 'fehler'; }
       zeichnen();
+      if (ks) ks.setze({ wetter: studioWetter() });
     });
   }
   function stand(ms) { var d = new Date(ms); return pad(d.getHours()) + ':' + pad(d.getMinutes()); }

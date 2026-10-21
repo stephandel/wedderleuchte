@@ -3,7 +3,7 @@
    - index.html und JSON: erst aus dem Netz, ohne Netz aus dem Zwischenspeicher.
    - Übrige Hülle (CSS, JS, Bilder, Leaflet): sofort aus dem Zwischenspeicher, im Hintergrund auffrischen.
    - Wetterdaten, Karten und Radar kommen von fremden Diensten und gehen direkt ins Netz; den letzten Stand merkt sich app.js. */
-const VERSION = 'wedder-5c2e64ead5';
+const VERSION = 'wedder-be3a39af3b';
 const HUELLE = ['./', 'index.html', 'app.css', 'app.js', 'base.css', 'tokens.css', 'symbole.js', 'ikonen.js', 'manifest.json', 'meteogramm.js', 'meteogramm.css', 'wpkarte.js', 'wpkarte.css', 'apple-touch-icon.png', 'app-symbol-1024.png',
   'lib/leaflet/leaflet.min.js', 'lib/leaflet/leaflet.css', 'lib/leaflet/images/layers.png', 'lib/leaflet/images/layers-2x.png', 'lib/leaflet/images/marker-icon.png', 'lib/leaflet/images/marker-icon-2x.png', 'lib/leaflet/images/marker-shadow.png',
   'lib/kamera-studio/ks-symbole.js', 'lib/kamera-studio/ks-engine.js', 'lib/kamera-studio/ks-studio.js', 'lib/kamera-studio/ks-studio.css'];

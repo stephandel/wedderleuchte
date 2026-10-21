@@ -171,6 +171,10 @@ function kontrastHimmel(tokens) {
       await p.waitForTimeout(800);   // Galerie speichert das Foto
       const dbs = await p.evaluate(() => indexedDB.databases ? indexedDB.databases().then(l => l.map(d => d.name)) : []);
       pruefe('Galerie getrennt: IndexedDB „wedderleuchte-ks-galerie“, nicht weddaapp/wpcamera/ks-galerie', dbs.includes('wedderleuchte-ks-galerie') && !dbs.some(n => /weddaapp|wpcamera|^ks-galerie$/.test(n)), dbs);
+      // Neue Wetterdaten bei offenem Studio (z. B. Start mit ?kamera=1 vor dem Laden, „online“) kommen dort an
+      await p.evaluate(() => { const n = document.querySelector('#ksWurzel .ks')._ksInst; n.wetter = Object.assign({}, n.wetter, { temp: -99 }); window.dispatchEvent(new Event('online')); });
+      await p.waitForFunction(() => document.querySelector('#ksWurzel .ks')._ksInst.wetter.temp === 7.7, null, { timeout: 5000 }).catch(() => {});
+      pruefe('Neue Wetterdaten erreichen das offene Studio (ks.setze)', await p.evaluate(() => document.querySelector('#ksWurzel .ks')._ksInst.wetter.temp === 7.7));
       const schluessel = await p.evaluate(() => Object.keys(localStorage));
       pruefe('Speicher ohne weddaapp-/wpcamera-/wedda-Schlüssel', !schluessel.some(k => /weddaapp|wpcamera|^wedda-/.test(k)), schluessel);
       pruefe('Kein seitliches Scrollen mit Studio', await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
