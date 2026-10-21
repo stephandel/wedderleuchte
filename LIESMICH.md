@@ -24,3 +24,7 @@ Projektangaben: Repo `wedderleuchte`, Test-Seite https://stephandel.github.io/we
 ## Tokens in zwei Formaten
 
 `DESIGN.md` beginnt mit einem YAML-Kopf nach Googles DESIGN.md-Schema (Farben, Schrift, Rundungen, Abstände, Bewegung, Bauteile), darunter stehen die Regeln in Prosa. `tokens.json` enthält dieselben Werte im W3C-Design-Token-Format (Hell und Dunkel getrennt), `tokens.css` als CSS-Variablen.
+
+## Wetterfoto (seit 21.10.2026)
+
+Der Reiter „Kamera“ (runder Knopf) und das Teilen-Symbol oben öffnen das Wetterfoto-Studio: Foto aufnehmen oder wählen, Wetter der Wedderleuchte kommt aufs Bild, Vorlage wählen, teilen. Das Studio kommt unverändert aus dem Kamera-Konfigurator (`lib/kamera-studio/`, neu holen mit `node tools/kamera-studio-holen.js`). Die Galerie „Meine Wetterfotos“ liegt nur auf dem Gerät und ist von WeddaApp und Camera App getrennt. Der frühere Teilen-Bildschirm ist weggefallen.
