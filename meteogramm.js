@@ -267,6 +267,22 @@
     // Maße
     var BAND_TAG = 22, BAND_CAM = 16, TITEL_H = 22, BAND_UNTEN = 24, TAGESINFO_H = MOND ? 50 : 34;
     var ZEILE_H_SCHMAL = 72, ZEILE_H_BREIT = 92, PXH_BREIT = 24;
+    // Vollbild im Querformat (B7, 22.10.2026): Kopf, Fahne und Knopfleiste lassen auf Telefonen quer nur 150–220 px fürs
+    // Diagramm; mit 92 px je Zeile passte keine zweite ganz hinein. Flach: die Zeilenhöhe wird aus dem freien Platz
+    // berechnet, sodass die ersten zwei Zeilen ganz passen (20–44 px), die Tagesinfo zeigt dann nur die Sonnenstunden.
+    var ZEILE_H_FLACH_MIN = 20, ZEILE_H_FLACH_MAX = 44, TAGESINFO_H_FLACH = 20, gezeichnetFlachH = 0, gezeichnetFlach = false;
+    function flach(){ var h = global.innerHeight || 0, w = global.innerWidth || 0; return vollbild && h < 500 && w > h; }
+    function flachHoehe(){
+      if (!flach()) return 0;
+      // Freier Platz direkt gemessen: Unterkante der Fahne (samt Kopf und allem, was eine App darüber zeigt, z. B. Orte-Reiter)
+      // bis Oberkante der unten haftenden Knopfleiste, 4 px Reserve. offset* statt Bildschirmlage: die Öffnen-Animation skaliert.
+      var ro = wurzel.querySelector('.mg-readout'), kn = wurzel.querySelector('.mg-knoepfe'), extra = 0;
+      if (!ro || !kn) return ZEILE_H_FLACH_MAX;
+      var frei = wurzel.clientHeight - (parseFloat(getComputedStyle(wurzel).paddingBottom) || 0) - kn.offsetHeight - (ro.offsetTop + ro.offsetHeight) - 4;
+      sichtbareZeilen().slice(0, 2).forEach(function(z){ if (z.tagesinfo) extra += TAGESINFO_H_FLACH; });
+      var h = Math.floor((frei - BAND_TAG - BAND_CAM - 2 * TITEL_H - extra - 2) / 2);
+      return Math.max(ZEILE_H_FLACH_MIN, Math.min(ZEILE_H_FLACH_MAX, h));
+    }
 
     var el = {}, daten = null, cache = {}, geo = null, altT0 = null, datenNr = 0;
     var pxH = 26, idxJetzt = 0, sammler = 0, camAktuell = null;
@@ -618,7 +634,8 @@
       var schmal = W < 560;
       pxH = (schmal ? Math.max(18, Math.min(40, Math.floor(W / 26))) : PXH_BREIT) * zoom;
       var tagB = 24 * pxH;                       // so viele Pixel breit ist ein Tag
-      var zeileH = schmal ? ZEILE_H_SCHMAL : ZEILE_H_BREIT;
+      gezeichnetFlachH = flachHoehe(); gezeichnetFlach = gezeichnetFlachH > 0;
+      var zeileH = gezeichnetFlachH || (schmal ? ZEILE_H_SCHMAL : ZEILE_H_BREIT);
 
       var ZEILEN = sichtbareZeilen();
       var n = daten.zeit.length;
@@ -629,7 +646,7 @@
       var y = BAND_TAG + BAND_CAM, zeilen = [];
       ZEILEN.forEach(function(z){
         var s = skala(z);
-        var extra = z.tagesinfo ? TAGESINFO_H : 0;
+        var extra = z.tagesinfo ? (gezeichnetFlach ? TAGESINFO_H_FLACH : TAGESINFO_H) : 0;
         var g = { z: z, s: s, y0: y + TITEL_H, h: zeileH, yt: y, extra: extra };
         g.yv = function(v){ return g.y0 + g.h - (v - s.lo) / (s.hi - s.lo) * g.h; };
         zeilen.push(g);
@@ -694,11 +711,24 @@
         var std = ((idxJetzt % 24) + 24) % 24;
         if (Math.min(std, 24 - std) > 2.5) s.push('<text class="mg-jetzt-t" x="' + (x(idxJetzt) + 4) + '" y="15">Jetzt</text>');
       }
+      zeilen.forEach(function(g){ zeichneTagesinfo(s, g, x, pxH); });
       s.push('</svg>');
       el.svgWrap.innerHTML = s.join('');
       if (el.punkte) el.punkte.innerHTML = '';   // Punkte werden in wertlinienSetzen neu angelegt
       el.svgWrap.style.height = hoehe + 'px';
       el.wrap.style.height = hoehe + 'px';
+      // Auswahl-Strich: Lücke über der Tagesinfo (B7, 22.10.2026). Er liegt als eigene Ebene über der Zeichnung und lief
+      // sonst je nach Uhrzeit durch Sonnenstunden, Sonnenzeiten und Mond; dort gibt es keine Kurve zum Ablesen.
+      if (el.cursor) {
+        var stopps = ['#000 0px'];
+        if (24 * pxH >= 60) zeilen.forEach(function(g){
+          if (!g.z.tagesinfo || !g.extra) return;
+          var a = g.y0 + g.h, b2 = a + g.extra;
+          stopps.push('#000 ' + a + 'px', 'transparent ' + a + 'px', 'transparent ' + b2 + 'px', '#000 ' + b2 + 'px');
+        });
+        // nur auf die Linie (::after), die Spitze oben bleibt ganz
+        el.cursor.style.setProperty('--mg-cursor-maske', stopps.length > 1 ? 'linear-gradient(to bottom, ' + stopps.join(', ') + ', #000 100%)' : 'none');
+      }
 
       // Feste Achse links
       var a = [];
@@ -706,8 +736,12 @@
         a.push('<div class="mg-ax-titel" style="top:' + g.yt + 'px;height:' + TITEL_H + 'px">' +
           '<span class="mg-ax-punkt" style="background:' + g.z.farbe + '"></span>' +
           esc(g.z.titel) + (g.z.einheit ? ' <small>in ' + esc(g.z.einheit) + '</small>' : '') + '</div>');
+        var letzteTy = null;
         g.s.ticks.forEach(function(t){
           var ty = Math.max(g.y0, Math.min(g.y0 + g.h - 14, g.yv(t) - 7));
+          // Flach (Vollbild quer) stehen die Zahlen sonst übereinander: nur jede, die 14 px Abstand zur letzten hat
+          if (gezeichnetFlach && letzteTy !== null && Math.abs(ty - letzteTy) < 14) return;
+          letzteTy = ty;
           var txt = (g.z.id === 'welle' || g.z.id === 'tide' || g.z.id === 'regen' || (g.z.id === 'wasser' && t % 1)) ? dez(t, 1) : Math.round(t);
           a.push('<div class="mg-ax-tick" style="top:' + ty + 'px">' + txt + '</div>');
         });
@@ -767,10 +801,25 @@
         (daten.sonnenunter || []).forEach(function(iso){ var xi = idxFuerIso(iso); if (xi >= 0 && xi < n) s.push('<text class="mg-sonne" x="' + x(xi) + '" y="' + (g.yt + 15) + '" text-anchor="middle">↓ ' + iso.slice(11, 16) + '</text>'); });
       }
 
+      // Marken (B7, 22.10.2026): Grundlinie bleibt in der Zeile (nicht im Titelstreifen, nicht in der nächsten Zeile).
+      // Passt sie nicht über (Hoch) bzw. unter (Tief) den Punkt, kommt sie auf die andere Seite, sonst rechts neben ihn,
+      // nie auf ihn. Eine Marke, die eine schon gesetzte überdecken würde, entfällt (Punkt bleibt). Breite: 11 px fett ≈ 6,5 px je Zeichen.
+      var gesetzt = [];
+      function marke(mx, py, hoch, ab, txt){
+        var oben = g.y0 + 10.5, unten = g.y0 + g.h - 3, w = txt.length * 6.5, passt = function(v){ return v >= oben && v <= unten; };
+        var yb = hoch ? py - ab[0] : py + ab[1], anders = hoch ? py + ab[1] : py - ab[0];
+        if (!passt(yb)) {
+          if (passt(anders)) yb = anders;
+          else { mx += w / 2 + 6; yb = Math.max(oben, Math.min(unten, py + 4)); }
+        }
+        if (gesetzt.some(function(q){ return Math.abs(q.x - mx) < (q.w + w) / 2 + 2 && Math.abs(q.y - yb) < 13; })) return;
+        gesetzt.push({ x: mx, y: yb, w: w });
+        s.push('<text class="mg-mark" x="' + mx + '" y="' + yb + '" text-anchor="middle">' + txt + '</text>');
+      }
       if (z.extrema === 'tag') {
         tagesExtrema(F).forEach(function(e){
           s.push('<circle cx="' + x(e.i) + '" cy="' + g.yv(e.v) + '" r="3" fill="' + z.farbe + '"/>');
-          if (24 * pxH >= 60) s.push('<text class="mg-mark" x="' + x(e.i) + '" y="' + (e.hoch ? g.yv(e.v) - 7 : g.yv(e.v) + 14) + '" text-anchor="middle">' + (e.hoch ? '↑ ' : '↓ ') + Math.round(e.v) + '°</text>');
+          if (24 * pxH >= 60) marke(x(e.i), g.yv(e.v), e.hoch, [7, 14], (e.hoch ? '↑ ' : '↓ ') + Math.round(e.v) + '°');
         });
       }
       if (z.extrema === 'tide') {
@@ -783,7 +832,7 @@
         ex.forEach(function(e){
           s.push('<circle cx="' + x(e.i) + '" cy="' + g.yv(e.v) + '" r="' + (pxH < 5 ? 2.5 : 3.5) + '" fill="' + z.farbe + '"/>');
           var dt = new Date(daten.t0.getTime() + e.i * 3600000);
-          if (pxH >= 7) s.push('<text class="mg-mark" x="' + x(e.i) + '" y="' + (e.hoch ? g.yv(e.v) - 8 : g.yv(e.v) + 15) + '" text-anchor="middle">' + pad2(dt.getHours()) + ':' + pad2(dt.getMinutes()) + '</text>');
+          if (pxH >= 7) marke(x(e.i), g.yv(e.v), e.hoch, [8, 15], pad2(dt.getHours()) + ':' + pad2(dt.getMinutes()));
         });
       }
 
@@ -791,8 +840,12 @@
       if (z.wertlinie) s.push('<line class="mg-wertlinie" id="' + kid('wl-' + z.id) + '" x1="' + x(0) + '" x2="' + x(n - 1) + '" y1="0" y2="0" stroke="' + z.farbe + '" visibility="hidden"/>');
       // Der Punkt auf der Kurve an der gewählten Stelle liegt seit 08.10.2026 nicht mehr im SVG, sondern in der
       // Ebene .mg-punkte ueber dem schwarzen Strich (siehe wertlinienSetzen) - sonst verdeckt der Strich den Punkt.
+    }
 
-      // Tages-Fußzeile unter der Sonnenzeile
+    // Tages-Fußzeile unter der Sonnenzeile. Wird nach der Jetzt-Linie gezeichnet (B7, 22.10.2026): je nach Uhrzeit
+    // kreuzt die Linie den Text, vorher lag sie darüber; jetzt liegt der Text mit Hof in Bandfarbe oben (CSS .mg-tagesinfo).
+    function zeichneTagesinfo(s, g, x, pxH){
+      var z = g.z;
       if (z.tagesinfo && g.extra && 24 * pxH >= 60) {
         var basis = g.y0 + g.h;
         daten.tage.forEach(function(t){
@@ -800,7 +853,7 @@
           if (t.bis - t.von < 6) return;                 // angeschnittene Tage weglassen
           var stunden = t.sonneMin / 60;
           s.push('<text class="mg-tagesinfo-stark" x="' + mitte + '" y="' + (basis + 15) + '" text-anchor="middle">☀ ' + dez(stunden, 1) + ' h</text>');
-          if (24 * pxH < 150) return;              // herausgezoomt: nur die Sonnenstunden
+          if (24 * pxH < 150 || gezeichnetFlach) return;   // herausgezoomt oder flach: nur die Sonnenstunden
           var unten = (t.auf && t.unter ? t.auf + ' – ' + t.unter : '') + (t.uvMax != null ? '  ·  UV ' + Math.round(t.uvMax) : '');
           if (unten) s.push('<text class="mg-tagesinfo" x="' + mitte + '" y="' + (basis + 28) + '" text-anchor="middle">' + unten + '</text>');
           if (MOND && t.mond) {
@@ -1693,6 +1746,7 @@
       el.scroll.addEventListener('scroll', anzeigen, { passive: true });
       global.addEventListener('scroll', sichtMitte, { passive: true });
       global.addEventListener('resize', sichtMitte);
+      global.addEventListener('resize', flachPruefen);
       wurzel.addEventListener('scroll', sichtMitte, { passive: true });
       // Wer selbst ins Diagramm greift, übernimmt - der Zeitraffer hört auf
       ['pointerdown', 'wheel', 'touchstart'].forEach(function(t){
@@ -1823,6 +1877,7 @@
       var b = document.getElementById(kid('voll')), kopf = wurzel.querySelector('.mg-vb-kopf');
       if (b) { b.innerHTML = ico(an ? 'vollaus' : 'voll'); b.setAttribute('aria-pressed', String(an)); b.title = an ? 'Vollbild beenden' : 'Vollbild: über den ganzen Bildschirm'; }
       if (kopf) kopf.hidden = !an;
+      flachPruefen();   // nach dem Kopf: er zählt beim freien Platz mit
       if (an) {
         wurzel.setAttribute('role', 'dialog'); wurzel.setAttribute('aria-modal', 'true'); wurzel.setAttribute('aria-label', VOLLBILD_TITEL + ' im Vollbild');
         seiteSperren(true);
@@ -1844,6 +1899,11 @@
       if (!an && BEI_VOLLBILD_ZU) { try { BEI_VOLLBILD_ZU(); } catch(e){} }
       // Die haftende Fahne rutscht beim Umschalten nach oben - das Diagramm soll dabei an Ort und Stelle bleiben
       setTimeout(function(){ sichtMitte(); zoomKnoepfe(); if (el.haftMessen) el.haftMessen(); }, 320);
+    }
+    // Zeilenhöhe neu wählen, wenn das Blatt quer/flach wird oder nicht mehr (Öffnen, Schließen, Drehen); Stelle bleibt
+    function flachPruefen(){
+      if (!geo || !el.scroll || !el.scroll.isConnected || flachHoehe() === gezeichnetFlachH) return;
+      var alt = idxAusScroll(); zeichnen(false); zentrieren(alt, false);
     }
     // Alles außer dem Blatt inert machen: auf jeder Ebene vom Baustein bis <body> die Geschwister. Was schon inert war, bleibt unberührt.
     function seiteSperren(an){
@@ -2334,7 +2394,7 @@
       abbauen: function(){
         // Offenes Blatt: Sperre aufheben; der Verlaufseintrag bleibt (ein Zurück ohne sichtbare Wirkung), sonst liefe ein späteres Zurück ins Leere
         if (vollbild) { vollbild = false; vb.gepusht = false; seiteSperren(false); }
-        document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck);
+        document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck); global.removeEventListener('resize', flachPruefen);
         wurzel.classList.remove('mg-vollbild'); wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
         clearInterval(uhr); if (auffrischUhr) clearTimeout(auffrischUhr); filmStopp(); if (zf.uhr) clearInterval(zf.uhr); wurzel.innerHTML = ''; wurzel.classList.remove('mg'); }
     };

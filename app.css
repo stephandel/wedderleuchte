@@ -226,8 +226,6 @@ body { background: var(--radar-grund); }
 /* Meteogramm-Knöpfe 44 px und Einheiten nicht unter 11 px (A32: im Vollbild-Blatt fiel es auf; der Baustein hat 40 px und 0,78 em) */
 #graphs .mg-btn { min-height: var(--tap); min-width: var(--tap); }
 #graphs small { font-size: var(--fs-caption); }
-/* Durchgang 21.10.: Der Baustein zeichnet Marken, Sonnenzeiten und Tagesinfo mit 10,5 px (Grenze 11 px) */
-#graphs.mg .mg-svg .mg-mark, #graphs.mg .mg-svg .mg-sonne, #graphs.mg .mg-svg .mg-tagesinfo { font-size: 11px; }
 #karte-zeile { margin: 0 0 var(--s3); }
 #karte { --wk-hoehe: calc(100dvh - var(--kopf-hoehe) - var(--safe-top) - var(--leiste-hoehe) - var(--safe-bottom) - var(--s8) * 4 - var(--tap)); border-radius: var(--r-kachel); overflow: hidden; }
 #karte.wk {   /* wpkarte.js setzt .wk auf den Behälter selbst */
@@ -245,7 +243,6 @@ body { background: var(--radar-grund); }
 #karte.wk-vollbild { --wk-zeit: var(--auf-himmel-kachel-voll); --wk-leiste: var(--auf-himmel-kachel-voll); }   /* im Blatt deckend, der Himmel liegt dahinter */
 #karte .wk-vb-chip[aria-checked="true"] { color: var(--auf-akzent); }
 #karte .wk-ticks, #karte .wk-quelle, #karte .wk-legende, #karte .wk-titel, #karte .wk-tage { font-size: var(--fs-caption); }
-#karte .wk-range { height: var(--tap); }   /* Zeit-Regler: Tippfläche mindestens 44 px */
 
 /* ---------- Wetterfoto: Studio im Vollbild ---------- */
 .studio { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--label); display: flex; flex-direction: column; padding: var(--safe-top) var(--safe-right) 0 var(--safe-left); }

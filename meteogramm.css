@@ -232,8 +232,12 @@
 .mg-ax-wert { position: absolute; right: 3px; font-family: var(--mg-mono); font-size: 11px; font-weight: 700; line-height: 14px; padding: 1px 3px; border-radius: 4px; background: var(--mg-flaeche); box-shadow: 0 0 0 1px currentColor; z-index: 1; }
 .mg-ax-wert[hidden] { display: none; }
 .mg-ax-datum { position: absolute; left: 0; padding: 0 10px 0 8px; display: flex; align-items: center; background: var(--mg-flaeche); font-size: 12px; font-weight: 700; color: var(--mg-text); white-space: nowrap; border-radius: 0 6px 6px 0; }
-.mg-cursor { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; border-left: 2px solid var(--mg-text); opacity: 0.85; pointer-events: none; }
-.mg-cursor::before { content: ""; position: absolute; top: 0; left: -6px; border: 5px solid transparent; border-top: 7px solid var(--mg-text); }
+/* Auswahl-Strich: Farbe kommt aus border-color (Apps setzen sie dort). Die Linie ist ::after, damit nur sie die Lücke
+   über der Tagesinfo bekommt (--mg-cursor-maske aus meteogramm.js); eine Maske am Strich selbst schnitt die Spitze ab (B7). */
+.mg-cursor { position: absolute; top: 0; bottom: 0; left: 50%; width: 0; border: 0 solid var(--mg-text); opacity: 0.85; pointer-events: none; }
+.mg-cursor::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; border-left: 2px solid; border-left-color: inherit;
+  -webkit-mask-image: var(--mg-cursor-maske, none); mask-image: var(--mg-cursor-maske, none); }
+.mg-cursor::before { content: ""; position: absolute; top: 0; left: -4px; border: 5px solid transparent; border-top: 7px solid var(--mg-text); }
 
 /* ---- Schwebende Helfer im Diagramm ---- */
 /* Zoom-Ecke: − 🔍 + rechts unten über der Zeitachse, halb durchsichtig */
@@ -285,10 +289,13 @@
 .mg-svg .mg-linie { fill: none; stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
 .mg-svg .mg-linie2 { fill: none; stroke-width: 1.6; stroke-dasharray: 4 3; opacity: 0.8; }
 .mg-svg .mg-flaeche { opacity: 0.16; }
-.mg-svg .mg-mark { fill: var(--mg-text); font-size: 10.5px; font-weight: 700; paint-order: stroke; stroke: var(--mg-flaeche); stroke-width: 3px; stroke-linejoin: round; }
-.mg-svg .mg-sonne { fill: var(--ochre, #e0a24f); font-weight: 700; font-size: 10.5px; }
-.mg-svg .mg-tagesinfo { font-size: 10.5px; }
+/* Marken, Sonnenzeiten und Tagesinfo: 11 px, die Untergrenze (B7, 22.10.2026; vorher 10,5 px) */
+.mg-svg .mg-mark { fill: var(--mg-text); font-size: 11px; font-weight: 700; paint-order: stroke; stroke: var(--mg-flaeche); stroke-width: 3px; stroke-linejoin: round; }
+.mg-svg .mg-sonne { fill: var(--ochre, #e0a24f); font-weight: 700; font-size: 11px; }
+.mg-svg .mg-tagesinfo { font-size: 11px; }
 .mg-svg .mg-tagesinfo-stark { font-size: 11px; font-weight: 700; fill: var(--mg-text); }
+/* Die Jetzt-Linie läuft je nach Uhrzeit durch die Tagesinfo: Text liegt darüber (meteogramm.js), Hof in Bandfarbe hält ihn lesbar */
+.mg-svg :is(.mg-tagesinfo, .mg-tagesinfo-stark) { paint-order: stroke; stroke: var(--mg-flaeche2); stroke-width: 3px; stroke-linejoin: round; }
 .mg-svg .mg-jetzt { stroke: var(--mg-akzent); stroke-width: 1.5; stroke-dasharray: 4 3; }
 .mg-svg .mg-jetzt-t { fill: var(--mg-akzent); font-weight: 700; }
 .mg-svg .mg-cam-mark { fill: var(--ochre, #e0a24f); opacity: 0.85; }

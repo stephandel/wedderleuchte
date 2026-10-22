@@ -34,7 +34,9 @@
 .wk-tk svg { width: 18px; height: 18px; display: block; }
 .wk-tk:disabled { opacity: .35; }
 .wk-spur { flex: 1; min-width: 0; position: relative; padding: 0 2px 30px; }
-.wk-range { width: 100%; margin: 0; display: block; accent-color: #fff; height: 28px; }
+/* Trefferfläche 44 px (B7, 22.10.2026), Optik bleibt schlank: negative Ränder halten den Platz bei 28 px; die Spur sitzt
+   mittig, oben endet die Fläche am Rand des Zeitbands, unten reicht sie über die Stundenmarken (die lassen Tipps durch) */
+.wk-range { width: 100%; margin: -4px 0 -12px; display: block; accent-color: #fff; height: 44px; }
 .wk-ticks { position: absolute; left: 10px; right: 10px; bottom: 16px; height: 14px; font-size: 10.5px; color: var(--wk-still); pointer-events: none; }
 .wk-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .wk-ticks span::before { content: ""; display: block; width: 0.5px; height: 4px; background: var(--wk-still); margin: 0 auto 1px; }
