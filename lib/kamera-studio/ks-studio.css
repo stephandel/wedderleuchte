@@ -745,6 +745,6 @@
 /* Große Schrift im Hochformat: alle sechs Werkzeuge bleiben, die Leiste rollt seitlich (statt Anpassen und Format zu verstecken) */
 .ks.ks-gross.ks-hoch .ks-werkzeugleiste { overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
 .ks.ks-gross.ks-hoch .ks-werkzeugleiste::-webkit-scrollbar { display: none; }
-.ks.ks-gross.ks-hoch .ks-werkzeugleiste .ks-knopf.ks-werkzeug { flex: 0 0 auto; min-width: calc(76px * var(--ks-tk)); }
+.ks.ks-gross.ks-hoch .ks-werkzeugleiste .ks-knopf.ks-werkzeug { flex: 0 0 22%; min-width: 0; }   /* 4,5 Werkzeuge im Bild: das angeschnittene fünfte zeigt, dass die Leiste rollt */
 /* Niedriges Querformat (iPhone SE quer): Vorlagenbilder kleiner, damit eine Reihe ganz in den Rollbereich passt */
-@media (max-height: 340px) { .ks.ks-quer .ks-vorlage img { height: 52px; } }
+@container ks (max-height: 340px) { .ks.ks-quer .ks-vorlage img { height: 52px; } }   /* misst das Studio, nicht das Fenster (eingebettete Studios) */
