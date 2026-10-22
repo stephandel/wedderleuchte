@@ -1,5 +1,5 @@
 Kamera-Studio, unverändert kopiert mit tools/kamera-studio-holen.js
 Quelle: Wetter Apps/Kamera Konfigurator/src/ (privat: GitHub kamera-konfigurator-quelle)
-Stand der Quelle: ca1d5a0 2026-10-22 Zweite Nachbesserung: rollende Werkzeugleiste, Fokus-Sichtbarkeit, Container-Abfrage, d-test-Selektoren
+Stand der Quelle: b813ffc 2026-10-22 Text-Werkzeug: „Mehr“ mit Symbol und im gleichen Stil wie die anderen (Nachbesserung 3.10)
 Dateien: ks-symbole.js, ks-engine.js, ks-studio.js, ks-studio.css
 Nicht von Hand ändern: Änderungen in der Quelle machen, dann neu holen.

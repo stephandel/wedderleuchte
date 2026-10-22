@@ -132,8 +132,14 @@
 .ks .ks-profi-zeile { margin-top: 4px; border-top: .5px solid var(--ks-trenner); padding-top: 8px; }
 .ks .ks-titel { font-size: var(--ks-fs-body); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ks .ks-undo { display: flex; gap: 4px; }
+/* Text-Werkzeug (Plan 3.10): drei kurze Knöpfe je Reihe; schmal ohne Symbol, damit die Wörter passen */
+.ks .ks-text-werkzeuge { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.ks .ks-text-werkzeuge .ks-knopf { min-width: 0; padding: 0 8px; }
+@container ks (max-width: 420px) { .ks .ks-text-werkzeuge .ks-ic { display: none; } }
+.ks.ks-quer .ks-text-werkzeuge .ks-ic { display: none; }   /* quer ist die Spalte schmal */
 /* Kurzbeschriftung „Foto zurück/vor“ nur, wo Platz ist: Schritt für Schritt ab 380 px (nicht bei großer Bedienung), sonst ab 600 px */
 .ks .ks-undo-text { display: none; font-size: var(--ks-fs-fuss); }
+.ks .ks-undo-titel { display: none; align-self: center; font-size: var(--ks-fs-fuss); font-weight: 600; color: var(--ks-text2); padding: 0; }
 @container ks (min-width: 600px) { .ks .ks-undo .ks-undo-text { display: inline; } .ks .ks-undo .ks-knopf.ks-rund { width: auto; padding: 0 10px; } }
 /* Kurzbeschriftung „Foto zurück/vor“ erst ab 380 px: darunter bricht „Schritt x von 6 · Name“ auf 2–3 Zeilen um (gemessen bei 340/358) */
 @container ks (min-width: 380px) { .ks:not(.ks-gross)[data-ks-variante="assistent"] .ks-undo .ks-undo-text { display: inline; } .ks:not(.ks-gross)[data-ks-variante="assistent"] .ks-undo .ks-knopf.ks-rund { width: auto; padding: 0 10px; } }
@@ -333,6 +339,13 @@
 .ks .ks-blatt-kopf h2 { font-size: var(--ks-fs-titel); font-weight: 700; }
 .ks .ks-blatt-inhalt:has(> .ks-reihe-ende:last-child) { padding-bottom: 0; }
 .ks .ks-blatt-inhalt > .ks-reihe-ende:last-child { position: sticky; bottom: 0; margin: 0 calc(var(--ks-rand) * -1); padding: 8px var(--ks-rand) 16px; background: var(--ks-bg2); border-top: .5px solid var(--ks-trenner); }
+/* Fester Fuß im Blatt (Teilen-Optionen): Knöpfe bleiben beim Rollen unten in der Daumenzone */
+.ks .ks-blatt-fuss { flex: none; display: flex; flex-direction: column; gap: 8px; padding: 8px var(--ks-rand) 16px; background: var(--ks-bg2); border-top: .5px solid var(--ks-trenner); }
+.ks .ks-blatt-fuss .ks-senden-knoepfe .ks-knopf { flex: 1 1 0; min-width: fit-content; padding: 0 10px; }   /* eine Reihe, wo sie passt; sonst bricht sie um */
+@container ks (max-width: 440px) { .ks .ks-blatt-fuss .ks-senden-knoepfe .ks-ic { display: none; } }   /* schmal: drei Wörter ohne Symbol, damit sie nebeneinander passen */
+.ks:not(.ks-quer) .ks-blatt-inhalt .ks-nur-quer, .ks.ks-quer .ks-blatt-fuss .ks-datei-info { display: none; }   /* quer: Dateiname zu den Optionen */
+.ks.ks-quer .ks-blatt-fuss { padding: 6px var(--ks-rand) 8px; }
+.ks.ks-quer .ks-blatt-fuss .ks-senden-knoepfe .ks-knopf { min-height: var(--ks-tap); }   /* quer flach: eine Reihe in normaler Tipphöhe (bei großer Bedienung 55 statt 62 px) */
 .ks .ks-blatt-inhalt { overflow-y: auto; overflow-x: hidden; padding: 4px var(--ks-rand) 16px; display: flex; flex-direction: column; gap: 14px; overscroll-behavior: contain; }
 .ks.ks-quer .ks-blatt, .ks.ks-breit .ks-blatt {
   left: auto; top: 8px; bottom: 8px; right: 8px; width: min(420px, calc(100% - 16px)); max-height: none;
