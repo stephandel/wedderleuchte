@@ -98,7 +98,7 @@ body { background: var(--radar-grund); }
 .werte dt { color: var(--label-2); font-size: var(--fs-subhead); }
 .werte dd { margin: 0; font-weight: 600; font-size: var(--fs-subhead); text-align: right; font-variant-numeric: tabular-nums; }
 .einheit { display: inline-block; font-weight: 400; color: var(--label-2); overflow-wrap: anywhere; }
-.rose { display: flex; align-items: center; gap: var(--s2); }
+.rose { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
 .rose svg { width: calc(var(--s8) * 2); height: calc(var(--s8) * 2); flex: none; }
 .rose .rose-ring { fill: none; stroke: var(--trenner); stroke-width: var(--strich); }
 .rose text { fill: var(--label-2); font-size: var(--fs-caption); font-family: var(--font); text-anchor: middle; dominant-baseline: central; }
