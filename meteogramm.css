@@ -42,14 +42,14 @@
    rechts daneben das Wettermodell als kleines Feld "Mix ▾" mit Aufklapp-Liste. */
 .mg-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 8px 14px 0; }
 .mg-tabs { display: inline-flex; gap: 0; min-width: 0; }
-.mg-tab { min-height: 32px; padding: 0 10px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--mg-text-still); font: 600 13.5px/1 var(--mg-serif); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.mg-tab { min-height: 44px; min-width: 44px; padding: 0 10px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--mg-text-still); font: 600 13.5px/1 var(--mg-serif); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
 .mg-tab.is-on { color: var(--mg-text); border-bottom-color: var(--mg-akzent); }
-.mg-modell { position: relative; flex: none; }
-.mg-modell-btn { display: inline-flex; align-items: center; gap: 3px; min-height: 30px; padding: 0 7px 0 9px; border: 1px solid var(--mg-rand); border-radius: 9px; background: var(--mg-flaeche2); color: var(--mg-text-still); font: 600 11.5px/1 var(--mg-mono); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mg-modell { position: relative; flex: none; margin-left: auto; }   /* auch bei nur einem Ort rechts, sonst klappt die Liste links aus dem Bild (10.11.2026) */
+.mg-modell-btn { display: inline-flex; align-items: center; gap: 3px; min-height: 44px; min-width: 44px; padding: 0 7px 0 9px; border: 1px solid var(--mg-rand); border-radius: 9px; background: var(--mg-flaeche2); color: var(--mg-text-still); font: 600 11.5px/1 var(--mg-mono); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mg-modell-btn .mg-i { width: 14px; height: 14px; }
 .mg-modell-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; display: grid; gap: 2px; min-width: 250px; max-width: calc(100vw - 32px); padding: 6px; background: var(--mg-flaeche); border: 1px solid var(--mg-rand); border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
 .mg-modell-panel[hidden] { display: none; }
-.mg-modell-opt { display: grid; gap: 1px; text-align: left; padding: 7px 9px; border: 0; border-radius: 8px; background: transparent; color: var(--mg-text); font: 500 12.5px/1.3 var(--mg-serif); cursor: pointer; }
+.mg-modell-opt { display: grid; gap: 1px; align-content: center; min-height: 44px; text-align: left; padding: 7px 9px; border: 0; border-radius: 8px; background: transparent; color: var(--mg-text); font: 500 12.5px/1.3 var(--mg-serif); cursor: pointer; }
 .mg-modell-opt b { font-family: var(--mg-mono); font-size: 12.5px; }
 .mg-modell-opt span { color: var(--mg-text-still); font-size: 11.5px; }
 .mg-modell-opt:hover { background: var(--mg-flaeche2); }
@@ -83,7 +83,7 @@
 .mg-wl { font-size: 11.5px; color: var(--mg-text-still); white-space: nowrap; }
 .mg-wr { display: inline-flex; align-items: baseline; gap: 0 5px; min-width: 0; }
 .mg-wv { font-family: var(--mg-mono); font-size: 13px; font-weight: 700; color: var(--mg-text); white-space: nowrap; }
-.mg-wv small { font-size: 0.78em; font-weight: 600; color: var(--mg-text-still); margin-left: 2px; }
+.mg-wv small { font-size: 11px; font-weight: 600; color: var(--mg-text-still); margin-left: 2px; }
 .mg-wz { font-size: 11px; color: var(--mg-text-still); white-space: nowrap; }
 .mg-sep { color: var(--mg-text-still); font-size: 12px; }
 
@@ -91,10 +91,24 @@
    ↻ links außen, ‹ Jetzt › als Gruppe in einem Rahmen in der Mitte, ☰ rechts außen.
    Die Leiste haftet unten am Bildschirm, bis das Tool aus dem Bild ist; auf dem
    Handy bleibt sie so immer unterm Daumen. */
-.mg-knoepfe { position: sticky; bottom: var(--mg-haft-unten); z-index: 7; display: grid; grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr); align-items: center; gap: 8px;
-  padding: 8px 14px; background: var(--mg-flaeche); border-top: 1px solid var(--mg-rand); border-bottom: 1px solid var(--mg-rand); }
+.mg-knoepfe { position: sticky; bottom: var(--mg-haft-unten); z-index: 7; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+  padding: 8px 14px; background: var(--mg-flaeche); border-top: 1px solid var(--mg-rand); border-bottom: 1px solid var(--mg-rand); container-type: inline-size; }
+.mg-links { flex: 1 1 0; min-width: max-content; }
 .mg-mitte { display: flex; justify-content: center; min-width: 0; }
-.mg-rechts { display: inline-flex; justify-content: flex-end; gap: 8px; }
+.mg-rechts { display: inline-flex; flex: 1 1 0; min-width: max-content; justify-content: flex-end; gap: 8px; }
+/* Sieben Knöpfe à 44 px passen erst ab etwa 440 px Leistenbreite in eine Zeile (10.11.2026, P-7b4f). Darunter zwei feste Zeilen:
+   oben ↻ Farbe … Vollbild ☰, unten ‹ Jetzt › über die ganze Breite. Feste Schwelle statt freiem Umbruch, damit die Leiste
+   nicht springt, wenn „Jetzt“ den Abstand („+14 h“) dazubekommt. */
+@container (max-width: 439.98px) {
+  .mg-mitte { order: 1; flex: 1 0 100%; }
+  .mg-mitte .mg-gruppe { flex: 1; }
+  .mg-mitte .mg-btn-jetzt { flex: 1; }
+  /* Die Menüs klappen über der Leiste auf; die ist jetzt gut 50 px höher, sonst ragten sie oben aus dem Bild (320 × 568).
+     Platz = Bildschirm minus Kopf (--mg-haft-oben), Tab-Leiste der App (--mg-haft-unten) und die zweizeilige Leiste selbst */
+  .mg-knoepfe :is(.mg-zeilen-panel, .mg-farb-panel) { overflow-y: auto; -webkit-overflow-scrolling: touch;
+    max-height: calc(100vh - var(--mg-haft-oben, 0px) - var(--mg-haft-unten, 0px) - 140px);
+    max-height: calc(100dvh - var(--mg-haft-oben, 0px) - var(--mg-haft-unten, 0px) - 140px); }
+}
 /* ---- Vollbild (07.10.2026, Blatt seit A32 am 21.10.2026): Knopf ⤢ in der Leiste oder Doppeltipp auf die Lupe ----
    Der Baustein legt sich fest über den ganzen Bildschirm (an alle vier Ränder geheftet), Safe Areas als Innenabstand,
    oben ein Kopf mit „Fertig“ (44 px), das Blatt scrollt in sich. z-index 90: über Seitenleisten der Apps, unter dem Player (200).
@@ -143,7 +157,7 @@
 .mg-gruppe .mg-btn:disabled > * { opacity: 0.4; }
 .mg-btn:disabled { opacity: 0.35; cursor: default; }
 @media (max-width: 480px) { .mg-knoepfe { gap: 6px; padding-left: 8px; padding-right: 8px; } .mg-rechts { gap: 6px; } .mg-btn-jetzt { min-width: 96px; padding: 0 8px; } }
-.mg-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; min-width: 40px; padding: 0 12px; border-radius: var(--mg-r); border: 1px solid var(--mg-rand); background: var(--mg-flaeche2); color: var(--mg-text); font: 600 13.5px/1 var(--mg-serif); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mg-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: var(--mg-r); border: 1px solid var(--mg-rand); background: var(--mg-flaeche2); color: var(--mg-text); font: 600 13.5px/1 var(--mg-serif); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mg-btn:active { transform: scale(0.97); }
 /* Einfarbige Symbole in der Schriftfarbe des Knopfs */
 .mg-i { display: block; width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
@@ -166,8 +180,8 @@
 /* Haftet die Leiste unten am Bildschirm, klappt das Menü nach oben auf */
 .mg-zeilen-panel.is-oben { top: auto; bottom: calc(100% + 6px); }
 .mg-zeilen-panel h4 { margin: 4px 8px 6px; font-size: 11px; line-height: 1.3; text-align: right; text-transform: uppercase; letter-spacing: 0.08em; color: var(--mg-text-still); }
-.mg-zeilen-panel h4 small { display: block; font-size: 10px; font-weight: 500; text-transform: none; letter-spacing: 0; opacity: 0.85; }
-.mg-zeilen-panel label { display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; padding: 6px 6px; border-radius: 9px; cursor: pointer; font-size: 13.5px; min-height: 40px; text-align: right; white-space: nowrap; }
+.mg-zeilen-panel h4 small { display: block; font-size: 11px; font-weight: 500; text-transform: none; letter-spacing: 0; opacity: 0.85; }
+.mg-zeilen-panel label { display: flex; flex-direction: row-reverse; align-items: center; gap: 8px; padding: 6px 6px; border-radius: 9px; cursor: pointer; font-size: 13.5px; min-height: 44px; text-align: right; white-space: nowrap; }
 .mg-zeilen-panel label:hover { background: var(--mg-flaeche2); }
 .mg-zeilen-panel input { width: 20px; height: 20px; flex: none; accent-color: var(--mg-akzent); }
 .mg-zeilen-panel .mg-punkt { width: 9px; height: 9px; border-radius: 50%; flex: none; }
@@ -182,7 +196,7 @@
 
 /* ---- Ansichten: Webcam, Satellit, Regen ---- */
 .mg-ansichten { display: flex; justify-content: center; gap: 6px; padding: 12px 14px 10px; flex-wrap: wrap; }
-.mg-atab { min-height: 36px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--mg-rand); background: var(--mg-flaeche2);
+.mg-atab { min-height: 44px; padding: 0 12px; border-radius: 10px; border: 1px solid var(--mg-rand); background: var(--mg-flaeche2);
   color: var(--mg-text-still); font: 600 13px/1 var(--mg-serif); cursor: pointer; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
 .mg-atab.is-on { border-color: var(--mg-akzent); color: var(--mg-text); background: var(--mg-flaeche); }
 
@@ -195,7 +209,7 @@
    unsichtbar. Die Niederschlagsflächen bringen ihre eigene Durchsicht mit. */
 .mg-k-auflage { }
 .mg-k-auflage[hidden] { display: none; }
-.mg-play { position: absolute; left: 10px; top: 10px; width: 42px; height: 42px; border-radius: 50%; border: 0;
+.mg-play { position: absolute; left: 10px; top: 10px; width: 44px; height: 44px; border-radius: 50%; border: 0;
   background: rgba(0,0,0,0.55); color: #fff; font-size: 15px; cursor: pointer; backdrop-filter: blur(3px); -webkit-tap-highlight-color: transparent; }
 .mg-play:active { transform: scale(0.94); }
 .mg-karte.is-film .mg-play { background: var(--mg-akzent); color: #06222a; }
@@ -209,13 +223,16 @@
   display: flex; align-items: baseline; white-space: nowrap; }
 .mg-cam-text > b { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .mg-cam-rest { flex: 0 0 auto; }
+/* Quellen-Link in der Bildunterschrift: Polster nach oben macht die Tippfläche 44 px hoch, ohne die Zeile zu verschieben;
+   unten nur so viel, wie die Unterschrift Innenabstand hat, sonst schnitte der Bildrand die Fläche ab (10.11.2026) */
+.mg-cam-text a { padding: 24px 0 6px; }
 .mg-cam.is-leer .mg-cam-text { background: none; color: var(--mg-text-still); top: 0; display: flex; align-items: center; justify-content: center; text-align: center; white-space: normal; }
 /* Umschalter zwischen mehreren Kameras eines Orts, oben rechts im Bild */
 .mg-camwahl { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; z-index: 2; }
 .mg-camwahl[hidden] { display: none; }
-.mg-camtab { min-height: 30px; padding: 0 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.5); color: #fff; font: 600 12px/1 var(--mg-serif); cursor: pointer; backdrop-filter: blur(3px); -webkit-tap-highlight-color: transparent; }
+.mg-camtab { min-height: 44px; min-width: 44px; padding: 0 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.5); color: #fff; font: 600 12px/1 var(--mg-serif); cursor: pointer; backdrop-filter: blur(3px); -webkit-tap-highlight-color: transparent; }
 .mg-camtab.is-on { background: rgba(255,255,255,0.92); color: #111; border-color: transparent; }
-.mg-live { display: inline-block; background: #c0392b; color: #fff; border-radius: 6px; padding: 1px 6px; font-weight: 700; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; }
+.mg-live { display: inline-block; background: #c0392b; color: #fff; border-radius: 6px; padding: 1px 6px; font-weight: 700; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
 .mg-camhint { opacity: 0.85; font-size: 11.5px; }
 
 /* ---- Diagrammfläche ---- */
@@ -228,7 +245,7 @@
 .mg-svg { display: block; }
 .mg-achse { position: absolute; left: 0; top: 0; width: 46px; pointer-events: none; background: var(--mg-flaeche); border-right: 1px solid var(--mg-rand); }
 .mg-ax-titel { position: absolute; left: 0; padding: 0 10px 0 8px; background: var(--mg-flaeche2); border-radius: 0 6px 6px 0; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; color: var(--mg-text-still); white-space: nowrap; }
-.mg-ax-titel small { font-weight: 600; letter-spacing: 0; }
+.mg-ax-titel small { font-size: 11px; font-weight: 600; letter-spacing: 0; }
 .mg-ax-punkt { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 .mg-ax-tick { position: absolute; right: 8px; font-family: var(--mg-mono); font-size: 11px; color: var(--mg-text-still); line-height: 14px; }
 .mg-ax-wert { position: absolute; right: 3px; font-family: var(--mg-mono); font-size: 11px; font-weight: 700; line-height: 14px; padding: 1px 3px; border-radius: 4px; background: var(--mg-flaeche); box-shadow: 0 0 0 1px currentColor; z-index: 1; }
@@ -310,8 +327,9 @@
 .mg-svg .mg-sortziel { stroke: var(--mg-akzent); stroke-width: 3; }
 
 @media (max-width: 560px) {
-  .mg-tabs { flex: 1 1 auto; }
-  .mg-tab { flex: 1; padding: 0 6px; text-align: center; font-size: 13px; }
+  .mg-tabs { flex: 1 1 auto; overflow-x: auto; scrollbar-width: none; }   /* viele lange Ortsnamen: wischen statt überdecken */
+  .mg-tabs::-webkit-scrollbar { display: none; }
+  .mg-tab { flex: 1 0 auto; padding: 0 6px; text-align: center; font-size: 13px; }   /* nie schmaler als der Name, lieber wischen */
   .mg-zeilenwahl { position: static; }
   .mg-zeilen-panel { left: auto; right: 8px; min-width: 0; max-width: calc(100vw - 16px); }
 }
@@ -339,38 +357,38 @@
 .mg-film-balken i { display: block; height: 100%; background: var(--mg-akzent); transition: width .25s linear; }
 .mg-film-kopf { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; font-size: 12.5px; color: var(--mg-text-still); }
 .mg-film-kopf b { color: var(--mg-text); }
-.mg-film-ende { border: 0; background: none; color: var(--mg-akzent); font: 700 12.5px/1 var(--mg-serif); padding: 6px 0; cursor: pointer; }
+.mg-film-ende { min-height: 44px; border: 0; background: none; color: var(--mg-akzent); font: 700 12.5px/1 var(--mg-serif); padding: 6px 0; cursor: pointer; }
 .mg-film-zeile { display: flex; align-items: baseline; gap: 2px 14px; flex-wrap: wrap; margin-top: 2px; }
 .mg-film-was { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--mg-text-still); min-width: 74px; }
-.mg-film-wahl { border: 0; background: none; color: var(--mg-text-still); font: 600 13px/1 var(--mg-serif); padding: 8px 1px 6px; border-bottom: 2px solid transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mg-film-wahl { min-height: 44px; min-width: 44px; border: 0; background: none; color: var(--mg-text-still); font: 600 13px/1 var(--mg-serif); padding: 8px 1px 6px; border-bottom: 2px solid transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mg-film-wahl.is-on { color: var(--mg-text); border-bottom-color: var(--mg-akzent); }
 
 /* ---- Links in der Knopfleiste (10.10.2026): ↻ schmal, daneben die Farbwahl ---- */
 .mg-links { display: inline-flex; align-items: center; gap: 6px; }
-.mg-btn-frisch { min-width: 40px; padding: 0 8px; }
+.mg-btn-frisch { min-width: 44px; padding: 0 8px; }
 .mg-farbwahl { position: relative; }
 .mg-farb-panel { position: absolute; left: 0; bottom: calc(100% + 6px); z-index: 30; width: max-content; padding: 6px; border: 1px solid var(--mg-rand); border-radius: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.3);
   background: var(--mg-flaeche); background: color-mix(in srgb, var(--mg-flaeche) 60%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); transform-origin: bottom left; animation: mg-auf .18s ease-out; }
 .mg-farb-panel[hidden] { display: none; }
 .mg-farb-panel h4 { margin: 4px 8px 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--mg-text-still); }
-.mg-farb-wahl { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 6px 10px 6px 8px; border: 0; border-radius: 9px; background: transparent; color: var(--mg-text); font: 500 13.5px/1 var(--mg-serif); cursor: pointer; text-align: left; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
+.mg-farb-wahl { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 44px; padding: 6px 10px 6px 8px; border: 0; border-radius: 9px; background: transparent; color: var(--mg-text); font: 500 13.5px/1 var(--mg-serif); cursor: pointer; text-align: left; white-space: nowrap; -webkit-tap-highlight-color: transparent; }
 .mg-farb-wahl:hover { background: var(--mg-flaeche2); }
 .mg-farb-wahl.is-on { background: var(--mg-flaeche2); box-shadow: inset 2px 0 0 var(--mg-akzent); }
 .mg-farb-wahl i { width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--mg-rand); flex: none; }
 
 /* ---- Player (10.10.2026): Webcam/Satellit/Regen groß, mit Zoom und Spulleiste ---- */
-.mg-bild-player { position: absolute; left: 8px; top: 8px; z-index: 2; width: 34px; height: 34px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.5); color: #fff;
+.mg-bild-player { position: absolute; left: 8px; top: 8px; z-index: 2; width: 44px; height: 44px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.5); color: #fff;
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer; backdrop-filter: blur(3px); -webkit-tap-highlight-color: transparent; }
 .mg-bild-player .mg-i { width: 17px; height: 17px; }
-.mg-karte .mg-play ~ .mg-bild-player { left: 58px; }
+.mg-karte .mg-play ~ .mg-bild-player { left: 60px; }
 .mg-player { position: fixed; inset: 0; z-index: 200; background: #000; color: #fff; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); font-family: var(--mg-serif); }
 .mg-player[hidden] { display: none; }
 .mg-player .mg-bild-player { display: none; }
 .mg-pl-kopf { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; }
 .mg-pl-tabs { display: flex; gap: 6px; }
-.mg-pl-tab { min-height: 34px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.08); color: #fff; font: 600 13px/1 var(--mg-serif); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mg-pl-tab { min-height: 44px; min-width: 44px; padding: 0 12px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.08); color: #fff; font: 600 13px/1 var(--mg-serif); cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mg-pl-tab.is-on { background: #fff; color: #000; border-color: #fff; }
-.mg-pl-x { width: 38px; height: 38px; flex: none; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mg-pl-x { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mg-pl-buehne { flex: 1; min-height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; touch-action: none; }
 .mg-pl-bild { width: 100%; transform-origin: center center; will-change: transform; }
 .mg-player .mg-karte, .mg-player .mg-cam { width: 100%; max-height: none; margin: 0; border: 0; border-radius: 0; }
@@ -380,9 +398,9 @@
 .mg-player .mg-cam-text { font-size: 13px; }
 .mg-pl-leiste { padding: 6px 12px 8px; }
 .mg-pl-zeile1 { display: flex; align-items: center; gap: 8px; }
-.mg-pl-btn { width: 40px; height: 40px; flex: none; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.mg-pl-btn { width: 44px; height: 44px; flex: none; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .mg-pl-pp { width: 46px; height: 46px; background: #fff; color: #000; border-color: #fff; }
-.mg-pl-spur { flex: 1; min-width: 0; height: 30px; margin: 0; -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
+.mg-pl-spur { flex: 1; min-width: 0; height: 44px; margin: 0; -webkit-appearance: none; appearance: none; background: transparent; cursor: pointer; }
 .mg-pl-spur::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--mg-akzent) var(--mg-anteil, 0%), rgba(255,255,255,0.3) var(--mg-anteil, 0%)); }
 .mg-pl-spur::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -9px; border-radius: 50%; background: #fff; border: 2px solid var(--mg-akzent); box-shadow: 0 1px 4px rgba(0,0,0,0.5); }
 .mg-pl-spur::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.3); }
