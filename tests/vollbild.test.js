@@ -253,7 +253,7 @@ async function zuGraphs(p) { await p.click('#leiste [data-tab="graphs"]'); await
         pruefe('Tipp auf Graphs öffnet das Meteogramm direkt als Blatt, Fokus auf „Fertig“', await blatt('#graphs') && await p.evaluate(() => document.activeElement && document.activeElement.classList.contains('mg-vb-fertig')));
         await foto(p, 'vollbild-immer-graphs');
         await p.click('#graphs .mg-vb-fertig'); await p.waitForTimeout(400);
-        pruefe('„Fertig“ führt zum vorherigen Reiter (Wetter), Seite frei', await reiter() === 'wetter' && !(await blatt('#graphs')) && await p.evaluate(() => !document.querySelector('#leiste').closest('[inert]')), await reiter());
+        pruefe('„Fertig“ bleibt im Reiter Graphs (kleine Ansicht, F1), Seite frei', await reiter() === 'graphs' && !(await blatt('#graphs')) && await p.evaluate(() => !document.querySelector('#leiste').closest('[inert]')), await reiter());
         await p.click('#leiste [data-tab="mehr"]'); await p.waitForTimeout(200);
         await p.click('#leiste [data-tab="radsat"]'); await p.waitForTimeout(900);
         pruefe('Tipp auf Rad/Sat öffnet die Karte direkt als Blatt', await blatt('#karte'));
@@ -261,15 +261,16 @@ async function zuGraphs(p) { await p.click('#leiste [data-tab="graphs"]'); await
         pruefe('Umschalter im Blatt: Karten bleiben im Blatt', await blatt('#karte') && await p.evaluate(() => document.querySelectorAll('#karte [data-ebene]').length) === 6);
         await foto(p, 'vollbild-immer-karten');
         await p.evaluate(() => history.back()); await p.waitForTimeout(500);
-        pruefe('Zurück führt zum vorherigen Reiter (Mehr)', await reiter() === 'mehr' && !(await blatt('#karte')), await reiter());
+        pruefe('Zurück bleibt im Reiter Rad/Sat (kleine Ansicht)', await reiter() === 'radsat' && !(await blatt('#karte')), await reiter());
         await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(500); await p.keyboard.press('Escape'); await p.waitForTimeout(400);
-        pruefe('Esc aus Graphs führt ebenfalls zurück (Mehr)', await reiter() === 'mehr', await reiter());
+        pruefe('Esc aus Graphs bleibt ebenfalls im Reiter (Graphs)', await reiter() === 'graphs' && !(await blatt('#graphs')), await reiter());
         await p.reload(); await p.waitForSelector('.aktuell-kachel', { timeout: 10000 }); await p.waitForTimeout(300);
         await p.click('#leiste [data-tab="mehr"]'); await p.waitForTimeout(300);
         pruefe('Nach einem Neustart ist die Wahl noch gesetzt', await p.isChecked('#vollbildImmer'));
         await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(700);
         pruefe('Nach dem Neustart öffnet Graphs wieder als Blatt', await blatt('#graphs'));
         await p.click('#graphs .mg-vb-fertig'); await p.waitForTimeout(300);
+        await p.click('#leiste [data-tab="mehr"]'); await p.waitForTimeout(300);
         await p.uncheck('#vollbildImmer');
         await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(500);
         pruefe('Schalter aus: Graphs öffnet wieder normal mit Tab-Leiste', await reiter() === 'graphs' && !(await blatt('#graphs')));
