@@ -1,7 +1,9 @@
-/* tests/verkleinern.test.js – „Fertig“ bleibt im Reiter (F1, P-cff6); 11.11.2026
+/* tests/verkleinern.test.js – „Fertig“ bleibt im Reiter (F1, P-cff6) und ‹ Jetzt › liegt über der Reiterleiste (B3, P-ecd6); 11.11.2026
    Start:  NODE_PATH="<Ordner mit playwright>/node_modules" PORT=8897 node tests/verkleinern.test.js
-   Prüft in WebKit bei 402 × 874 (hell und dunkel), 375 × 667 und 320 × 568: Schalter „immer im Vollbild“ an: „Fertig“, Esc und Zurück schließen das Blatt, die App bleibt im Reiter Graphs bzw. Rad/Sat
+   Prüft in WebKit bei 402 × 874 (hell und dunkel), 375 × 667 und 320 × 568:
+   1) Schalter „immer im Vollbild“ an: „Fertig“, Esc und Zurück schließen das Blatt, die App bleibt im Reiter Graphs bzw. Rad/Sat
       und zeigt die kleine Ansicht; erst der nächste Besuch des Reiters öffnet wieder das Blatt.
+   2) „Tag zurück / Jetzt / Tag vor“ unter der Wetterkurve liegen beim Öffnen von Graphs ganz über der Reiterleiste und lassen sich antippen.
    Ohne Netz wie tests/vollbild.test.js; die Uhr steht auf dem 22.10.2026 mittags, damit „jetzt“ in den Testdaten liegt.
    Bilder landen in BILDER (Standard /tmp/wedderleuchte-tests/), ihr Name beginnt mit BILDNAME (z. B. „vorher-“). Exit-Code 0 = alles grün. */
 'use strict';
@@ -87,6 +89,22 @@ async function blattAuf(p, name, a) {
   if (!(await blatt(p, a.sel))) { await p.click(a.sel + ' ' + a.voll); await p.waitForTimeout(500); }
   return blatt(p, a.sel);
 }
+// Knöpfe ‹ Jetzt › unter der Wetterkurve gegen die Reiterleiste: ganz darüber, ganz im Bild, mind. 44 × 44, in der Mitte liegt der Knopf selbst
+const KNOEPFE = () => {
+  const leiste = document.querySelector('#leiste').getBoundingClientRect(), vh = document.documentElement.clientHeight, mg = document.querySelector('#graphs');
+  const verstoesse = [], werte = [];
+  ['[aria-label="Einen Tag zurück"]', '.mg-btn-jetzt', '[aria-label="Einen Tag vor"]'].forEach(s => {
+    const k = mg.querySelector(s); if (!k) { verstoesse.push(s + ' fehlt'); return; }
+    const r = k.getBoundingClientRect(), n = k.getAttribute('aria-label') || k.textContent.trim();
+    werte.push(n + ' ' + Math.round(r.top) + '–' + Math.round(r.bottom));
+    if (r.bottom > leiste.top + 0.5) verstoesse.push(n + ': unten ' + Math.round(r.bottom) + ' > Leiste oben ' + Math.round(leiste.top));
+    if (r.top < 0 || r.bottom > vh + 0.5) verstoesse.push(n + ': nicht ganz im Bild');
+    if (r.width < 43.5 || r.height < 43.5) verstoesse.push(n + ': nur ' + Math.round(r.width) + ' × ' + Math.round(r.height));
+    const oben = document.elementFromPoint(r.left + r.width / 2, Math.min(r.top + r.height / 2, vh - 1)), wer = oben && (oben.closest('button, nav') || oben);
+    if (!oben || !(k === oben || k.contains(oben))) verstoesse.push(n + ': verdeckt von ' + (wer ? (wer.getAttribute('data-tab') || wer.id || wer.className || wer.tagName) : 'nichts'));
+  });
+  return { leiste: Math.round(leiste.top) + '–' + Math.round(leiste.bottom), hoehe: vh, knoepfe: werte, verstoesse };
+};
 
 // 1) F1: ganz = alle Wege (Fertig, Esc, Zurück, Umschalter, nächster Besuch, Neustart); sonst nur „Fertig“ in beiden Reitern
 async function f1(b, g, ganz) {
@@ -152,12 +170,40 @@ async function f1(b, g, ganz) {
   await s.ctx.close();
 }
 
+// 2) B3: Knöpfe unter der Wetterkurve beim Öffnen, nach einem Tipp und ganz unten auf der Seite
+async function b3(b, g, o) {
+  o = o || {};
+  const kz = kuerzel(g) + (o.schrift ? '-schrift130' : '') + (o.immer ? '-nach-fertig' : '');
+  const s = await neueSeite(b, { breite: g[0], hoehe: g[1], farbe: g[2], schrift: o.schrift, speicher: o.immer ? { [VORSATZ + 'vollbild-immer']: 'true' } : null }), p = s.p;
+  await p.click('#leiste [data-tab="graphs"]'); await p.waitForSelector('#graphs .mg-svg text', { timeout: 10000 }); await p.waitForTimeout(700);
+  if (o.immer) { await p.click('#graphs .mg-vb-fertig'); await p.waitForTimeout(600); }
+  const m = await p.evaluate(KNOEPFE);
+  pruefe(kz + ': „Tag zurück / Jetzt / Tag vor“ liegen beim Öffnen von Graphs frei über der Reiterleiste', await reiter(p) === 'graphs' && m.verstoesse.length === 0, m);
+  await foto(p, 'b3-graphs-' + kz);
+  if (!o.schrift && !o.immer) {
+    const vor = await p.evaluate(() => { const r = document.querySelector('#graphs [aria-label="Einen Tag vor"]').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, zeit: document.querySelector('#graphs .mg-zeit').textContent.trim() }; });
+    await p.mouse.click(vor.x, vor.y); await p.waitForTimeout(900);
+    const nach = { reiter: await reiter(p), zeit: await p.evaluate(() => document.querySelector('#graphs .mg-zeit').textContent.trim()) };
+    pruefe(kz + ': Tipp auf „Tag vor“ blättert einen Tag weiter, die App bleibt in Graphs', nach.reiter === 'graphs' && nach.zeit !== vor.zeit, [vor.zeit, nach]);
+    if (nach.reiter !== 'graphs') { await p.click('#leiste [data-tab="graphs"]'); await p.waitForTimeout(500); }
+    await p.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight)); await p.waitForTimeout(400);
+    const u = await p.evaluate(KNOEPFE);
+    pruefe(kz + ': auch ganz unten auf der Seite liegen die Knöpfe frei', u.verstoesse.length === 0, u);
+  }
+  pruefe(kz + ': keine Fehler in der Konsole', s.probleme.length === 0, s.probleme);
+  await s.ctx.close();
+}
+
 (async () => {
   const srv = await server();
   const b = await webkit.launch();
   try {
     console.log('1) „Fertig“, Esc und Zurück bleiben im Reiter (F1)');
     for (const g of GROESSEN) await f1(b, g, g === GROESSEN[0]);
+    console.log('2) ‹ Jetzt › unter der Wetterkurve über der Reiterleiste (B3)');
+    for (const g of GROESSEN) await b3(b, g);
+    await b3(b, GROESSEN[0], { schrift: true });
+    await b3(b, GROESSEN[2], { immer: true });
   } finally { await b.close(); srv.close(); }
   console.log('\n' + ok + ' von ' + (ok + fehler) + ' Prüfungen bestanden');
   process.exit(fehler ? 1 : 0);

@@ -480,6 +480,13 @@
     var bar = $('#leiste'); bar.classList.remove('nur-symbole');
     var eng = $$('.tab span', bar).some(function (sp) { return sp.scrollWidth > sp.clientWidth + 1; });
     bar.classList.toggle('nur-symbole', eng);
+    leisteMessen();
+  }
+  // Oberkante der schwebenden Tab-Leiste über dem unteren Bildrand (Höhe plus Abstand samt sicherem Bereich) als --leiste-oben:
+  // Das Meteogramm hält damit seine Knopfleiste ‹ Jetzt › über der Tab-Leiste (P-ecd6, app.css #graphs.mg)
+  function leisteMessen() {
+    var bar = $('#leiste'); if (!bar || !bar.offsetHeight) return;
+    document.documentElement.style.setProperty('--leiste-oben', Math.round(bar.offsetHeight + (parseFloat(getComputedStyle(bar).bottom) || 0)) + 'px');
   }
   // „Meteogramm und Karten immer im Vollbild“ (A32 P3): Graphs und Rad/Sat öffnen gleich als Blatt. „Fertig“, Esc und Zurück bleiben
   // im Reiter und zeigen die kleine Ansicht (F1, 11.11.2026); erst der nächste Besuch des Reiters öffnet wieder das Blatt.

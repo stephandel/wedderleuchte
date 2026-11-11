@@ -222,6 +222,8 @@ body { background: var(--radar-grund); }
   --mg-flaeche: var(--auf-himmel-kachel-voll); --mg-flaeche2: var(--auf-himmel-kachel-voll); --mg-rand: var(--trenner);
   --mg-text: var(--label); --mg-text-still: var(--label-2); --mg-akzent: var(--auf-himmel-akzent);
   --mg-schatten: none; --mg-serif: var(--font); --mg-mono: var(--font);
+  /* Knopfleiste ‹ Jetzt › haftet über der schwebenden Tab-Leiste statt dahinter (P-ecd6); app.js misst --leiste-oben */
+  --mg-haft-unten: calc(var(--leiste-oben, calc(var(--leiste-hoehe) + var(--safe-bottom) + var(--s2))) + var(--s2));
 }
 /* Meteogramm-Knöpfe 44 px und Einheiten nicht unter 11 px (A32: im Vollbild-Blatt fiel es auf; der Baustein hat 40 px und 0,78 em) */
 #graphs .mg-btn { min-height: var(--tap); min-width: var(--tap); }
