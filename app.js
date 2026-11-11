@@ -25,9 +25,9 @@
   ];
   var TABS = [
     { id: 'wetter', name: 'Wetter', ikon: 'cloudsun' },
-    { id: 'graphs', name: 'Graphs', ikon: 'chart' },
+    { id: 'graphs', name: 'Kurven', ikon: 'chart' },
     { id: 'kamera', name: 'Kamera', ikon: 'camera' },
-    { id: 'radsat', name: 'Rad/Sat', ikon: 'radar' },
+    { id: 'radsat', name: 'Radar', ikon: 'radar' },
     { id: 'mehr', name: 'Mehr', ikon: 'more' }
   ];
   var HIMMEL = ['Nord', 'Nordost', 'Ost', 'Südost', 'Süd', 'Südwest', 'West', 'Nordwest'];
@@ -422,7 +422,7 @@
       '<section class="abschnitt"><h2>Orte und Favoriten</h2><div class="gruppe">' + liste +
       '<div class="zeile"><button type="button" class="zeile-text tippbar" id="gpsKnopf"><b>Aktuellen Standort verwenden</b><small>Fragt vorher bei dir nach</small></button><span class="ikon-knopf" aria-hidden="true">' + Ikon('pin') + '</span></div></div></section>' +
       '<section class="abschnitt"><h2>Darstellung</h2><div class="gruppe"><div class="einstell"><span id="windLabel">Wind in</span><div class="segment" role="radiogroup" aria-labelledby="windLabel">' + seg + '</div></div>' +
-      '<label class="einstell schalter-zeile tippbar"><span><b>Meteogramm und Karten immer im Vollbild</b><small>Graphs und Rad/Sat (auch Karten) öffnen über den ganzen Bildschirm; „Fertig“ zeigt die kleine Ansicht.</small></span>' +
+      '<label class="einstell schalter-zeile tippbar"><span><b>Meteogramm und Karten immer im Vollbild</b><small>Kurven und Radar (auch Karten) öffnen über den ganzen Bildschirm; „Fertig“ zeigt die kleine Ansicht.</small></span>' +
       '<input type="checkbox" role="switch" id="vollbildImmer"' + (vbImmer() ? ' checked' : '') + '></label>' +
       '<div class="einstell"><span>Temperatur in °C. Hell und Dunkel folgen deinem iPhone.</span></div></div></section>' +
       '<section class="abschnitt"><h2>Quellen</h2><div class="gruppe"><ul class="quellen-liste">' +
@@ -463,7 +463,7 @@
   }
 
   // ---------- Kopf, Tab-Leiste, Reiterwechsel ----------
-  var TITEL = { wetter: null, graphs: 'Graphs', radsat: 'Rad/Sat', mehr: APP_NAME };
+  var TITEL = { wetter: null, graphs: 'Kurven', radsat: 'Radar', mehr: APP_NAME };
   function kopfAktualisieren() {
     $('#kopfTitel').textContent = tab === 'wetter' ? ort.name : TITEL[tab] || APP_NAME;
     $('#kopfModell').hidden = tab !== 'wetter';
