@@ -107,3 +107,14 @@
   .wk-vollbild .wk-leiste { display: grid; grid-template-columns: repeat(2, auto); align-content: start; width: auto !important; overflow-y: auto; }
   .wk-vollbild .wk-trenner { display: none; }
 }
+
+/* DWD-Radar (Wedderleuchte, 18.11.2026): Farbskala mit Wörtern über der Zeitleiste, Vorhersage-Teil gestrichelt und beschriftet */
+.wk-rleg { padding: 2px 4px 6px; }
+.wk-rleg-farben { display: flex; height: 8px; border-radius: 4px; overflow: hidden; box-shadow: inset 0 0 0 0.5px var(--wk-rand); }
+.wk-rleg-farben i { flex: 1; }
+.wk-rleg-woerter { display: grid; grid-template-columns: 4fr 4fr 7fr; margin-top: 3px; font-size: 11px; line-height: 1.25; color: var(--wk-text); }
+.wk-rleg-woerter span { min-width: 0; padding-right: 4px; }
+.wk-vor { position: absolute; right: 10px; top: 25px; height: 0; border-top: 2px dashed var(--wk-still); pointer-events: none; }
+.wk-vor::before { content: ""; position: absolute; left: -1px; top: -20px; height: 24px; border-left: 2px solid var(--wk-text); }
+.wk-tage .wk-gem { color: var(--wk-still); font-weight: 600; }
+.wk-tage .wk-vh { color: var(--wk-text); font-weight: 600; }

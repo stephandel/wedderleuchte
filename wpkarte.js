@@ -5,6 +5,9 @@
                  aus einem Open-Meteo-Gitter, Zeitleiste über alle Stunden der nächsten 7 Tage.
      „radsat"  – Regen-Radar (RainViewer, dazu EUMETSAT-Niederschlag), Satellitenbild in Farbe und Infrarot schwarz-weiß (EUMETSAT),
                  Zeitleiste über die letzten 2 Stunden in 10-Minuten-Schritten.
+                 Wedderleuchte (18.11.2026): Ist radar-dwd.js geladen und liegt der Ort im Gebiet des Deutschen Wetterdienstes,
+                 kommt das Regen-Radar vom DWD (5-Minuten-Takt, 90 Min gemessen + bis 2 Std. Vorhersage, Farbskala mit
+                 leicht/mäßig/stark, „gemessen vor X Min“). Fällt der DWD aus, springt RainViewer ein. Satellit bleibt bei 10 Minuten.
    Braucht Leaflet (global `L`). Ohne Netz (offline) zeigt er die gespeicherte Ansicht aus snapshot/karte.json.
 
    var k = WetterKarte.einbauen({ ziel, modus, ort, orte, offset, symbol(code, istTag, werte), offline, snapshot, merk(k, v), beiZeit(text),
@@ -244,6 +247,12 @@
     var el = {}, map, basis, flaeche = null, marken = {}, gitter = null, gitterVersprechen = null, gitterSchluessel = '';
     var idx = 0, film = false, filmUhr = null, ladeUhr = null, abgebaut = false;
     var frames = [], frameLayer = {}, rainviewer = null, snap = null, hinweisText = '';
+    // DWD-Radar (Wedderleuchte): dwd = { referenz, ende, schritt } aus der Fähigkeitenliste, dwdFrames = [{ t, art }]
+    var RD = global.RadarDWD || null, DWD_MOEGLICH = !!RD && MODUS === 'radsat' && RD.abgedeckt(ort.lat, ort.lon);
+    var dwd = null, dwdFrames = [], zeitTypAktiv = '', filmWarten = null;
+    function zeitTyp() { return dwd && (an.flaeche === 'radar' || !an.flaeche) ? 'dwd' : 'alt'; }
+    var TEXT_DWD_WEG = 'Das Radar des Deutschen Wetterdienstes ist gerade nicht erreichbar – gezeigt wird RainViewer (ohne Vorhersage).';
+    var TEXT_OHNE_NETZ = 'Kein Netz – das Radar braucht eine Verbindung.';
     var canvas = document.createElement('canvas'); canvas.width = 720; canvas.height = 540;
     var CW = canvas.width, CH = canvas.height;
 
@@ -273,16 +282,23 @@
           (VOLLBILD_KNOPF ? '<button type="button" class="wk-knopf wk-voll" aria-pressed="false" aria-label="Vollbild" title="Vollbild: über den ganzen Bildschirm">' + ICONS.voll + '</button>' : '') +
         '</div>' +
       '</div>' +
-      '<div class="wk-zeit"><div class="wk-regler">' +
+      '<div class="wk-zeit">' +
+        '<div class="wk-rleg" hidden><div class="wk-rleg-farben" aria-hidden="true">' + (RD ? RD.STUFEN.map(function (s) { return '<i style="background:' + s.farbe + '"></i>'; }).join('') : '') + '</div>' +
+        '<div class="wk-rleg-woerter"><span>leicht</span><span>mäßig · ab 2</span><span>stark · ab 10 mm/h</span></div></div>' +
+        '<div class="wk-regler">' +
         '<button type="button" class="wk-tk" data-film="anfang" aria-label="Anfang">' + ICONS.anfang + '</button>' +
         '<button type="button" class="wk-tk wk-play" data-film="play" aria-label="Abspielen">' + ICONS.play + '</button>' +
-        '<div class="wk-spur"><input type="range" class="wk-range" min="0" max="0" step="1" value="0" aria-label="Zeitpunkt"><div class="wk-ticks"></div><div class="wk-tage"></div></div>' +
+        '<div class="wk-spur"><input type="range" class="wk-range" min="0" max="0" step="1" value="0" aria-label="Zeitpunkt"><div class="wk-vor" hidden></div><div class="wk-ticks"></div><div class="wk-tage"></div></div>' +
         '<button type="button" class="wk-tk" data-film="ende" aria-label="Ende">' + ICONS.ende + '</button>' +
       '</div></div>';
     el.karte = wurzel.querySelector('.wk-leaflet'); el.legende = wurzel.querySelector('.wk-legende'); el.legA = wurzel.querySelector('.wk-leg-a'); el.legB = wurzel.querySelector('.wk-leg-b');
     el.titel = wurzel.querySelector('.wk-titel'); el.lade = wurzel.querySelector('.wk-lade'); el.hinweis = wurzel.querySelector('.wk-hinweis'); el.quelle = wurzel.querySelector('.wk-quelle');
+    el.rleg = wurzel.querySelector('.wk-rleg'); el.vor = wurzel.querySelector('.wk-vor');
     el.range = wurzel.querySelector('.wk-range'); el.ticks = wurzel.querySelector('.wk-ticks'); el.tage = wurzel.querySelector('.wk-tage'); el.play = wurzel.querySelector('.wk-play');
-    el.quelle.textContent = KACHEL_QUELLE + (MODUS === 'karten' ? ' · Open-Meteo' : ' · Open-Meteo · RainViewer · EUMETSAT');
+    function quelleSetzen() {
+      el.quelle.textContent = KACHEL_QUELLE + (MODUS === 'karten' ? ' · Open-Meteo' : ' · Open-Meteo · ' + (dwd ? RD.QUELLE : 'RainViewer') + ' · EUMETSAT');
+    }
+    quelleSetzen();
 
     // ---------- Karte ----------
     // zoomAnimation aus: die animierte Zoomstufe blieb im Test hängen (kein transitionend), ohne Animation zoomt es zuverlässig
@@ -304,7 +320,9 @@
         var id = b.dataset.ebene;
         if (id === 'wetter') an.wetter = !an.wetter;
         else an.flaeche = an.flaeche === id ? null : id;
-        merken(); knoepfe(); anzeigen(true);
+        merken(); knoepfe();
+        if (MODUS === 'radsat' && zeitTyp() !== zeitTypAktiv) { filmStopp(); bildebenenWeg(); framesBauen(); }
+        anzeigen(true);
       });
     });
     wurzel.querySelectorAll('[data-zoom]').forEach(function (b) {
@@ -330,9 +348,26 @@
     function filmStart() {
       if (film || frames.length < 2) return;
       film = true; el.play.innerHTML = ICONS.pause; el.play.setAttribute('aria-label', 'Anhalten');
+      if (zeitTypAktiv === 'dwd') { if (idx >= frames.length - 1) idx = 0; dwdTakt(); return; }
       if (MODUS === 'radsat') frames.forEach(function (f, i) { frameLayerFuer(i); });   // vorladen
       if (idx >= frames.length - 1) idx = 0;
       takt();
+    }
+    // DWD: jedes zweite Bild (10 Minuten), immer nur das nächste Bild vorladen und weiterschalten, wenn es da ist
+    // (spätestens nach 2,5 s) – so lädt das Abspielen nicht alle 43 Bilder auf einmal
+    function dwdTakt() {
+      var letzt = frames.length - 1, naechst = idx >= letzt ? 0 : Math.min(letzt, idx + 2);
+      var f = frameLayerFuer(naechst), start = Date.now();
+      function weiter() {
+        if (!film) return;
+        idx = naechst; el.range.value = idx; anzeigen(false); dwdTakt();
+      }
+      function pruefen() {
+        if (!film) return;
+        var bereit = !f.dwd || f.dwd._wkGeladen || Date.now() - start > 2500;
+        filmUhr = setTimeout(bereit ? weiter : pruefen, bereit ? Math.max(0, (idx >= letzt ? 1500 : 650) - (Date.now() - start)) : 150);
+      }
+      pruefen();
     }
     function takt() {
       filmUhr = setTimeout(function () {
@@ -342,7 +377,7 @@
     }
     function filmStopp() {
       if (!film) return;
-      film = false; if (filmUhr) { clearTimeout(filmUhr); filmUhr = null; }
+      film = false; if (filmUhr) { clearTimeout(filmUhr); filmUhr = null; } if (filmWarten) { clearTimeout(filmWarten); filmWarten = null; }
       el.play.innerHTML = ICONS.play; el.play.setAttribute('aria-label', 'Abspielen');
     }
     function ortszeit(ms) { return new Date(ms + offset * 1000); }
@@ -369,7 +404,8 @@
           tage += '<span class="' + (tag === heute ? 'is-heute' : '') + '" style="left:' + (mitte / (n - 1) * 100).toFixed(2) + '%">' + WT[d2.getUTCDay()] + '</span>';
         });
       } else {
-        var min = [30, 60].filter(function (m) { return m / SCHRITT * proSchritt >= 44; })[0] || 60;
+        var schrittMin = zeitTypAktiv === 'dwd' ? 5 : SCHRITT;
+        var min = [30, 60].filter(function (m) { return m / schrittMin * proSchritt >= 44; })[0] || 60;
         for (i = 0; i < n; i++) {
           var o = ortszeit(frames[i]);
           if ((o.getUTCMinutes() % min) !== 0) continue;
@@ -377,6 +413,14 @@
         }
         var d0 = ortszeit(frames[0]);
         tage = '<span style="left:50%">' + WT[d0.getUTCDay()] + ' ' + d0.getUTCDate() + '.' + (d0.getUTCMonth() + 1) + '.</span>';
+        // DWD: Teil nach der letzten Messung ist Vorhersage – gestrichelt und mit Wort, nicht nur Farbe
+        var lm = zeitTypAktiv === 'dwd' ? RD.letzteMessung(dwdFrames) : -1;
+        el.vor.hidden = !(lm >= 0 && lm < n - 1);
+        if (!el.vor.hidden) {
+          var x = lm / (n - 1) * 100;
+          el.vor.style.left = 'calc(10px + (100% - 20px) * ' + (x / 100).toFixed(4) + ')';
+          tage = '<span class="wk-gem" style="left:' + (x / 2).toFixed(2) + '%">gemessen</span><span class="wk-vh" style="left:' + ((x + 100) / 2).toFixed(2) + '%">Vorhersage</span>';
+        }
       }
       el.ticks.innerHTML = html; el.tage.innerHTML = tage;
     }
@@ -410,6 +454,7 @@
     var bewegUhr = null;
     map.on('moveend zoomend', function () {
       if (OFFLINE) { flaecheZeichnen(); markenSetzen(); return; }
+      if (!film) dwdAufraeumen();
       flaecheZeichnen();
       clearTimeout(bewegUhr);
       bewegUhr = setTimeout(function () {
@@ -430,7 +475,16 @@
       } else if (snap) {
         frames = snap.zeiten.map(function (z) { return Date.parse(z); });
         idx = frames.length - 1;
+      } else if (zeitTyp() === 'dwd') {
+        var warAlt = zeitTypAktiv !== 'dwd', altZeit = frames.length ? frames[idx] : null, warNeueste = zeitTypAktiv === 'dwd' && idx === RD.letzteMessung(dwdFrames);
+        dwdFrames = RD.zeitleiste(dwd, { zurueck: 90, vor: 120 });
+        frames = dwdFrames.map(function (f) { return f.t; });
+        var lm = RD.letzteMessung(dwdFrames), gleich = altZeit != null ? frames.indexOf(altZeit) : -1;
+        idx = warAlt || warNeueste || gleich < 0 ? Math.max(0, lm) : gleich;   // anfangs die neueste Messung
+        zeitTypAktiv = 'dwd'; el.rleg.hidden = false; quelleSetzen();
       } else {
+        if (zeitTypAktiv === 'dwd') frames = [];
+        zeitTypAktiv = 'alt'; dwdFrames = []; el.rleg.hidden = true; el.vor.hidden = true;
         var ms = SCHRITT * 60000, neu = Math.floor((Date.now() - VERZUG * 60000) / ms) * ms, erst = !frames.length;
         frames = []; for (var k = BILDER - 1; k >= 0; k--) frames.push(neu - k * ms);
         if (erst || idx >= frames.length) idx = frames.length - 1;      // anfangs das neueste Bild
@@ -544,9 +598,27 @@
     }
     // Für einen Zeitpunkt alle nötigen Bildebenen anlegen (einmal) – Rückgabe { sat, satsw, regen, radar }
     // satsw = Infrarot 10,5 µm in Graustufen (weiß = kalte, hohe Wolken), das klassische Schwarz-Weiß-Bild der alten WeatherPro
+    function dwdLayer(fr) {
+      var o = { layers: RD.EBENE, styles: '', format: 'image/png', transparent: true, version: '1.3.0', crs: L.CRS.EPSG3857,
+        time: RD.iso(fr.t), opacity: 0, zIndex: 4, tileSize: 512 };     // 512er-Kacheln: ein Viertel der Anfragen
+      if (fr.art === 'vorhergesagt') o.dim_reference_time = RD.iso(dwd.referenz);   // neuer Lauf → neue Adresse
+      var l = L.tileLayer.wms(RD.WMS, o);
+      // Leaflet meldet „load“ auch, wenn Kacheln fehlschlugen (der DWD schickt dann eine XML-Fehlerseite statt PNG): Fehler je Ladedurchgang zählen
+      l.on('loading', function () { l._wkFehler = 0; });
+      l.on('load', function () { l._wkGeladen = true; if (!l._wkFehler && hinweisText === TEXT_DWD_LUECKE) hinweis(''); });
+      l.on('tileerror', function () { l._wkFehler = (l._wkFehler || 0) + 1; if (frameLayer[idx] && frameLayer[idx].dwd === l) hinweis(TEXT_DWD_LUECKE); });
+      return l;
+    }
+    var TEXT_DWD_LUECKE = 'Für diesen Zeitpunkt liefert der Deutsche Wetterdienst gerade kein Radarbild.';
     function frameLayerFuer(i) {
       var f = frameLayer[i]; if (f) return f;
       var zeit = frames[i]; f = {};
+      if (zeitTypAktiv === 'dwd') {
+        f.dwd = dwdLayer(dwdFrames[i]);
+        f.dwd.on('loading', function () { lade(true); }); f.dwd.on('load', function () { lade(false); }); f.dwd.addTo(map);
+        frameLayer[i] = f;
+        return f;
+      }
       if (snap) {
         var bounds = [[snap.bounds.sued, snap.bounds.west], [snap.bounds.nord, snap.bounds.ost]];
         var bild = function (name, z) { return name ? L.imageOverlay(SNAP + name.replace(/^snapshot\//, ''), bounds, { opacity: 0, interactive: false, zIndex: z }) : null; };
@@ -570,11 +642,35 @@
         if (f.satsw) f.satsw.setOpacity(aktiv && e === 'satsw' ? 1 : 0);
         if (f.regen) f.regen.setOpacity(aktiv && (e === 'radar' || e === 'satregen') ? (e === 'radar' ? 0.55 : 0.85) : 0);
         if (f.radar) f.radar.setOpacity(aktiv && e === 'radar' ? 0.9 : 0);
+        if (f.dwd) f.dwd.setOpacity(aktiv && e === 'radar' ? 0.8 : 0);
       }
       f = frameLayer[idx];
+      if (zeitTypAktiv === 'dwd') { dwdHinweis(f); return; }
+      if (hinweisText === TEXT_DWD_WEG || hinweisText === TEXT_OHNE_NETZ) return;   // Ausfall des DWD bleibt sichtbar
       if (e === 'radar' && f && !f.radar && !snap) hinweis('Über dieser Gegend gibt es kein Regenradar – gezeigt wird der Niederschlag aus Satellitendaten (EUMETSAT).');
       else if (e && !snap && !inMeteosat()) hinweis('Satellitenbilder gibt es hier nur für Europa, Afrika und den Atlantik (Meteosat).');
+      else if (hinweisText && hinweisText.indexOf('Gespeicherter') < 0 && hinweisText !== TEXT_DWD_WEG && hinweisText !== TEXT_OHNE_NETZ) hinweis('');
+    }
+    // Alle Bildebenen von der Karte nehmen (Wechsel Radar ↔ Satellit, neuer DWD-Lauf)
+    function bildebenenWeg() {
+      for (var i in frameLayer) { var f = frameLayer[i]; ['sat', 'satsw', 'regen', 'radar', 'dwd'].forEach(function (k) { if (f[k]) map.removeLayer(f[k]); }); }
+      frameLayer = {};
+    }
+    // DWD: beim Verschieben/Zoomen nur das gezeigte Bild behalten, sonst laden alle unsichtbaren Zeitpunkte neu
+    function dwdAufraeumen() {
+      if (zeitTypAktiv !== 'dwd') return;
+      for (var i in frameLayer) if (+i !== idx) { if (frameLayer[i].dwd) map.removeLayer(frameLayer[i].dwd); delete frameLayer[i]; }
+    }
+    function dwdHinweis(f) {
+      if (RD.veraltet(dwd, Date.now())) hinweis('Die letzte Radarmessung ist älter als 30 Minuten – der Deutsche Wetterdienst hat noch nichts Neues geliefert.');
+      else if (f && f.dwd && f.dwd._wkFehler) hinweis(TEXT_DWD_LUECKE);
       else if (hinweisText && hinweisText.indexOf('Gespeicherter') < 0) hinweis('');
+    }
+    function dwdHolen() {
+      if (!DWD_MOEGLICH || OFFLINE) return Promise.resolve(null);
+      return RD.holen().then(function (info) { dwd = info; return info; }).catch(function (e) {
+        console.warn('WetterKarte DWD', e); dwd = null; return null;
+      });
     }
     function inMeteosat() { var c = map.getCenter(); return c.lng > -70 && c.lng < 75 && c.lat > -70 && c.lat < 75; }
     function rainviewerHolen() {
@@ -635,7 +731,10 @@
     function anzeigen(ebeneGewechselt) {
       if (!frames.length) return;
       var zeit = frames[idx];
-      el.titel.innerHTML = '<b>' + zeitText(zeit, true) + '</b>' + (MODUS === 'karten' ? 'Vorhersage' : (snap ? 'gespeichert' : 'Beobachtung'));
+      var fr = zeitTypAktiv === 'dwd' ? dwdFrames[idx] : null, art = fr ? RD.zeitpunktText(fr, Date.now()) : '';
+      el.titel.innerHTML = '<b>' + zeitText(zeit, true) + '</b>' + (fr ? escH(art) : MODUS === 'karten' ? 'Vorhersage' : (snap ? 'gespeichert' : 'Beobachtung'));
+      el.titel.dataset.art = fr ? fr.art : '';
+      el.range.setAttribute('aria-valuetext', zeitText(zeit, true) + (fr ? ', ' + art : ''));
       beiZeit(zeitText(zeit, true));
       if (MODUS === 'karten') { flaecheZeichnen(); markenSetzen(); }
       else { if (ebeneGewechselt) { for (var i in frameLayer) { var f = frameLayer[i]; ['sat', 'satsw', 'regen', 'radar'].forEach(function (k) { if (f[k]) f[k].setOpacity(0); }); } } bildebenenZeigen(); if (ebeneGewechselt) markenSetzen(); }
@@ -764,17 +863,31 @@
       if (MODUS === 'karten') {
         gitterHolen().then(function () { if (abgebaut) return; framesBauen(); anzeigen(true); });
       } else {
-        framesBauen();
-        Promise.all([rainviewerHolen(), gitterHolen()]).then(function () { if (abgebaut) return; anzeigen(true); });
+        if (DWD_MOEGLICH) lade(true);
+        dwdHolen().then(function (info) {
+          if (abgebaut) return;
+          if (DWD_MOEGLICH && !info) hinweis(navigator.onLine === false ? TEXT_OHNE_NETZ : TEXT_DWD_WEG);
+          quelleSetzen(); framesBauen();
+          return Promise.all([info ? null : rainviewerHolen(), gitterHolen()]);
+        }).then(function () { if (abgebaut) return; lade(false); anzeigen(true); });
       }
     }
     start();
     if (VOLLBILD_START) vollbildSetzen(true);
-    var uhr = setInterval(function () {           // Rad/Sat: alle 10 Minuten kann ein neues Bild da sein
+    var uhr = setInterval(function () {           // Rad/Sat: alle 5 (DWD) bzw. 10 Minuten kann ein neues Bild da sein
       if (abgebaut || OFFLINE || MODUS !== 'radsat' || film) return;
+      if (dwd) {                                  // DWD: neue Messung da? Dann Zeitleiste neu, alte Bilder weg
+        dwdHolen().then(function (info) {
+          if (abgebaut || film || !info) return;
+          var lm = RD.letzteMessung(dwdFrames);
+          if (zeitTypAktiv === 'dwd' && lm >= 0 && dwdFrames[lm].t !== info.referenz) { bildebenenWeg(); framesBauen(); }
+          anzeigen(true);
+        });
+        if (zeitTypAktiv === 'dwd') return;
+      }
       var alt = frames[frames.length - 1]; framesBauen();
       if (frames[frames.length - 1] !== alt) { frameLayer = {}; map.eachLayer(function (l) { if (l instanceof L.TileLayer && l !== basis) map.removeLayer(l); }); anzeigen(true); }
-    }, 5 * 60000);
+    }, 60000);                                    // jede Minute: „vor X Min“ nachführen; neue Bilder holt RadarDWD höchstens alle 4 Min
 
     return {
       zeigeOrt: function (neu, neueOrte) {
