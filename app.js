@@ -65,7 +65,8 @@
   var karten = { radsat: null, karten: null };
   var mgInstanz = null, mgSchluessel = '';
   var suchTreffer = [], suchText = '';
-  var radarBild = null;       // {host, pfad, zeit}
+  var radarBild = null;       // RainViewer {host, pfad, zeit, geholt} oder DWD {dwd: true, zeit, geholt}
+  var aussicht = null;        // Sicherheits-Anzeige: { ort, tage (aus sicherheit.js), geholt }
 
   function windEinheit() { return WIND_EINHEITEN.filter(function (e) { return e.id === windId; })[0] || WIND_EINHEITEN[0]; }
   function wind(v) { return zahl(v * windEinheit().faktor); }
@@ -139,9 +140,10 @@
       daten = { ort: ort.id, roh: j, geholt: Date.now() };
       speicher.schreiben('daten-' + ort.id, daten);
       status = 'ok'; offline = false; zeichnen(); hinweis('');
+      aussichtLaden();
       if (ks) ks.setze({ wetter: studioWetter() });   // offenes Wetterfoto bekommt die neuen Werte
     }).catch(function () {
-      if (gemerkt && gemerkt.roh) { daten = gemerkt; status = 'ok'; offline = true; hinweis('Offline · Stand ' + stand(gemerkt.geholt)); }
+      if (gemerkt && gemerkt.roh) { daten = gemerkt; status = 'ok'; offline = true; hinweis('Offline · Stand ' + stand(gemerkt.geholt)); aussicht = speicher.lesen('aussicht-' + ort.id, null); }
       else { daten = null; status = 'fehler'; }
       zeichnen();
       if (ks) ks.setze({ wetter: studioWetter() });
@@ -210,8 +212,10 @@
   function zustandHtml(ik, titel, text, knopf) {
     return '<div class="kachel zustand">' + Ikon(ik) + '<p><b>' + esc(titel) + '</b><br>' + esc(text) + '</p>' + (knopf || '') + '</div>';
   }
+  // DWD-Radar nur, wo der Deutsche Wetterdienst misst (radar-dwd.js); sonst bleibt RainViewer
+  function dwdOrt() { return !!window.RadarDWD && RadarDWD.abgedeckt(ort.lat, ort.lon); }
   function quellenZeile() {
-    return '<p class="quellen-zeile">Wetterdaten: Open-Meteo.com (CC BY 4.0) · Radar: RainViewer · Karte: © OpenStreetMap-Mitwirkende, OpenTopoMap (CC BY-SA)</p>';
+    return '<p class="quellen-zeile">Wetterdaten: Open-Meteo.com (CC BY 4.0) · Radar: ' + (dwdOrt() ? 'Deutscher Wetterdienst (CC BY 4.0)' : 'RainViewer') + ' · Karte: © OpenStreetMap-Mitwirkende, OpenTopoMap (CC BY-SA)</p>';
   }
   // Antippen der linken Hälfte wechselt die rechte Hälfte: Werte → Radar-Karte (DESIGN.md Regel 35); die Wahl wird gemerkt
   var AKT_ANSICHTEN = ['werte', 'radar'];
@@ -226,7 +230,7 @@
       '<span class="akt-sym">' + symbol(info[0]) + '</span><span class="hero">' + esc(grad(c.temperature_2m)) + '</span>' +
       '<span class="punkte" aria-hidden="true">' + punkte + '</span></button>' +
       '<div class="akt-rechts"><div class="lage">' + esc(info[1]) + '</div>' +
-      (radar ? '<div class="radar-karte akt-radar" data-radar role="img" aria-label="Regenradar, letzte Aufnahme"><span class="radar-leer">Radar wird geladen …</span></div></div></div>' : '<dl class="werte">' +
+      (radar ? '<div class="radar-karte akt-radar" data-radar role="img" aria-label="Regenradar, letzte Messung"><span class="radar-leer">Radar wird geladen …</span></div></div></div>' : '<dl class="werte">' +
       '<div><dt>Gefühlt</dt><dd>' + esc(grad(c.apparent_temperature)) + '</dd></div>' +
       '<div><dt>Wind</dt><dd>' + wind(c.wind_speed_10m) + ' <span class="einheit">' + esc(w.name) + '</span></dd></div>' +
       '<div><dt>Böen</dt><dd>' + wind(c.wind_gusts_10m) + ' <span class="einheit">' + esc(w.name) + '</span></dd></div>' +
@@ -278,6 +282,59 @@
       '<div class="balken" role="img" aria-label="' + esc(satz) + '">' + bal + '</div>' +
       '<div class="achse" aria-hidden="true"><span>Jetzt</span><span>+1 h</span><span>+2 h</span></div></div></article>';
   }
+  // ---------- Sicherheits-Anzeige: Temperatur-Aussicht 10 Tage mit Spanne (sicherheit.js, Open-Meteo Ensemble) ----------
+  // Je Tag ein Balken auf gemeinsamer Achse: blau = Tiefstwert, orange = Höchstwert, je von 8 der 10 Rechenläufe (10.–90. Perzentil),
+  // Strich = Mitte. Dazu ein Wort sicher/mittel/unsicher (mit 1–3 Strichen) und beim Antippen ein Erklär-Satz.
+  var AUS_STRICHE = { sicher: 3, mittel: 2, unsicher: 1 };
+  function aussichtModul(m) {
+    if (!aussicht || aussicht.ort !== ort.id || !aussicht.tage || !aussicht.tage.length) return '';
+    var tage = aussicht.tage, lo = Infinity, hi = -Infinity;
+    tage.forEach(function (t) { lo = Math.min(lo, t.min.p10, t.max.p10); hi = Math.max(hi, t.min.p90, t.max.p90); });
+    lo = Math.floor(lo) - 1; hi = Math.ceil(hi) + 1;
+    var pos = function (v) { return ((v - lo) / (hi - lo) * 100).toFixed(1); };
+    var band = function (b, kl) { return '<i class="' + kl + '" style="left:' + pos(b.p10) + '%;width:' + (pos(b.p90) - pos(b.p10)).toFixed(1) + '%"></i><i class="aus-mitte ' + kl + '-m" style="left:' + pos(b.p50) + '%"></i>'; };
+    var zeilen = tage.map(function (t, i) {
+      var dt = datumTeile(t.datum), name = t.datum === m.d.time[0] ? 'Heute' : wochentag(t.datum);
+      var striche = '', n = AUS_STRICHE[t.stufe] || 0;
+      for (var k = 0; k < 3; k++) striche += '<i' + (k < n ? ' class="an"' : '') + '></i>';
+      return '<details class="aus-tag"><summary>' +
+        '<span class="name">' + name + '<small>' + dt.t + '.' + dt.m + '.</small></span>' +
+        '<span class="aus-zahl">' + esc(grad(t.min.p50)) + '</span>' +
+        '<span class="aus-balken" aria-hidden="true">' + band(t.min, 'aus-tief') + band(t.max, 'aus-hoch') + '</span>' +
+        '<span class="aus-zahl">' + esc(grad(t.max.p50)) + '</span>' +
+        '<span class="aus-wort"><span class="aus-striche" aria-hidden="true">' + striche + '</span>' + (t.stufe || '–') + '</span>' +
+        '</summary><p>' + esc(t.satz) + '</p></details>';
+    }).join('');
+    var alt = Date.now() - aussicht.geholt > 6 * 3600e3;
+    return '<article class="kachel k-gross aussicht" aria-label="Temperatur-Aussicht 10 Tage"><h2 class="kachel-kopf">' + Ikon('chart') + 'Wie sicher ist die Vorhersage?</h2>' +
+      '<p class="aus-erklaer">Der Balken zeigt, wo 8 von 10 Rechenläufen des Wettermodells liegen: <span class="aus-leg-tief">Tiefstwert</span> und <span class="aus-leg-hoch">Höchstwert</span>. Je breiter, desto unsicherer. Zahlen: Mitte der Läufe (Modell ECMWF, kann von der Tagesliste abweichen). Tippe auf einen Tag für Einzelheiten.</p>' +
+      '<div class="aus-liste">' + zeilen + '</div>' +
+      (alt ? '<p class="klein stand">Stand ' + stand(aussicht.geholt) + ' Uhr</p>' : '') + '</article>';
+  }
+  // Ensemble höchstens alle 3 Stunden holen (das Modell rechnet nur alle 6 Stunden neu); ohne Netz bleibt der letzte Stand
+  function aussichtLaden() {
+    if (!window.Sicherheit) return;
+    var o = ort, schl = 'aussicht-' + o.id, gemerkt = speicher.lesen(schl, null);
+    if (gemerkt && gemerkt.tage) { aussicht = gemerkt; aussichtZeigen(); }
+    if (gemerkt && Date.now() - gemerkt.geholt < 3 * 3600e3) return;
+    fetch(Sicherheit.url(o.lat, o.lon)).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(function (j) {
+      var tage = Sicherheit.auswerten(j);
+      if (!tage.length) throw new Error('Ensemble leer');
+      if (o.id !== ort.id) return;
+      aussicht = { ort: o.id, tage: tage, geholt: Date.now() };
+      speicher.schreiben(schl, aussicht); aussichtZeigen();
+    }).catch(function (e) { console.warn('Aussicht', e && e.message); });
+  }
+  // Nur die eine Kachel ersetzen, damit Radar-Bilder und offene Zeilen der anderen Kacheln bleiben
+  function aussichtZeigen() {
+    if (tab !== 'wetter' || status !== 'ok') return;
+    var m = aufbereiten(), raster = $('#tab-wetter .raster'); if (!m || !raster) return;
+    var html = aussichtModul(m), alt = $('.aussicht', raster);
+    if (!html) { if (alt) alt.remove(); return; }
+    var neu = document.createElement('div'); neu.innerHTML = html;
+    if (alt) raster.replaceChild(neu.firstChild, alt); else raster.appendChild(neu.firstChild);
+  }
+
   function renderWetter() {
     var s = $('#tab-wetter'), m = status === 'ok' ? aufbereiten() : null;
     if (status === 'laden' && !m) { s.innerHTML = skelettWetter(); return; }
@@ -286,7 +343,7 @@
         '<button type="button" class="button" id="nochmal">Erneut versuchen</button>') + quellenZeile();
       return;
     }
-    s.innerHTML = '<div class="raster">' + [aktuellModul(m), stundenModul(m), tageModul(m), regenModul(m)].join('') + '</div>' + quellenZeile();
+    s.innerHTML = '<div class="raster">' + [aktuellModul(m), stundenModul(m), tageModul(m), regenModul(m), aussichtModul(m)].join('') + '</div>' + quellenZeile();
     himmelSetzen(m);
     radarKachelFuellen();
     pruefeSchrift();
@@ -308,9 +365,15 @@
   }
   function himmelSetzen(m) { document.documentElement.dataset.himmel = m ? himmelLage(m) : 'klar'; }
 
-  // ---------- Radar-Kachel (RainViewer über abgedunkelter OpenTopoMap) ----------
+  // ---------- Radar-Kachel (DWD in Deutschland, sonst RainViewer, über abgedunkelter OpenTopoMap) ----------
   function radarInfo() {
     if (radarBild && Date.now() - radarBild.geholt < 5 * 60e3) return Promise.resolve(radarBild);
+    if (dwdOrt()) return RadarDWD.holen().then(function (info) {
+      radarBild = { dwd: true, zeit: info.referenz / 1000, geholt: Date.now() }; return radarBild;
+    }, function () { return rainviewerInfo(); });   // DWD weg: RainViewer springt ein
+    return rainviewerInfo();
+  }
+  function rainviewerInfo() {
     return fetch(RAINVIEWER).then(function (r) { return r.json(); }).then(function (j) {
       var p = j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
       if (!p) throw new Error('kein Bild');
@@ -337,11 +400,12 @@
         if (ty < 0 || ty >= n) continue;
         var x = ((tx % n) + n) % n, pos = 'left:' + (tx * 256 - links).toFixed(1) + 'px;top:' + (ty * 256 - oben).toFixed(1) + 'px';
         html += '<img class="topo" alt="" src="' + TOPO.replace('{s}', 'abc'[(x + ty) % 3]).replace('{z}', Z).replace('{x}', x).replace('{y}', ty) + '" style="' + pos + '">';
-        html += '<img alt="" src="' + r.host + r.pfad + '/256/' + Z + '/' + x + '/' + ty + '/2/1_1.png" style="' + pos + '">';
+        html += '<img alt="" src="' + (r.dwd ? RadarDWD.kachelUrl(Z, x, ty, r.zeit * 1000) : r.host + r.pfad + '/256/' + Z + '/' + x + '/' + ty + '/2/1_1.png') + '" style="' + pos + '">';
       }
     }
     var d = new Date(r.zeit * 1000 + (daten.roh.utc_offset_seconds || 0) * 1000);
-    el.innerHTML = html + '<span class="radar-punkt"></span><span class="radar-zeit">' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + '</span>' +
+    var vor = Math.max(0, Math.round((Date.now() - r.zeit * 1000) / 60e3));
+    el.innerHTML = html + '<span class="radar-punkt"></span><span class="radar-zeit">' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ' · vor ' + vor + ' Min</span>' +
       (el.classList.contains('akt-radar') ? '<span class="radar-name">Radar</span>' : '');
   }
 
@@ -426,7 +490,7 @@
       '<input type="checkbox" role="switch" id="vollbildImmer"' + (vbImmer() ? ' checked' : '') + '></label>' +
       '<div class="einstell"><span>Temperatur in °C. Hell und Dunkel folgen deinem iPhone.</span></div></div></section>' +
       '<section class="abschnitt"><h2>Quellen</h2><div class="gruppe"><ul class="quellen-liste">' +
-      '<li>Wetterdaten: Open-Meteo.com (CC BY 4.0), Modell „Beste Mischung“</li><li>Karte: © OpenStreetMap-Mitwirkende, OpenTopoMap (CC BY-SA)</li><li>Radar: RainViewer</li><li>Satellit: EUMETSAT</li></ul></div></section>' +
+      '<li>Wetterdaten: Open-Meteo.com (CC BY 4.0), Modell „Beste Mischung“</li><li>Karte: © OpenStreetMap-Mitwirkende, OpenTopoMap (CC BY-SA)</li><li>Radar in Deutschland: Deutscher Wetterdienst (CC BY 4.0), sonst RainViewer</li><li>Temperatur-Aussicht: Open-Meteo.com Ensemble, Modell ECMWF IFS (CC BY 4.0)</li><li>Satellit: EUMETSAT</li></ul></div></section>' +
       '<p class="quellen-zeile">' + APP_NAME + ' ' + VERSION + ' · Wetterdaten: Open-Meteo.com (CC BY 4.0)</p>';
     if (fokus === 'suchfeld') { var f = $('#suchfeld'); if (f) { f.focus(); f.setSelectionRange(f.value.length, f.value.length); } }
   }
@@ -448,7 +512,7 @@
   function ortWaehlen(o) {
     if (!orte.some(function (x) { return x.id === o.id; })) { orte.push({ id: o.id, name: o.name, lat: o.lat, lon: o.lon }); speicher.schreiben('orte', orte); }
     ort = { id: o.id, name: o.name, lat: o.lat, lon: o.lon }; speicher.schreiben('ort', ort);
-    suchTreffer = []; suchText = ''; daten = null; radarBild = null; mgAbbauen(); kartenAbbauen();
+    suchTreffer = []; suchText = ''; daten = null; radarBild = null; aussicht = speicher.lesen('aussicht-' + o.id, null); mgAbbauen(); kartenAbbauen();
     waehleTab('wetter'); laden();
     $('#kopfTitel').focus();   // der Suchtreffer ist verschwunden, sonst läge der Fokus auf dem Seitenkörper
   }
@@ -664,7 +728,7 @@
   function start() {
     binden(); leisteBauen(); pruefeSchrift();
     var gemerkt = speicher.lesen('daten-' + ort.id, null);
-    if (gemerkt && gemerkt.roh) { daten = gemerkt; status = 'ok'; }
+    if (gemerkt && gemerkt.roh) { daten = gemerkt; status = 'ok'; aussicht = speicher.lesen('aussicht-' + ort.id, null); }
     if (offline && daten) hinweis('Offline · Stand ' + stand(daten.geholt));
     waehleTab('wetter');
     if (!offline) laden(); else if (!daten) { status = 'fehler'; zeichnen(); }

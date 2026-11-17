@@ -74,3 +74,10 @@ Startort:
 Standardorte:
 
 > Mannheim, Mengerschied, Corralejo, El Cotillo, Costa Calma, Morro Jable
+
+## Radar vom DWD und Sicherheits-Anzeige (18.11.2026, Stephans Entscheidung P-89c2, Zweig `radar-und-sicherheit`)
+
+- `radar-dwd.js` (vor `wpkarte.js` einbinden): Liegt der Ort im Gebiet des Deutschen Wetterdienstes (`RadarDWD.abgedeckt`), kommt das Regen-Radar im Reiter Radar und in der Radar-Kachel vom DWD-Kartendienst (`maps.dwd.de`, Ebene `dwd:Niederschlagsradar`, CC BY 4.0, ohne Schlüssel): 5-Minuten-Takt, 90 Min gemessen + bis 2 Std. Vorhersage, Titel „gemessen vor X Min“ / „Vorhersage für in X Min“, Farbskala leicht/mäßig/stark. Satellit-Ebenen behalten ihre 10-Minuten-Zeitleiste. Außerhalb (Fuerteventura) und bei Ausfall des DWD bleibt RainViewer. Damit ist die frühere Regel „DWD nicht übernommen“ für das Radar aufgehoben; Bright Sky bleibt draußen.
+- `sicherheit.js` + Kachel „Wie sicher ist die Vorhersage?“ (fünftes Modul am Ende der Startseite): Open-Meteo Ensemble, ECMWF IFS (51 Läufe), 10 Tage; Band 10.–90. Perzentil für Tiefst- und Höchstwert, Wort sicher (Spanne ≤ 3 °C) / mittel (≤ 6 °C) / unsicher, Erklär-Satz beim Antippen. Höchstens alle 3 Std. abgefragt; fällt der Abruf aus, fehlt die Kachel (oder zeigt den letzten Stand).
+- Quellen: Quellenzeile nennt je nach Ort „Radar: Deutscher Wetterdienst (CC BY 4.0)“ oder „RainViewer“; unter „Mehr“ beide plus „Temperatur-Aussicht: Open-Meteo.com Ensemble, Modell ECMWF IFS (CC BY 4.0)“.
+- Tests: `node tests/radar-sicherheit.test.js` (Rechenregeln, ohne Browser) und `NODE_PATH=… PORT=8975 node tests/radar-dwd.test.js` (WebKit 402/320, hell/dunkel, Fehlerfälle, Corralejo).

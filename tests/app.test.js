@@ -140,7 +140,8 @@ function kontrastHimmel(tokens) {
       pruefe('Rad/Sat: Karte eingebaut', await p.$('#karte.wk') !== null);
       await p.click('[data-tab="mehr"]'); await p.waitForTimeout(400);
       const mehr = await p.evaluate(() => ({ titel: document.querySelector('.titel-gross').textContent, quellen: document.querySelector('.quellen-liste').textContent }));
-      pruefe('Mehr: Titel „Wedderleuchte“, Quellen ohne DWD', mehr.titel === 'Wedderleuchte' && /Open-Meteo/.test(mehr.quellen) && !/DWD|Bright Sky/.test(mehr.quellen), mehr);
+      // Seit 18.11.2026 (P-89c2) kommt das Radar in Deutschland vom DWD-Kartendienst; Bright Sky bleibt draußen
+      pruefe('Mehr: Titel „Wedderleuchte“, Quellen mit DWD-Radar und Ensemble, ohne Bright Sky', mehr.titel === 'Wedderleuchte' && /Open-Meteo/.test(mehr.quellen) && /Deutscher Wetterdienst \(CC BY 4\.0\)/.test(mehr.quellen) && /Ensemble/.test(mehr.quellen) && !/Bright Sky/.test(mehr.quellen), mehr);
       const m2 = await masse(p);
       pruefe('Mehr: Tippflächen ≥ 44 px, kein seitliches Scrollen', m2.knopf.length === 0 && !m2.breit, m2.knopf.slice(0, 5));
       await p.screenshot({ path: path.join(BILDER, '4-mehr.png'), fullPage: true });
@@ -241,8 +242,9 @@ function kontrastHimmel(tokens) {
       console.log('     schlechtester Wert frei/Kachel: ' + Object.entries(k).map(([n, v]) => n + ' ' + v.join('/')).join(', '));
       const sw = fs.readFileSync(path.join(WURZEL, 'sw.js'), 'utf8');
       pruefe('Service Worker: Version aktuell, nur eigene Speicher löschen', require('../tools/version.js').berechnen().neu === sw && /startsWith\('wedder-'\)/.test(sw));
-      const fremd = ['index.html', 'app.js', 'app.css'].filter(d => /dwd|wedda-|weddaapp|wpcamera|WeddaApp/.test(fs.readFileSync(path.join(WURZEL, d), 'utf8').split('\n').filter(z => !/^\s*(\/\/|\/\*)/.test(z)).join('\n')));
-      pruefe('Keine Reste von WeddaApp (DWD, Name, Speicher)', fremd.length === 0, fremd);
+      const fremd = ['index.html', 'app.js', 'app.css'].filter(d => /(^|[^\w-])dwd\.js|brightsky|wedda-|weddaapp|wpcamera|WeddaApp/i.test(fs.readFileSync(path.join(WURZEL, d), 'utf8').split('\n').filter(z => !/^\s*(\/\/|\/\*)/.test(z)).join('\n')));
+      // Seit 18.11.2026 gewollt: radar-dwd.js (DWD-Kartendienst). Verboten bleiben WeddaApps dwd.js/Bright Sky, Name und Speicher
+      pruefe('Keine Reste von WeddaApp (dwd.js/Bright Sky, Name, Speicher)', fremd.length === 0, fremd);
     }
 
     console.log('5) Offline (Service Worker) und Studio-Dateien');

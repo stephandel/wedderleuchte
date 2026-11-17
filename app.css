@@ -137,6 +137,46 @@ body { background: var(--radar-grund); }
 .liste-kopf { display: grid; grid-template-columns: subgrid; grid-column: 1 / -1; padding: 0 var(--s4) var(--s1); font-size: var(--fs-caption); color: var(--label-2); column-gap: var(--s2); }
 .liste-kopf span:last-child { text-align: right; }
 
+/* Sicherheits-Anzeige: Temperatur-Aussicht 10 Tage (18.11.2026). Balken: Spanne von 8 der 10 Rechenläufe, Strich = Mitte */
+.aus-erklaer { font-size: var(--fs-footnote); color: var(--label-2); margin: 0 0 var(--s2); max-width: 75ch; }
+.aus-leg-tief, .aus-leg-hoch { white-space: nowrap; color: var(--label); }
+.aus-leg-tief::before, .aus-leg-hoch::before { content: ""; display: inline-block; width: var(--s3); height: var(--s2); border-radius: var(--s1); margin-right: var(--s1); background: var(--aus-tief); }
+.aus-leg-hoch::before { background: var(--aus-hoch); }
+.aussicht { --aus-tief: var(--auf-himmel-akzent); --aus-hoch: var(--orange); }
+.aus-liste { margin: 0 calc(var(--s4) * -1) calc(var(--s4) * -1); }
+.aus-tag { border-top: 1px solid var(--trenner); }
+.aus-tag summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: minmax(3.4em, auto) 2.2em minmax(var(--s8), 1fr) 2.2em minmax(6.2em, auto); align-items: center; column-gap: var(--s2);
+  padding: var(--s1) var(--s4); min-height: var(--tap); font-size: var(--fs-subhead); }
+.aus-tag summary::-webkit-details-marker { display: none; }
+.aus-tag .name { font-weight: 600; color: var(--label); line-height: 1.2; }
+.aus-tag .name small { display: block; font-weight: 400; font-size: var(--fs-footnote); color: var(--label-2); }
+.aus-zahl { font-variant-numeric: tabular-nums; text-align: right; }
+.aus-zahl:first-of-type { color: var(--label-2); }
+/* zwei Spuren übereinander: oben Tiefstwert, unten Höchstwert – so überdecken sie sich nie */
+.aus-balken { position: relative; height: calc(var(--s3) + var(--s1)); border-radius: var(--s1); background: var(--fuellung); }
+.aus-balken i { position: absolute; height: calc(var(--s1) * 1.5); border-radius: var(--s1); min-width: var(--s1); }
+.aus-balken .aus-tief { top: 0; background: var(--aus-tief); }
+.aus-balken .aus-hoch { bottom: 0; background: var(--aus-hoch); }
+.aus-balken .aus-mitte { width: 2px; min-width: 0; height: var(--s2); margin-left: -1px; border-radius: 1px; background: var(--label); }
+.aus-balken .aus-tief-m { top: -1px; }
+.aus-balken .aus-hoch-m { bottom: -1px; }
+.aus-wort { display: flex; align-items: center; gap: var(--s2); white-space: nowrap; }
+.aus-striche { display: inline-flex; align-items: flex-end; gap: 2px; }
+.aus-striche i { width: 3px; height: var(--s2); border-radius: 1px; background: var(--label-3); }
+.aus-striche i:nth-child(2) { height: var(--s3); }
+.aus-striche i:nth-child(3) { height: var(--s4); }
+.aus-striche i.an { background: var(--label); }
+.aus-tag p { margin: 0; padding: 0 var(--s4) var(--s3); font-size: var(--fs-subhead); color: var(--label); max-width: 75ch; }
+.aus-tag[open] summary .name { text-decoration: underline; text-underline-offset: 3px; }
+.aus-tag summary:focus-visible { outline-offset: -2px; }
+/* schmale iPhones (320–380 pt): Striche weg, Spalten nach Inhalt, damit der Balken breit genug bleibt */
+@media (max-width: 380px) {
+  .aus-tag summary { grid-template-columns: auto 2em minmax(var(--s8), 1fr) 2em auto; }
+  .aus-striche { display: none; }
+}
+html.schrift-gross .aus-tag summary { grid-template-columns: minmax(3.4em, auto) 2.2em minmax(var(--s8), 1fr) 2.2em; }
+html.schrift-gross .aus-wort { grid-column: 1 / -1; }
+
 /* Regenradar */
 .radar-karte { position: relative; display: block; width: 100%; height: calc(var(--s8) * 5); overflow: hidden; border-radius: var(--r-button); background: var(--radar-grund); isolation: isolate; text-align: left; }
 .radar-karte img { position: absolute; max-width: none; width: 256px; height: 256px; }
@@ -244,7 +284,7 @@ body { background: var(--radar-grund); }
 #karte { --wk-fertig: var(--akzent-text); }
 #karte.wk-vollbild { --wk-zeit: var(--auf-himmel-kachel-voll); --wk-leiste: var(--auf-himmel-kachel-voll); }   /* im Blatt deckend, der Himmel liegt dahinter */
 #karte .wk-vb-chip[aria-checked="true"] { color: var(--auf-akzent); }
-#karte .wk-ticks, #karte .wk-quelle, #karte .wk-legende, #karte .wk-titel, #karte .wk-tage { font-size: var(--fs-caption); }
+#karte .wk-ticks, #karte .wk-quelle, #karte .wk-legende, #karte .wk-titel, #karte .wk-tage, #karte .wk-rleg-woerter { font-size: var(--fs-caption); }
 
 /* ---------- Wetterfoto: Studio im Vollbild ---------- */
 .studio { position: fixed; inset: 0; z-index: 50; background: var(--bg); color: var(--label); display: flex; flex-direction: column; padding: var(--safe-top) var(--safe-right) 0 var(--safe-left); }
