@@ -373,24 +373,42 @@
     }, function () { return rainviewerInfo(); });   // DWD weg: RainViewer springt ein
     return rainviewerInfo();
   }
-  function rainviewerInfo() {
+  function rainviewerHolen() {
     return fetch(RAINVIEWER).then(function (r) { return r.json(); }).then(function (j) {
       var p = j.radar && j.radar.past && j.radar.past[j.radar.past.length - 1];
       if (!p) throw new Error('kein Bild');
-      radarBild = { host: j.host, pfad: p.path, zeit: p.time, geholt: Date.now() };
-      return radarBild;
+      return { host: j.host, pfad: p.path, zeit: p.time, geholt: Date.now() };
     });
+  }
+  function rainviewerInfo() { return rainviewerHolen().then(function (r) { radarBild = r; return r; }); }
+  // Zwischenbild (18.11.2026, P-7ed7): Der DWD ist etwa alle 5 Minuten 1–1,5 Minuten lang langsam (3–11 s je Bild) oder stumm.
+  // Seine Bilder werden darum erst unsichtbar geladen; sind sie nach KACHEL_ZWISCHEN_MS nicht alle da, zeigt die Kachel die letzte
+  // RainViewer-Aufnahme („· RainViewer“ in der Zeitzeile) und tauscht, sobald die DWD-Bilder vollständig geladen sind.
+  var KACHEL_ZWISCHEN_MS = 600, kachelLauf = 0, vorgeladen = [];
+  function vorladen(url) {
+    return new Promise(function (fertig) { var i = new Image(); i.onload = i.onerror = function () { fertig(); }; i.src = url; vorgeladen.push(i); if (vorgeladen.length > 40) vorgeladen.shift(); });
   }
   // Füllt alle Radar-Karten auf dem Startbildschirm (Regenradar-Kachel und rechte Hälfte von „Aktuell“)
   function radarKachelFuellen() {
     if (!$('[data-radar]')) return;
+    var lauf = ++kachelLauf, dwdDa = false;
+    function fuellen(r) { if (lauf === kachelLauf) $$('[data-radar]').forEach(function (el) { el.innerHTML = radarHtml(el, r); }); }
+    var uhr = dwdOrt() ? setTimeout(function () {
+      if (!dwdDa && lauf === kachelLauf) rainviewerHolen().then(function (rv) { if (!dwdDa) fuellen(rv); }).catch(function () { });
+    }, KACHEL_ZWISCHEN_MS) : null;
     radarInfo().then(function (r) {
-      $$('[data-radar]').forEach(function (el) { radarKarteFuellen(el, r); });
+      if (!r.dwd) { dwdDa = true; clearTimeout(uhr); fuellen(r); return; }
+      var urls = [];
+      $$('[data-radar]').forEach(function (el) { $$('img', radarBau(el, r)).forEach(function (i) { if (/maps\.dwd\.de/.test(i.src)) urls.push(i.src); }); });
+      return Promise.all(urls.map(vorladen)).then(function () { dwdDa = true; clearTimeout(uhr); fuellen(r); });
     }).catch(function () {
+      clearTimeout(uhr);
       $$('[data-radar]').forEach(function (e) { e.innerHTML = '<span class="radar-leer">' + (offline ? 'Offline – das Radar braucht Verbindung.' : 'Das Radar ist gerade nicht erreichbar.') + '</span>'; });
     });
   }
-  function radarKarteFuellen(el, r) {
+  // Inhalt einer Radar-Karte als losgelöstes Element (nur zum Auslesen der Bildadressen)
+  function radarBau(el, r) { var t = document.createElement('template'); t.innerHTML = radarHtml(el, r); return t.content; }
+  function radarHtml(el, r) {
     var Z = 6, n = Math.pow(2, Z), b = el.clientWidth || 300, h = el.clientHeight || 160;
     var rad = ort.lat * Math.PI / 180;
     var px = (ort.lon + 180) / 360 * n * 256, py = (1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2 * n * 256;
@@ -405,8 +423,11 @@
     }
     var d = new Date(r.zeit * 1000 + (daten.roh.utc_offset_seconds || 0) * 1000);
     var vor = Math.max(0, Math.round((Date.now() - r.zeit * 1000) / 60e3));
-    el.innerHTML = html + '<span class="radar-punkt"></span><span class="radar-zeit">' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ' · vor ' + vor + ' Min</span>' +
-      (el.classList.contains('akt-radar') ? '<span class="radar-name">Radar</span>' : '');
+    // In Deutschland ist der DWD die Quelle; steht dort RainViewer (Zwischenbild oder Ausfall), sagt die Karte das dazu:
+    // in der Kachel in der Zeitzeile, in der schmalen Hälfte von „Aktuell“ im Etikett unten (die Zeitzeile bräche dort um)
+    var rv = dwdOrt() && !r.dwd, schmal = el.classList.contains('akt-radar');
+    return html + '<span class="radar-punkt"></span><span class="radar-zeit">' + pad(d.getUTCHours()) + ':' + pad(d.getUTCMinutes()) + ' · vor ' + vor + ' Min' + (rv && !schmal ? ' · RainViewer' : '') + '</span>' +
+      (schmal ? '<span class="radar-name">' + (rv ? 'RainViewer' : 'Radar') + '</span>' : '');
   }
 
   // ---------- Reiter: Graphs ----------
