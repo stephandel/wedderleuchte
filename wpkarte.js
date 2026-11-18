@@ -250,6 +250,12 @@
     // DWD-Radar (Wedderleuchte): dwd = { referenz, ende, schritt } aus der Fähigkeitenliste, dwdFrames = [{ t, art }]
     var RD = global.RadarDWD || null, DWD_MOEGLICH = !!RD && MODUS === 'radsat' && RD.abgedeckt(ort.lat, ort.lon);
     var dwd = null, dwdFrames = [], zeitTypAktiv = '', filmWarten = null;
+    // Zeitregler (18.11.2026, Absturz am iPhone beim schnellen Hin- und Herschieben): Vorher legte jede Reglerstellung eine eigene
+    // DWD-Bildebene an, die in der Karte blieb – nach einmal Durchschieben 43 Ebenen mit 258 Kacheln (512 px, zusammen etwa 270 MB
+    // entpackt) und bei langsamem DWD bis zu 246 Anfragen gleichzeitig. Jetzt: neue Bilder erst laden, wenn der Finger
+    // REGLER_RUHE ms ruht (Uhrzeit im Titel sofort), nicht fertige Bilder überholter Zeitpunkte abbrechen und höchstens
+    // DWD_BEHALTEN fertige Bilder zum schnellen Zurückblättern behalten.
+    var REGLER_RUHE = 150, DWD_BEHALTEN = 4, reglerAktiv = false, reglerUhr = null, filmZiel = -1, benutzt = 0;
     function zeitTyp() { return dwd && (an.flaeche === 'radar' || !an.flaeche) ? 'dwd' : 'alt'; }
     var TEXT_DWD_WEG = 'Das Radar des Deutschen Wetterdienstes ist gerade nicht erreichbar – gezeigt wird RainViewer (ohne Vorhersage).';
     var TEXT_OHNE_NETZ = 'Kein Netz – das Radar braucht eine Verbindung.';
@@ -337,7 +343,12 @@
     }
 
     // ---------- Zeitleiste ----------
-    el.range.addEventListener('input', function () { filmStopp(); idx = +el.range.value; anzeigen(false); });
+    el.range.addEventListener('input', function () {
+      filmStopp(); idx = +el.range.value;
+      reglerAktiv = true; clearTimeout(reglerUhr);
+      reglerUhr = setTimeout(function () { reglerAktiv = false; reglerUhr = null; if (!abgebaut) anzeigen(false); }, REGLER_RUHE);
+      anzeigen(false);
+    });
     wurzel.querySelectorAll('[data-film]').forEach(function (b) {
       b.addEventListener('click', function () {
         var a = b.dataset.film;
@@ -360,6 +371,7 @@
     var FILM_GEDULD = 12000, TEXT_FILM_HALT = 'Abspielen angehalten – der Deutsche Wetterdienst liefert das nächste Bild gerade nicht.';
     function dwdTakt() {
       var letzt = frames.length - 1, naechst = idx >= letzt ? 0 : Math.min(letzt, idx + 2);
+      filmZiel = naechst;
       var f = frameLayerFuer(naechst), start = Date.now();
       function weiter() {
         if (!film) return;
@@ -381,7 +393,7 @@
     }
     function filmStopp() {
       if (!film) return;
-      film = false; if (filmUhr) { clearTimeout(filmUhr); filmUhr = null; } if (filmWarten) { clearTimeout(filmWarten); filmWarten = null; }
+      film = false; filmZiel = -1; if (filmUhr) { clearTimeout(filmUhr); filmUhr = null; } if (filmWarten) { clearTimeout(filmWarten); filmWarten = null; }
       el.play.innerHTML = ICONS.play; el.play.setAttribute('aria-label', 'Abspielen');
     }
     function ortszeit(ms) { return new Date(ms + offset * 1000); }
@@ -640,7 +652,8 @@
     // Alle Bildebenen unsichtbar, nur die des gewählten Zeitpunkts in der gewählten Ebene sichtbar
     function bildebenenZeigen() {
       var e = an.flaeche, i, f;
-      if (e && frames.length) frameLayerFuer(idx);
+      // Während der Finger den Regler bewegt, nur schon vorhandene Bilder zeigen; neue lädt erst die Ruhepause (siehe REGLER_RUHE)
+      if (e && frames.length && (!reglerAktiv || frameLayer[idx])) { frameLayerFuer(idx)._wkBenutzt = ++benutzt; dwdBegrenzen(); }
       for (i in frameLayer) {
         f = frameLayer[i];
         var aktiv = e && +i === idx;
@@ -662,6 +675,19 @@
     function bildebenenWeg() {
       for (var i in frameLayer) { var f = frameLayer[i]; ['sat', 'satsw', 'regen', 'radar', 'dwd'].forEach(function (k) { if (f[k]) map.removeLayer(f[k]); }); }
       frameLayer = {};
+    }
+    // DWD: Bilder überholter Zeitpunkte, die noch laden, von der Karte nehmen (Leaflet bricht ihre Anfragen dabei ab) und von den
+    // fertigen nur die DWD_BEHALTEN zuletzt gezeigten behalten. Das gezeigte Bild und das Ziel des Films bleiben immer.
+    function dwdBegrenzen() {
+      if (zeitTypAktiv !== 'dwd') return;
+      var fertig = [];
+      for (var i in frameLayer) {
+        if (+i === idx || +i === filmZiel || !frameLayer[i].dwd) continue;
+        if (frameLayer[i].dwd._wkGeladen) fertig.push(+i);
+        else { map.removeLayer(frameLayer[i].dwd); delete frameLayer[i]; }
+      }
+      fertig.sort(function (a, b) { return frameLayer[b]._wkBenutzt - frameLayer[a]._wkBenutzt; });
+      fertig.slice(DWD_BEHALTEN).forEach(function (k) { map.removeLayer(frameLayer[k].dwd); delete frameLayer[k]; });
     }
     // DWD: beim Verschieben/Zoomen nur das gezeigte Bild behalten, sonst laden alle unsichtbaren Zeitpunkte neu
     function dwdAufraeumen() {
@@ -964,7 +990,7 @@
         if (vollbild) { vollbild = false; vb.gepusht = false; seiteSperren(false); }
         document.removeEventListener('keydown', vbTaste); global.removeEventListener('popstate', vbZurueck);
         wurzel.classList.remove('wk-vollbild'); wurzel.removeAttribute('role'); wurzel.removeAttribute('aria-modal'); wurzel.removeAttribute('aria-label');
-        window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
+        window.removeEventListener('resize', groesseGeaendert); abgebaut = true; filmStopp(); clearTimeout(reglerUhr); clearInterval(uhr); map.remove(); wurzel.innerHTML = ''; wurzel.classList.remove('wk'); }
     };
   }
 
