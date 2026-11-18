@@ -296,7 +296,7 @@
     el.rleg = wurzel.querySelector('.wk-rleg'); el.vor = wurzel.querySelector('.wk-vor');
     el.range = wurzel.querySelector('.wk-range'); el.ticks = wurzel.querySelector('.wk-ticks'); el.tage = wurzel.querySelector('.wk-tage'); el.play = wurzel.querySelector('.wk-play');
     function quelleSetzen() {
-      el.quelle.textContent = KACHEL_QUELLE + (MODUS === 'karten' ? ' · Open-Meteo' : ' · Open-Meteo · ' + (dwd ? RD.QUELLE : 'RainViewer') + ' · EUMETSAT');
+      el.quelle.textContent = KACHEL_QUELLE + (MODUS === 'karten' ? ' · Open-Meteo' : ' · Open-Meteo · ' + (dwd ? RD.QUELLE + (zwischen && map && map.hasLayer(zwischen) ? ' · RainViewer' : '') : 'RainViewer') + ' · EUMETSAT');
     }
     quelleSetzen();
 
@@ -347,14 +347,17 @@
     });
     function filmStart() {
       if (film || frames.length < 2) return;
+      if (zeitTypAktiv === 'dwd' && an.flaeche === 'radar' && !dwdBildDa()) { hinweis(TEXT_DWD_LAEDT.replace('bis dahin zeigt die Karte RainViewer', 'Abspielen geht, sobald es da ist')); return; }
       film = true; el.play.innerHTML = ICONS.pause; el.play.setAttribute('aria-label', 'Anhalten');
       if (zeitTypAktiv === 'dwd') { if (idx >= frames.length - 1) idx = 0; dwdTakt(); return; }
       if (MODUS === 'radsat') frames.forEach(function (f, i) { frameLayerFuer(i); });   // vorladen
       if (idx >= frames.length - 1) idx = 0;
       takt();
     }
-    // DWD: jedes zweite Bild (10 Minuten), immer nur das nächste Bild vorladen und weiterschalten, wenn es da ist
-    // (spätestens nach 2,5 s) – so lädt das Abspielen nicht alle 43 Bilder auf einmal
+    // DWD: jedes zweite Bild (10 Minuten), immer nur das nächste Bild vorladen und erst weiterschalten, wenn es da ist – so lädt
+    // das Abspielen nicht alle 43 Bilder auf einmal. Früher ging es nach 2,5 s auch ohne Bild weiter: bei langsamem DWD lief ein
+    // leerer Film (P-7ed7). Jetzt bleibt das alte Bild stehen; kommt nach FILM_GEDULD nichts, hält der Film mit Hinweis an.
+    var FILM_GEDULD = 12000, TEXT_FILM_HALT = 'Abspielen angehalten – der Deutsche Wetterdienst liefert das nächste Bild gerade nicht.';
     function dwdTakt() {
       var letzt = frames.length - 1, naechst = idx >= letzt ? 0 : Math.min(letzt, idx + 2);
       var f = frameLayerFuer(naechst), start = Date.now();
@@ -364,7 +367,8 @@
       }
       function pruefen() {
         if (!film) return;
-        var bereit = !f.dwd || f.dwd._wkGeladen || Date.now() - start > 2500;
+        var bereit = !f.dwd || f.dwd._wkGeladen;
+        if (!bereit && Date.now() - start > FILM_GEDULD) { filmStopp(); hinweis(TEXT_FILM_HALT); return; }
         filmUhr = setTimeout(bereit ? weiter : pruefen, bereit ? Math.max(0, (idx >= letzt ? 1500 : 650) - (Date.now() - start)) : 150);
       }
       pruefen();
@@ -442,12 +446,12 @@
       var la = [], lo = [];
       for (j = 0; j < NY; j++) for (i = 0; i < NX; i++) { la.push(lats[j]); lo.push(lons[i]); }
       var url = METEO + '?latitude=' + la.join(',') + '&longitude=' + lo.join(',') + '&hourly=' + FELDER + '&forecast_days=' + (MODUS === 'karten' ? TAGE : 1) + '&timezone=GMT';
-      lade(true);
+      if (MODUS === 'karten') lade(true);           // Rad/Sat: die Ladeanzeige gehört dem Radarbild, nicht den Ortsmarken
       var vs = fetch(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }).then(function (j2) {
         if (vs !== gitterVersprechen) return gitter;
-        gitter = gitterAus(j2, lats, lons); gitterSchluessel = schl; lade(false);
+        gitter = gitterAus(j2, lats, lons); gitterSchluessel = schl; if (MODUS === 'karten') lade(false);
         return gitter;
-      }).catch(function (e) { console.warn('WetterKarte Gitter', e); lade(false); return gitter; });
+      }).catch(function (e) { console.warn('WetterKarte Gitter', e); if (MODUS === 'karten') lade(false); return gitter; });
       gitterVersprechen = vs;
       return vs;
     }
@@ -615,7 +619,9 @@
       var zeit = frames[i]; f = {};
       if (zeitTypAktiv === 'dwd') {
         f.dwd = dwdLayer(dwdFrames[i]);
-        f.dwd.on('loading', function () { lade(true); }); f.dwd.on('load', function () { lade(false); }); f.dwd.addTo(map);
+        f.dwd.on('loading', function () { lade(true); });
+        f.dwd.on('load', function () { lade(false); if (zwischen && frameLayer[idx] === f) anzeigen(false); });   // DWD-Bild da: RainViewer weg
+        f.dwd.addTo(map);
         frameLayer[i] = f;
         return f;
       }
@@ -645,6 +651,7 @@
         if (f.dwd) f.dwd.setOpacity(aktiv && e === 'radar' ? 0.8 : 0);
       }
       f = frameLayer[idx];
+      if (zwischenPruefen()) { if (f && f.dwd) f.dwd.setOpacity(0); return; }   // DWD lädt unsichtbar weiter, bis es ganz da ist
       if (zeitTypAktiv === 'dwd') { dwdHinweis(f); return; }
       if (hinweisText === TEXT_DWD_WEG || hinweisText === TEXT_OHNE_NETZ) return;   // Ausfall des DWD bleibt sichtbar
       if (e === 'radar' && f && !f.radar && !snap) hinweis('Über dieser Gegend gibt es kein Regenradar – gezeigt wird der Niederschlag aus Satellitendaten (EUMETSAT).');
@@ -666,6 +673,55 @@
       else if (f && f.dwd && f.dwd._wkFehler) hinweis(TEXT_DWD_LUECKE);
       else if (hinweisText && hinweisText.indexOf('Gespeicherter') < 0) hinweis('');
     }
+    // ---------- Zwischenbild (18.11.2026, P-7ed7) ----------
+    // Der DWD-Kartendienst rechnet jedes Bild frisch und ist etwa alle 5 Minuten 1–1,5 Minuten lang langsam (3–11 s je Bild)
+    // oder antwortet gar nicht. Fehlt das neueste DWD-Bild nach ZWISCHEN_MS, zeigt die Karte die letzte RainViewer-Aufnahme –
+    // mit RainViewer und deren Uhrzeit im Titel – und tauscht, sobald das DWD-Bild vollständig geladen ist.
+    var ZWISCHEN_MS = 600, zwischen = null, zwischenZeit = 0, zwischenUhr = null, stummUhr = null;
+    var TEXT_DWD_LAEDT = 'Das Radarbild des Deutschen Wetterdienstes lädt noch – bis dahin zeigt die Karte RainViewer.';
+    var TEXT_DWD_STUMM = 'Der Deutsche Wetterdienst antwortet gerade nicht – gezeigt wird RainViewer (ohne Vorhersage).';
+    function dwdBildDa() { var f = frameLayer[idx]; return !!(f && f.dwd && f.dwd._wkGeladen); }
+    // nötig: Radar gewählt, kein Film, und entweder die DWD-Zeiten fehlen noch oder das neueste DWD-Bild ist nicht ganz geladen
+    function zwischenNoetig() {
+      if (!DWD_MOEGLICH || film || an.flaeche !== 'radar') return false;
+      if (!zeitTypAktiv) return true;
+      return zeitTypAktiv === 'dwd' && idx === RD.letzteMessung(dwdFrames) && !dwdBildDa();
+    }
+    // true = das Zwischenbild steht gerade für das fehlende DWD-Bild (Titel und Hinweis setzt zwischenTitel)
+    function zwischenPruefen() {
+      if (!zwischenNoetig()) {
+        clearTimeout(zwischenUhr); zwischenUhr = null; clearTimeout(stummUhr); stummUhr = null;
+        if (zwischen && map.hasLayer(zwischen)) { map.removeLayer(zwischen); if (hinweisText === TEXT_DWD_LAEDT || hinweisText === TEXT_DWD_STUMM) hinweis(''); quelleSetzen(); }
+        return false;
+      }
+      if (zwischen) {
+        if (!map.hasLayer(zwischen)) zwischen.addTo(map);
+        if (!stummUhr && hinweisText !== TEXT_DWD_STUMM) stummUhr = setTimeout(function () { stummUhr = null; if (zwischen && map.hasLayer(zwischen)) hinweis(TEXT_DWD_STUMM); }, 10000);
+        zwischenTitel();
+        return true;
+      }
+      if (!zwischenUhr) zwischenUhr = setTimeout(function () {
+        zwischenUhr = null;
+        if (abgebaut || !zwischenNoetig()) return;
+        if (rainviewer && Date.now() - rainviewer.geholt > 10 * 60000) rainviewer = null;   // Liste älter als 10 Min: neu holen
+        rainviewerHolen().then(function (rv) {
+          if (abgebaut || zwischen || !rv || !rv.frames.length) return;
+          var f = rv.frames[rv.frames.length - 1];
+          zwischen = L.tileLayer(rv.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: 0.9, zIndex: 3, tileSize: 256, maxNativeZoom: 7 });
+          zwischenZeit = f.time * 1000;
+          if (frames.length) anzeigen(false); else zwischenPruefen();
+        });
+      }, ZWISCHEN_MS);
+      return false;
+    }
+    function zwischenTitel() {
+      var vor = Math.max(0, Math.round((Date.now() - zwischenZeit) / MIN_MS));
+      el.titel.innerHTML = '<b>' + zeitText(zwischenZeit, true) + '</b>' + escH('RainViewer, gemessen vor ' + vor + ' Min');
+      el.titel.dataset.art = 'zwischen';
+      if (hinweisText !== TEXT_DWD_STUMM) hinweis(TEXT_DWD_LAEDT);
+      quelleSetzen();
+    }
+    var MIN_MS = 60000;
     function dwdHolen() {
       if (!DWD_MOEGLICH || OFFLINE) return Promise.resolve(null);
       return RD.holen().then(function (info) { dwd = info; return info; }).catch(function (e) {
@@ -676,8 +732,8 @@
     function rainviewerHolen() {
       if (OFFLINE || rainviewer) return Promise.resolve(rainviewer);
       return fetch(RAINVIEWER).then(function (r) { return r.json(); }).then(function (j) {
-        rainviewer = { host: j.host, frames: (j.radar && j.radar.past) || [] }; return rainviewer;
-      }).catch(function () { rainviewer = { host: '', frames: [] }; return rainviewer; });
+        rainviewer = { host: j.host, frames: (j.radar && j.radar.past) || [], geholt: Date.now() }; return rainviewer;
+      }).catch(function () { rainviewer = { host: '', frames: [], geholt: Date.now() }; return rainviewer; });
     }
 
     // ---------- Marken ----------
@@ -863,13 +919,16 @@
       if (MODUS === 'karten') {
         gitterHolen().then(function () { if (abgebaut) return; framesBauen(); anzeigen(true); });
       } else {
-        if (DWD_MOEGLICH) lade(true);
+        if (DWD_MOEGLICH) { lade(true); zwischenPruefen(); }
+        // Ortsmarken (Open-Meteo) laufen nebenher; das Radarbild wartet nicht auf sie (P-7ed7)
+        gitterHolen().then(function () { if (!abgebaut && frames.length) markenSetzen(); });
         dwdHolen().then(function (info) {
           if (abgebaut) return;
-          if (DWD_MOEGLICH && !info) hinweis(navigator.onLine === false ? TEXT_OHNE_NETZ : TEXT_DWD_WEG);
+          if (DWD_MOEGLICH && !info) { zeitTypAktiv = 'alt'; zwischenPruefen(); hinweis(navigator.onLine === false ? TEXT_OHNE_NETZ : TEXT_DWD_WEG); }
           quelleSetzen(); framesBauen();
-          return Promise.all([info ? null : rainviewerHolen(), gitterHolen()]);
-        }).then(function () { if (abgebaut) return; lade(false); anzeigen(true); });
+          if (info) { anzeigen(true); return; }
+          return rainviewerHolen().then(function () { if (abgebaut) return; lade(false); anzeigen(true); });
+        });
       }
     }
     start();
