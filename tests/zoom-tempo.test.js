@@ -68,8 +68,8 @@ function rainviewer() {
 
 // Verzögerung der DWD-Bilder, im Lauf umschaltbar (erst schnell laden, dann beginnt das Langsam-Fenster)
 const lage = { bild: 300 };
-async function neueSeite(b) {
-  const ctx = await b.newContext({ viewport: { width: 402, height: 874 }, serviceWorkers: 'block' });
+async function neueSeite(b, viewport) {
+  const ctx = await b.newContext({ viewport: viewport || { width: 402, height: 874 }, serviceWorkers: 'block' });
   const dwdAnfragen = [];
   // Antworten ohne Cache-Kopfzeilen wie beim echten DWD (geowebcache MISS, kein Cache-Control)
   await ctx.route(u => /^https?:$/.test(u.protocol) && !u.href.startsWith(BASIS), async route => {
@@ -223,6 +223,54 @@ const GRENZE_LUECKE = 300, GRENZE_WEIT = 1000;   // weit: neues Gebiet, RainView
     // (geprüft über die Zahl der Anfragen: je Zoomen nur die neuen Kacheln des neuen Ausschnitts)
     pruefe('keine Fehler (langsam)', probleme.length === 0, probleme.length ? probleme.slice(0, 3) : undefined);
     await ctx.close();
+
+    // Fund A-1 (Fable 23.11.): 520 px weg → RainViewer mit Titel „RainViewer“; 300 px zurück → die alten DWD-Kacheln decken die Mitte
+    // wieder, RainViewer geht. Der Titel muss dann wieder den DWD-Zeitpunkt nennen (vorher blieb „RainViewer“ bis ca. 9 s stehen).
+    console.log('\n== Weg und halb zurück (520 px, dann 300 px), DWD langsam ==');
+    {
+      lage.bild = 300;
+      const { ctx, p, probleme } = await neueSeite(b);
+      await radarOeffnen(p); await bildVoll(p);
+      lage.bild = 9000;
+      const schieben = dx => p.evaluate(dx => { const m = [...document.querySelectorAll('#karte *')].find(e => e._wkMap)._wkMap; m.panBy([dx, 0], { animate: false }); }, dx);
+      await schieben(-520);
+      const rv = await p.waitForFunction(() => /RainViewer/.test(document.querySelector('#karte .wk-titel').textContent), null, { timeout: 4000 }).then(() => true).catch(() => false);
+      pruefe('Weg (520 px): RainViewer mit Titel „RainViewer“', rv);
+      await p.waitForTimeout(300);
+      await p.evaluate(() => window.__messen());
+      await schieben(300);
+      const sp = await warten(p, x => x[x.length - 1].t > 3000, 5000);
+      const falsch = sp.filter(e => e.t > 200 && e.anteil > 0 && ((e.quellen === 'dwd' && /RainViewer/.test(e.titel)) || (e.quellen === 'rainviewer' && !/RainViewer/.test(e.titel))));
+      const dwdZuSehen = sp.filter(e => e.t > 200 && e.quellen === 'dwd').length;
+      pruefe('Halb zurück (300 px): DWD-Bild zu sehen und Titel ohne „RainViewer“ (ab 0,2 s)', dwdZuSehen > 0 && falsch.length === 0, falsch.length ? { falsch: falsch.length + ' von ' + sp.length, beispiel: falsch[0] } : { dwdMesspunkte: dwdZuSehen });
+      pruefe('keine Fehler (weg und zurück)', probleme.length === 0, probleme.length ? probleme.slice(0, 3) : undefined);
+      await ctx.close();
+    }
+
+    // Obergrenze der Platzhalter (Fable 23.11.: 30 statt höchstens 24 bei 1920 × 1200 nach viel Verschieben):
+    // großes Fenster, 20-mal verschieben (DWD schnell, Leaflet behält Kacheln im Rand), dann DWD langsam und zoomen
+    console.log('\n== Platzhalter-Obergrenze, Fenster 1920 × 1200 ==');
+    {
+      lage.bild = 300;
+      const { ctx, p, probleme } = await neueSeite(b, { width: 1920, height: 1200 });
+      await radarOeffnen(p);
+      await bildVoll(p);
+      for (let k = 0; k < 20; k++) {
+        await p.evaluate(k => { const m = [...document.querySelectorAll('#karte *')].find(e => e._wkMap)._wkMap; m.panBy([200, 150], { animate: false }); }, k);   // schräg in eine Richtung: Leaflet behält viele Randkacheln (Probe: 29)
+        await p.waitForTimeout(700);
+      }
+      await bildVoll(p);
+      let meist = 0;
+      for (const z of ['1', '1', '-1']) {
+        lage.bild = 9000;
+        await p.click('#karte [data-zoom="' + z + '"]'); await p.waitForTimeout(400);
+        meist = Math.max(meist, (await p.evaluate(ZAEHLEN)).platzhalter);
+      }
+      pruefe('Großes Fenster: höchstens 24 Platzhalter-Teile (auch nach mehrfachem Zoomen während des Ladens)', meist <= 24 && meist > 0, { meist });
+      pruefe('keine Fehler (großes Fenster)', probleme.length === 0, probleme.length ? probleme.slice(0, 3) : undefined);
+      tabelle.push({ probe: 'Platzhalter 1920 × 1200', platzhalter: meist });
+      await ctx.close();
+    }
 
     // Gegenprobe: DWD schnell – Zoomen bringt in ≤ 1,5 s das volle neue Bild, Platzhalter verschwinden
     console.log('\n== Gegenprobe DWD schnell (0,3 s je Bild) ==');
