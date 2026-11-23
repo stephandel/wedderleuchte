@@ -742,6 +742,10 @@
         if (t.loaded && t.coords.z === l._tileZoom && t.el.complete && t.el.naturalWidth) { var bild = t.el.cloneNode(); bild.className = ''; bild.removeAttribute('style'); teile.push(L.imageOverlay(bild, l._tileCoordsToBounds(t.coords), { opacity: 0.8, interactive: false, pane: 'wkPlatzhalter' })); }
       }
       if (!teile.length) return;                       // nochmal gezoomt, bevor etwas Neues da war: alter Platzhalter bleibt
+      // Leaflet behält nach dem Verschieben Kacheln im Rand (großes Fenster: 29 gemessen) – nur die der Kartenmitte nächsten behalten
+      var mitte = map.getCenter();
+      teile.sort(function (a, b) { return a.getBounds().getCenter().distanceTo(mitte) - b.getBounds().getCenter().distanceTo(mitte); });
+      teile = teile.slice(0, PLATZHALTER_MAX);
       if (!platzhalter) platzhalter = { f: f, gruppe: L.layerGroup().addTo(map) };
       if (platzhalter.gruppe.getLayers().length + teile.length > PLATZHALTER_MAX) platzhalter.gruppe.clearLayers();
       teile.forEach(function (o) { platzhalter.gruppe.addLayer(o); });
@@ -765,6 +769,8 @@
       if (!zwischenNoetig()) {
         clearTimeout(zwischenUhr); zwischenUhr = null; clearTimeout(stummUhr); stummUhr = null; zwischenFrei = false;
         if (zwischen && map.hasLayer(zwischen)) { map.removeLayer(zwischen); if (hinweisText === TEXT_DWD_LAEDT || hinweisText === TEXT_DWD_STUMM) hinweis(''); quelleSetzen(); }
+        // Fund A-1 (Fable 23.11.): weg- und zurückgeschoben → DWD wieder sichtbar, Titel sagte bis zu 9 s noch „RainViewer“
+        if (el.titel.dataset.art === 'zwischen' && frames.length) titelSetzen();
         return false;
       }
       if (zwischen && zwischenFrei) {                  // erst nach ZWISCHEN_MS, auch beim zweiten Mal (schneller DWD: kein Flackern)
@@ -860,14 +866,18 @@
     }
 
     // ---------- Anzeigen ----------
-    function anzeigen(ebeneGewechselt) {
-      if (!frames.length) return;
+    // Titel und Ansage des Reglers für den gewählten Zeitpunkt (auch, wenn das RainViewer-Zwischenbild wieder geht)
+    function titelSetzen() {
       var zeit = frames[idx];
       var fr = zeitTypAktiv === 'dwd' ? dwdFrames[idx] : null, art = fr ? RD.zeitpunktText(fr, Date.now()) : '';
       el.titel.innerHTML = '<b>' + zeitText(zeit, true) + '</b>' + (fr ? escH(art) : MODUS === 'karten' ? 'Vorhersage' : (snap ? 'gespeichert' : 'Beobachtung'));
       el.titel.dataset.art = fr ? fr.art : '';
       el.range.setAttribute('aria-valuetext', zeitText(zeit, true) + (fr ? ', ' + art : ''));
-      beiZeit(zeitText(zeit, true));
+    }
+    function anzeigen(ebeneGewechselt) {
+      if (!frames.length) return;
+      titelSetzen();
+      beiZeit(zeitText(frames[idx], true));
       if (MODUS === 'karten') { flaecheZeichnen(); markenSetzen(); }
       else { if (ebeneGewechselt) { for (var i in frameLayer) { var f = frameLayer[i]; ['sat', 'satsw', 'regen', 'radar'].forEach(function (k) { if (f[k]) f[k].setOpacity(0); }); } } bildebenenZeigen(); if (ebeneGewechselt) markenSetzen(); }
     }
