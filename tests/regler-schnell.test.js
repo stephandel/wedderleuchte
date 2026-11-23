@@ -9,7 +9,8 @@
    über die ganze Leiste und zurück), einmal mit langsamem DWD (6 s je Bild), einmal mit schnellem (0,3 s), dazu 16 s Abspielen.
    Grenzen: höchstens 8 DWD-Ebenen, 60 Bilder, 60 Megapixel und (beim schnellen Schieben) 24 gleichzeitig offene DWD-Anfragen;
    gemächliches Schieben (0,25 s je Schritt) begrenzt Ebenen und Bilder, die Anfragen dort werden nur gemessen. Nach dem Loslassen kommt das
-   Bild des gezeigten Zeitpunkts; langsames Schieben (ein Schritt je 0,5 s) zeigt bei schnellem DWD jeden Schritt als Bild.
+   Bild des gezeigten Zeitpunkts; langsames Schieben (ein Schritt je 0,5 s) zeigt bei schnellem DWD jeden Schritt als eigenes Bild
+   (spätestens 1 s nach dem Schritt; gemessen 0,49–0,72 s).
    Exit-Code 0 = alles grün. */
 'use strict';
 const http = require('http');
@@ -182,14 +183,27 @@ const max = (w, k) => Math.max(...w.map(x => x[k]));
         tabelle.push({ lage: id + ', 0,25 s je Schritt', maxEbenen: max(m, 'ebenen'), maxBilder: max(m, 'bilder'), maxMegapixel: max(m, 'megapixel'), anfragen: netz.gesamt - n0.gesamt, maxOffen: netz.maxOffen, abgebrochen: netz.abgebrochen - n0.abgebrochen });
       }
       if (bildMs < 1000) {
-        // Langsam schieben (ein Schritt je 0,5 s): jeder Schritt zeigt sein DWD-Bild (Drosselung darf das nicht verhindern)
-        let gesehen = 0;
+        // Langsam schieben (höchstens ein Schritt je 0,5 s): jeder Schritt zeigt sein DWD-Bild (Drosselung darf das nicht verhindern).
+        // Bis 23.11. wurde genau 500 ms nach dem Schritt einmal nachgesehen – das wackelte (ca. 2 von 5 Läufen „5 von 6“). Messung
+        // 23.11. (5 Läufe × 6 Schritte, Stand main): das Bild kam bei jedem Schritt, aber erst nach 489–717 ms (Median 525):
+        // 150 ms Ruhe (REGLER_RUHE) + 300 ms DWD im Test + Abholen und Einblenden. Kein Bild wurde übersprungen, das Zeitfenster war zu knapp.
+        // Jetzt: nach jedem Schritt bis zu 1,5 s auf das Bild warten (Zeit gemessen), nächster Schritt frühestens 0,5 s nach dem vorigen.
+        const LANGSAM_GRENZE = 1000;
+        let gesehen = 0; const ankunft = [], zeitenGesehen = new Set();
         for (let k = 0; k < 6; k++) {
+          const t0 = Date.now();
           await p.evaluate(v => { const r = document.querySelector('#karte .wk-range'); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); }, 10 + k);
-          await p.waitForTimeout(500);
-          if (await p.evaluate(DECKUNG) >= 0.99) gesehen++;
+          let ms = null;
+          while (Date.now() - t0 < 1500) {
+            const pa = await p.evaluate(PASST);
+            if (pa.zeiten.length === 1 && !zeitenGesehen.has(pa.zeiten[0]) && await p.evaluate(DECKUNG) >= 0.99) { ms = Date.now() - t0; zeitenGesehen.add(pa.zeiten[0]); break; }
+            await p.waitForTimeout(25);
+          }
+          ankunft.push(ms); if (ms != null) gesehen++;
+          await p.waitForTimeout(Math.max(0, 500 - (Date.now() - t0)));
         }
-        pruefe('Langsames Schieben (0,5 s je Schritt): jeder Schritt zeigt sein Bild', gesehen === 6, { gesehen: gesehen + ' von 6' });
+        const spaetest = Math.max(...ankunft.map(x => x == null ? Infinity : x));
+        pruefe('Langsames Schieben (ein Schritt je 0,5 s): jeder Schritt zeigt sein eigenes Bild, spätestens nach ' + LANGSAM_GRENZE + ' ms', gesehen === 6 && spaetest <= LANGSAM_GRENZE, { gesehen: gesehen + ' von 6', msBisBild: ankunft });
         // Abspielen 16 s: Ebenen bleiben begrenzt
         await p.evaluate(() => { const r = document.querySelector('#karte .wk-range'); r.value = 0; r.dispatchEvent(new Event('input', { bubbles: true })); });
         await p.waitForTimeout(800);
