@@ -105,12 +105,17 @@ const DECKUNG = () => {
   return t / 25;
 };
 // Das gezeigte DWD-Bild gehört zum Zeitpunkt im Titel? (time-Parameter der sichtbaren Kacheln = Zeitpunkt des Reglers)
-const PASST = () => {
+// Die App zeigt Uhrzeiten mit dem Versatz aus den Open-Meteo-Daten (Testdaten: utc_offset_seconds 7200), nicht mit der Zeitzone des Rechners
+const VERSATZ = JSON.parse(OM).utc_offset_seconds || 0;
+const PASST = (versatz) => {
   const box = document.querySelector('#karte');
   const zeiten = new Set([...box.querySelectorAll('img')].filter(i => /maps\.dwd\.de/.test(i.src) && i.complete && i.naturalWidth > 0)
     .filter(i => { let e = i, o = 1; while (e && e !== box) { o *= +getComputedStyle(e).opacity; e = e.parentElement; } return o > 0.05; })
     .map(i => new URL(i.src).searchParams.get('time') || new URL(i.src).searchParams.get('TIME')));
-  return { zeiten: [...zeiten], regler: +document.querySelector('.wk-range').value };
+  // Uhrzeit des sichtbaren Bilds (mit dem Versatz der App) gegen die Uhrzeit, die der Regler ansagt (aria-valuetext „Mo. 23.11. 16:25, …“)
+  const r = document.querySelector('#karte .wk-range'), reglerUhr = ((r.getAttribute('aria-valuetext') || '').match(/(\d\d:\d\d)/) || [])[1] || '';
+  const bildUhr = zeiten.size === 1 ? new Date(Date.parse([...zeiten][0]) + (versatz || 0) * 1000).toISOString().slice(11, 16) : '';
+  return { zeiten: [...zeiten], regler: +r.value, reglerUhr, bildUhr, stimmt: !!bildUhr && bildUhr === reglerUhr };
 };
 
 async function radarOeffnen(p) {
@@ -159,8 +164,8 @@ const max = (w, k) => Math.max(...w.map(x => x[k]));
       const t0 = Date.now();
       await p.evaluate(() => { const r = document.querySelector('#karte .wk-range'); r.value = 30; r.dispatchEvent(new Event('input', { bubbles: true })); });
       let deck = 0; while (Date.now() - t0 < bildMs + 6000) { deck = await p.evaluate(DECKUNG); if (deck >= 0.99) break; await p.waitForTimeout(100); }
-      const da = Date.now() - t0, passt = await p.evaluate(PASST);
-      pruefe('Nach dem Loslassen: Bild des gezeigten Zeitpunkts vollständig da', deck >= 0.99 && passt.zeiten.length === 1, { ms: da, deckung: deck, zeiten: passt.zeiten.length });
+      const da = Date.now() - t0, passt = await p.evaluate(PASST, VERSATZ);
+      pruefe('Nach dem Loslassen: Bild des gezeigten Zeitpunkts vollständig da (Bild-Uhrzeit = Regler-Uhrzeit)', deck >= 0.99 && passt.zeiten.length === 1 && passt.stimmt, { ms: da, deckung: deck, zeiten: passt.zeiten.length, bild: passt.bildUhr, regler: passt.reglerUhr });
       const nachher = await p.evaluate(ZAEHLEN);
       pruefe('Nach dem Loslassen: höchstens ' + GRENZE.ebenen + ' DWD-Ebenen', nachher.ebenen <= GRENZE.ebenen, nachher);
       pruefe('keine Fehler', probleme.length === 0, probleme.length ? probleme.slice(0, 3) : undefined);
@@ -189,21 +194,28 @@ const max = (w, k) => Math.max(...w.map(x => x[k]));
         // 150 ms Ruhe (REGLER_RUHE) + 300 ms DWD im Test + Abholen und Einblenden. Kein Bild wurde übersprungen, das Zeitfenster war zu knapp.
         // Jetzt: nach jedem Schritt bis zu 1,5 s auf das Bild warten (Zeit gemessen), nächster Schritt frühestens 0,5 s nach dem vorigen.
         const LANGSAM_GRENZE = 1000;
-        let gesehen = 0; const ankunft = [], zeitenGesehen = new Set();
+        let gesehen = 0; const ankunft = [], zeitenGesehen = new Set(), falsch = [];
         for (let k = 0; k < 6; k++) {
           const t0 = Date.now();
           await p.evaluate(v => { const r = document.querySelector('#karte .wk-range'); r.value = v; r.dispatchEvent(new Event('input', { bubbles: true })); }, 10 + k);
           let ms = null;
           while (Date.now() - t0 < 1500) {
-            const pa = await p.evaluate(PASST);
-            if (pa.zeiten.length === 1 && !zeitenGesehen.has(pa.zeiten[0]) && await p.evaluate(DECKUNG) >= 0.99) { ms = Date.now() - t0; zeitenGesehen.add(pa.zeiten[0]); break; }
+            const pa = await p.evaluate(PASST, VERSATZ);
+            if (pa.zeiten.length === 1 && !zeitenGesehen.has(pa.zeiten[0]) && await p.evaluate(DECKUNG) >= 0.99) {
+              ms = Date.now() - t0; zeitenGesehen.add(pa.zeiten[0]);
+              if (!pa.stimmt) falsch.push({ schritt: k, bild: pa.bildUhr, regler: pa.reglerUhr });   // neues, aber falsches Bild
+              break;
+            }
             await p.waitForTimeout(25);
           }
           ankunft.push(ms); if (ms != null) gesehen++;
           await p.waitForTimeout(Math.max(0, 500 - (Date.now() - t0)));
         }
         const spaetest = Math.max(...ankunft.map(x => x == null ? Infinity : x));
-        pruefe('Langsames Schieben (ein Schritt je 0,5 s): jeder Schritt zeigt sein eigenes Bild, spätestens nach ' + LANGSAM_GRENZE + ' ms', gesehen === 6 && spaetest <= LANGSAM_GRENZE, { gesehen: gesehen + ' von 6', msBisBild: ankunft });
+        // Takt: nächster Schritt, sobald das Bild da ist, frühestens 0,5 s nach dem vorigen (kein fester 0,5-s-Takt – bei festem Takt
+        // überholt der nächste Schritt ein Bild, das erst nach 500 ms kommt; das ist gewollt seit der Absturz-Korrektur, Bericht 23.11.)
+        pruefe('Langsames Schieben (Schritt frühestens alle 0,5 s, sobald das Bild da ist): jeder Schritt zeigt sein eigenes Bild, spätestens nach ' + LANGSAM_GRENZE + ' ms', gesehen === 6 && spaetest <= LANGSAM_GRENZE, { gesehen: gesehen + ' von 6', msBisBild: ankunft });
+        pruefe('Langsames Schieben: das gezeigte Bild gehört zur Uhrzeit des Reglers', gesehen > 0 && falsch.length === 0, falsch.length ? falsch : { geprueft: gesehen });
         // Abspielen 16 s: Ebenen bleiben begrenzt
         await p.evaluate(() => { const r = document.querySelector('#karte .wk-range'); r.value = 0; r.dispatchEvent(new Event('input', { bubbles: true })); });
         await p.waitForTimeout(800);
