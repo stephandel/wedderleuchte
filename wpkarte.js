@@ -310,6 +310,9 @@
     // zoomAnimation aus: die animierte Zoomstufe blieb im Test hängen (kein transitionend), ohne Animation zoomt es zuverlässig
     map = L.map(el.karte, { zoomControl: false, attributionControl: false, worldCopyJump: true, zoomSnap: 0.5, minZoom: 2, maxZoom: 10, tap: false, zoomAnimation: false });
     map.on('zoomend', function () { zoomKnoepfe(); });
+    // vor Leaflets eigenem viewprereset (der wirft alle Kacheln weg): das gezeigte DWD-Bild als Platzhalter retten (P-cd84)
+    map.on('viewprereset', function () { platzhalterAnlegen(); });
+    map.createPane('wkPlatzhalter').style.zIndex = 250;   // über den Kachelebenen (200), unter Marken
     el.karte._wkMap = map;                             // für Fehlersuche im Browser erreichbar
     // Standardansicht: Nahaufnahme um den Ort (Stephans Wunsch: die Umgebung des Ortes füllt die Karte, z. B. Fuerteventura und Lanzarote oder die Rhein-Neckar-Region).
     // Rad/Sat etwas weiter weg, damit man Wolkenfelder als Ganzes sieht.
@@ -471,6 +474,7 @@
     map.on('moveend zoomend', function () {
       if (OFFLINE) { flaecheZeichnen(); markenSetzen(); return; }
       if (!film) dwdAufraeumen();
+      if (MODUS === 'radsat' && zeitTypAktiv === 'dwd' && frames.length) bildebenenZeigen();   // Platzhalter/Zwischenbild für den neuen Ausschnitt
       flaecheZeichnen();
       clearTimeout(bewegUhr);
       bewegUhr = setTimeout(function () {
@@ -631,8 +635,14 @@
       var zeit = frames[i]; f = {};
       if (zeitTypAktiv === 'dwd') {
         f.dwd = dwdLayer(dwdFrames[i]);
-        f.dwd.on('loading', function () { lade(true); });
-        f.dwd.on('load', function () { lade(false); if (zwischen && frameLayer[idx] === f) anzeigen(false); });   // DWD-Bild da: RainViewer weg
+        // Leaflet lädt den neuen Ausschnitt erst nach unserem moveend an (iPhone: erst im Stillstand) – erst hier ist die Lücke erkennbar
+        f.dwd.on('loading', function () { lade(true); if (frameLayer[idx] === f) zwischenPruefen(); });
+        f.dwd.on('load', function () {   // DWD-Bild da: RainViewer bzw. Platzhalter weg
+          lade(false);
+          var hatte = !!(platzhalter && platzhalter.f === f);
+          if (hatte) platzhalterWeg();
+          if ((zwischen || hatte) && frameLayer[idx] === f) anzeigen(false);
+        });
         f.dwd.addTo(map);
         frameLayer[i] = f;
         return f;
@@ -664,7 +674,9 @@
         if (f.dwd) f.dwd.setOpacity(aktiv && e === 'radar' ? 0.8 : 0);
       }
       f = frameLayer[idx];
-      if (zwischenPruefen()) { if (f && f.dwd) f.dwd.setOpacity(0); return; }   // DWD lädt unsichtbar weiter, bis es ganz da ist
+      if (platzhalter && (platzhalter.f !== f || e !== 'radar')) platzhalterWeg();   // anderer Zeitpunkt oder andere Ebene
+      if (zwischenPruefen()) { platzhalterWeg(); if (f && f.dwd) f.dwd.setOpacity(0); return; }   // DWD lädt unsichtbar weiter, bis es ganz da ist
+      if (platzhalter && f && f.dwd) f.dwd.setOpacity(0);   // neuer Ausschnitt lädt unsichtbar, bis er ganz da ist (keine Mischung)
       if (zeitTypAktiv === 'dwd') { dwdHinweis(f); return; }
       if (hinweisText === TEXT_DWD_WEG || hinweisText === TEXT_OHNE_NETZ) return;   // Ausfall des DWD bleibt sichtbar
       if (e === 'radar' && f && !f.radar && !snap) hinweis('Über dieser Gegend gibt es kein Regenradar – gezeigt wird der Niederschlag aus Satellitendaten (EUMETSAT).');
@@ -703,7 +715,7 @@
     // Der DWD-Kartendienst rechnet jedes Bild frisch und ist etwa alle 5 Minuten 1–1,5 Minuten lang langsam (3–11 s je Bild)
     // oder antwortet gar nicht. Fehlt das neueste DWD-Bild nach ZWISCHEN_MS, zeigt die Karte die letzte RainViewer-Aufnahme –
     // mit RainViewer und deren Uhrzeit im Titel – und tauscht, sobald das DWD-Bild vollständig geladen ist.
-    var ZWISCHEN_MS = 600, zwischen = null, zwischenZeit = 0, zwischenUhr = null, stummUhr = null;
+    var ZWISCHEN_MS = 600, zwischen = null, zwischenZeit = 0, zwischenUhr = null, stummUhr = null, zwischenFrei = false;
     var TEXT_DWD_LAEDT = 'Das Radarbild des Deutschen Wetterdienstes lädt noch – bis dahin zeigt die Karte RainViewer.';
     var TEXT_DWD_STUMM = 'Der Deutsche Wetterdienst antwortet gerade nicht – gezeigt wird RainViewer (ohne Vorhersage).';
     function dwdBildDa() { var f = frameLayer[idx]; return !!(f && f.dwd && f.dwd._wkGeladen); }
@@ -711,16 +723,51 @@
     function zwischenNoetig() {
       if (!DWD_MOEGLICH || film || an.flaeche !== 'radar') return false;
       if (!zeitTypAktiv) return true;
-      return zeitTypAktiv === 'dwd' && idx === RD.letzteMessung(dwdFrames) && !dwdBildDa();
+      return zeitTypAktiv === 'dwd' && idx === RD.letzteMessung(dwdFrames) && (!dwdBildDa() || dwdLuecke());
     }
+    // ---------- Platzhalter nach Zoomen und Verschieben (23.11.2026, P-cd84) ----------
+    // Leaflet wirft ohne Zoom-Animation beim Zoomen alle fertigen Kacheln weg; im Langsam-Fenster des DWD war die Karte danach
+    // 9 s ohne Regen. Jetzt bleibt das gezeigte DWD-Bild als Platzhalter (Kopien der fertigen Kacheln, aus dem Bildspeicher des
+    // Browsers, ohne neue Anfrage) vergrößert bzw. verkleinert stehen, bis der neue Ausschnitt vollständig geladen ist.
+    // Zeigt danach weniger als die Hälfte der Kartenmitte ein DWD-Bild (weit verschoben), springt wie beim Start RainViewer ein.
+    var platzhalter = null, PLATZHALTER_MAX = 24;
+    function platzhalterAnlegen() {
+      if (MODUS !== 'radsat' || an.flaeche !== 'radar' || zeitTypAktiv !== 'dwd' || abgebaut) return;
+      var f = frameLayer[idx], l = f && f.dwd;
+      if (!l || !map.hasLayer(l) || (zwischen && map.hasLayer(zwischen))) return;
+      if (platzhalter && platzhalter.f !== f) platzhalterWeg();
+      var teile = [];
+      for (var k in l._tiles) {
+        var t = l._tiles[k];
+        if (t.loaded && t.coords.z === l._tileZoom && t.el.complete && t.el.naturalWidth) { var bild = t.el.cloneNode(); bild.className = ''; bild.removeAttribute('style'); teile.push(L.imageOverlay(bild, l._tileCoordsToBounds(t.coords), { opacity: 0.8, interactive: false, pane: 'wkPlatzhalter' })); }
+      }
+      if (!teile.length) return;                       // nochmal gezoomt, bevor etwas Neues da war: alter Platzhalter bleibt
+      if (!platzhalter) platzhalter = { f: f, gruppe: L.layerGroup().addTo(map) };
+      if (platzhalter.gruppe.getLayers().length + teile.length > PLATZHALTER_MAX) platzhalter.gruppe.clearLayers();
+      teile.forEach(function (o) { platzhalter.gruppe.addLayer(o); });
+    }
+    function platzhalterWeg() { if (platzhalter) { map.removeLayer(platzhalter.gruppe); platzhalter = null; } }
+    // Anteil der inneren 3 × 3 Punkte der Karte, über denen ein fertiges DWD-Bild (oder Platzhalter) des gezeigten Zeitpunkts liegt
+    function dwdDeckung(f) {
+      var flaechen = [], l = f.dwd, k, t, n = 0, s = map.getSize();
+      for (k in l._tiles) { t = l._tiles[k]; if (t.loaded && t.el.complete && t.el.naturalWidth) flaechen.push(l._tileCoordsToBounds(t.coords)); }
+      if (platzhalter && platzhalter.f === f) platzhalter.gruppe.eachLayer(function (o) { flaechen.push(o.getBounds()); });
+      for (var a = 1; a <= 3; a++) for (var c = 1; c <= 3; c++) {
+        var p = map.containerPointToLatLng([s.x * (a * 0.2 + 0.1), s.y * (c * 0.2 + 0.1)]);
+        if (flaechen.some(function (b) { return b.contains(p); })) n++;
+      }
+      return n / 9;
+    }
+    // true = der neue Ausschnitt lädt noch und die Kartenmitte ist überwiegend ohne DWD-Bild
+    function dwdLuecke() { var f = frameLayer[idx]; return !!(f && f.dwd && map.hasLayer(f.dwd) && f.dwd.isLoading() && dwdDeckung(f) < 0.5); }
     // true = das Zwischenbild steht gerade für das fehlende DWD-Bild (Titel und Hinweis setzt zwischenTitel)
     function zwischenPruefen() {
       if (!zwischenNoetig()) {
-        clearTimeout(zwischenUhr); zwischenUhr = null; clearTimeout(stummUhr); stummUhr = null;
+        clearTimeout(zwischenUhr); zwischenUhr = null; clearTimeout(stummUhr); stummUhr = null; zwischenFrei = false;
         if (zwischen && map.hasLayer(zwischen)) { map.removeLayer(zwischen); if (hinweisText === TEXT_DWD_LAEDT || hinweisText === TEXT_DWD_STUMM) hinweis(''); quelleSetzen(); }
         return false;
       }
-      if (zwischen) {
+      if (zwischen && zwischenFrei) {                  // erst nach ZWISCHEN_MS, auch beim zweiten Mal (schneller DWD: kein Flackern)
         if (!map.hasLayer(zwischen)) zwischen.addTo(map);
         if (!stummUhr && hinweisText !== TEXT_DWD_STUMM) stummUhr = setTimeout(function () { stummUhr = null; if (zwischen && map.hasLayer(zwischen)) hinweis(TEXT_DWD_STUMM); }, 10000);
         zwischenTitel();
@@ -729,12 +776,15 @@
       if (!zwischenUhr) zwischenUhr = setTimeout(function () {
         zwischenUhr = null;
         if (abgebaut || !zwischenNoetig()) return;
-        if (rainviewer && Date.now() - rainviewer.geholt > 10 * 60000) rainviewer = null;   // Liste älter als 10 Min: neu holen
+        if (rainviewer && Date.now() - rainviewer.geholt > 10 * 60000) { rainviewer = null; if (zwischen && !map.hasLayer(zwischen)) zwischen = null; }   // Liste älter als 10 Min: neu holen
         rainviewerHolen().then(function (rv) {
-          if (abgebaut || zwischen || !rv || !rv.frames.length) return;
-          var f = rv.frames[rv.frames.length - 1];
-          zwischen = L.tileLayer(rv.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: 0.9, zIndex: 3, tileSize: 256, maxNativeZoom: 7 });
-          zwischenZeit = f.time * 1000;
+          if (abgebaut || !zwischenNoetig() || !rv || !rv.frames.length) return;
+          if (!zwischen) {
+            var f = rv.frames[rv.frames.length - 1];
+            zwischen = L.tileLayer(rv.host + f.path + '/256/{z}/{x}/{y}/2/1_1.png', { opacity: 0.9, zIndex: 3, tileSize: 256, maxNativeZoom: 7 });
+            zwischenZeit = f.time * 1000;
+          }
+          zwischenFrei = true;
           if (frames.length) anzeigen(false); else zwischenPruefen();
         });
       }, ZWISCHEN_MS);
